@@ -1,0 +1,39 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* 主题色 */
+  --primary-color: #6C8EF2;
+  --secondary-color: #76E3C4;
+  
+  /* 文字颜色 */
+  --text-primary: #1F2937;
+  --text-secondary: #4B5563;
+  
+  /* 背景色 */
+  --bg-primary: #FFFFFF;
+  --bg-secondary: #F3F4F6;
+  
+  /* 字体 */
+  --font-title: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* 暗色模式 */
+[data-theme='dark'] {
+  --text-primary: #F9FAFB;
+  --text-secondary: #D1D5DB;
+  --bg-primary: #111827;
+  --bg-secondary: #1F2937;
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--text-primary);
+  background-color: var(--bg-primary);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-title);
+} 
