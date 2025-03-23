@@ -1,0 +1,122 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-rgb: 255, 255, 255;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-rgb: 0, 0, 0;
+  }
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: rgb(var(--background-rgb));
+  min-height: 100vh;
+}
+
+/* 自定义滚动条样式 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* 自定义输入框样式 */
+.custom-input .ant-input {
+  box-shadow: none !important;
+}
+
+.custom-input .ant-input:focus,
+.custom-input .ant-input-focused {
+  box-shadow: none !important;
+}
+
+.custom-input .ant-input:hover {
+  border-color: #1890FF !important;
+}
+
+.custom-input .ant-input-affix-wrapper {
+  box-shadow: none !important;
+}
+
+.custom-input .ant-input-affix-wrapper:focus,
+.custom-input .ant-input-affix-wrapper-focused {
+  box-shadow: none !important;
+}
+
+.custom-input .ant-input-affix-wrapper:hover {
+  border-color: #1890FF !important;
+}
+
+/* 自定义卡片样式 */
+.ant-card {
+  transition: all 0.3s ease;
+}
+
+.ant-card:hover {
+  transform: translateY(-2px);
+}
+
+/* 自定义列表样式 */
+.ant-list-item {
+  padding: 0 !important;
+}
+
+/* 自定义卡片操作区域样式 */
+.ant-card-actions {
+  border-top: 1px solid #f0f0f0;
+  padding: 8px 16px;
+}
+
+/* 自定义卡片 Meta 样式 */
+.ant-card-meta-title {
+  margin-bottom: 8px !important;
+}
+
+.ant-card-meta-description {
+  margin-bottom: 0 !important;
+}
+
+/* 自定义图标样式 */
+.anticon {
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+/* 确保图标颜色样式生效 */
+.text-blue-500 {
+  color: #3b82f6 !important;
+}
+
+.text-blue-500:hover {
+  color: #2563eb !important;
+}
+
+.text-red-500 {
+  color: #ef4444 !important;
+}
+
+.text-red-500:hover {
+  color: #dc2626 !important;
+}
