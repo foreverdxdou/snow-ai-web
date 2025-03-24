@@ -6,7 +6,7 @@ import { Form, Input, Button, Card, Typography, Space, message, Spin } from 'ant
 import { ArrowLeftOutlined } from '@ant-design/icons';
 import { knowledgeService } from '../../../../services/knowledge';
 import type { KnowledgeBaseDTO, KnowledgeBaseVO } from '../../../../types/knowledge';
-import { handleResponse } from '@/app/utils/message';
+import { handleResponse } from '@/app/utils/request';
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -23,7 +23,7 @@ export default function KnowledgeEditPage() {
       try {
         setLoading(true);
         const response = await knowledgeService.getById(Number(params.id));
-        const data = handleResponse<KnowledgeBaseVO>(response, false);
+        const data = handleResponse<KnowledgeBaseVO>(response.data, false);
         setKnowledge(data);
         form.setFieldsValue({
           name: data.name,
@@ -42,7 +42,7 @@ export default function KnowledgeEditPage() {
   const onFinish = async (values: KnowledgeBaseDTO) => {
     try {
       const response = await knowledgeService.update(Number(params.id), values);
-      handleResponse(response);
+      handleResponse(response.data);
       router.push(`/knowledge/${params.id}`);
     } catch (error) {
       console.error('更新知识库失败:', error);

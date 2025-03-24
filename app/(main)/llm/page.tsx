@@ -27,10 +27,8 @@ import {
   Delete as DeleteIcon,
   Refresh as RefreshIcon,
 } from '@mui/icons-material';
-import { LlmConfig } from '../../types/llm';
-import { llmService } from '../../services/llm';
-import { handleResponse } from '../../utils/response';
-
+import { LlmConfig } from '@/app/types/llm';
+import { llmService } from '@/app/services/llm';
 export default function LlmPage() {
   const [configs, setConfigs] = useState<LlmConfig[]>([]);
   const [loading, setLoading] = useState(false);
@@ -56,10 +54,10 @@ export default function LlmPage() {
     try {
       setLoading(true);
       const response = await llmService.getList();
-      if (response.code === 200) {
-        setConfigs(response.data);
+      if (response.data.code === 200) {
+        setConfigs(response.data.data);
       } else {
-        throw new Error(response.message || '获取配置失败');
+        throw new Error(response.data.message || '获取配置失败');
       }
     } catch (error) {
       console.error('获取大模型配置失败:', error);
@@ -111,7 +109,7 @@ export default function LlmPage() {
           ...formData as LlmConfig,
           id: editingConfig.id,
         });
-        if (response.code === 200) {
+        if (response.data.code === 200) {
           setSnackbar({
             open: true,
             message: '更新成功',
@@ -120,11 +118,11 @@ export default function LlmPage() {
           handleClose();
           fetchConfigs();
         } else {
-          throw new Error(response.message || '更新失败');
+          throw new Error(response.data.message || '更新失败');
         }
       } else {
         const response = await llmService.save(formData as Omit<LlmConfig, 'id' | 'createTime' | 'updateTime'>);
-        if (response.code === 200) {
+        if (response.data.code === 200) {
           setSnackbar({
             open: true,
             message: '添加成功',
@@ -133,7 +131,7 @@ export default function LlmPage() {
           handleClose();
           fetchConfigs();
         } else {
-          throw new Error(response.message || '添加失败');
+          throw new Error(response.data.message || '添加失败');
         }
       }
     } catch (error) {
@@ -150,7 +148,7 @@ export default function LlmPage() {
     if (!window.confirm('确定要删除这个配置吗？')) return;
     try {
       const response = await llmService.delete(id);
-      if (response.code === 200) {
+      if (response.data.code === 200) {
         setSnackbar({
           open: true,
           message: '删除成功',
@@ -158,7 +156,7 @@ export default function LlmPage() {
         });
         fetchConfigs();
       } else {
-        throw new Error(response.message || '删除失败');
+        throw new Error(response.data.message || '删除失败');
       }
     } catch (error) {
       console.error('删除大模型配置失败:', error);
@@ -176,7 +174,7 @@ export default function LlmPage() {
         ...config,
         enabled: !config.enabled,
       });
-      if (response.code === 200) {
+      if (response.data.code === 200) {
         setSnackbar({
           open: true,
           message: '状态更新成功',
@@ -184,7 +182,7 @@ export default function LlmPage() {
         });
         await fetchConfigs();
       } else {
-        throw new Error(response.message || '更新状态失败');
+        throw new Error(response.data.message || '更新状态失败');
       }
     } catch (error) {
       console.error('更新状态失败:', error);

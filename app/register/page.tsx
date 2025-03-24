@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Form, Input, Button, Card, Typography } from 'antd';
 import { UserOutlined, LockOutlined, MailOutlined, TeamOutlined } from '@ant-design/icons';
-import { api } from '../utils/api';
+import { authService } from '@/app/services/auth';
 import { App } from 'antd';
 
 const { Title } = Typography;
@@ -25,7 +25,7 @@ export default function RegisterPage() {
   const onFinish = async (values: RegisterForm) => {
     try {
       setLoading(true);
-      await api.auth.register(values);
+      await authService.register(values);
       message.success('注册成功');
       router.push('/login');
     } catch (error) {

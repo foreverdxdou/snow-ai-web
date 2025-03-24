@@ -295,27 +295,23 @@ export default function MainLayout({
           </Box>
           <UserInfo />
         </Box>
-        <Box sx={{ 
-          pt: 7,
-          px: { xs: 2, sm: 3 },
-          pb: 3,
-          marginTop: 1,
-          marginLeft: -3
-        }}>
           <Box sx={{ 
             bgcolor: 'background.paper',
             borderRadius: 2,
             p: { xs: 1, sm: 2 },
+            height: '100%',
             boxShadow: 0,
-            transition: 'all 0.3s ease-in-out',
+              transition: theme.transitions.create(['left'], {
+            easing: theme.transitions.easing.sharp,
+            duration: theme.transitions.duration.leavingScreen,
+          }),
             '&:hover': {
               boxShadow: 3,
             },
-            margin: 0
+        
           }}>
             {children}
           </Box>
-        </Box>
       </Box>
     </Box>
   );

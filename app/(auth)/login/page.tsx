@@ -4,9 +4,9 @@ import { Button, Form, Input, message } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import Cookies from 'js-cookie';
+import { authService } from '@/app/services/auth';
 import Link from 'next/link';
-
+import Cookies from 'js-cookie';
 interface LoginForm {
   username: string;
   password: string;
@@ -24,26 +24,19 @@ export default function LoginPage() {
   const onFinish = async (values: LoginForm) => {
     try {
       setLoading(true);
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(values),
-      });
-
-      const data = await response.json();
-
+      const response = await authService.login(values.username, values.password);
+      console.log(response);
+      const data = response.data;
       if (data.code === 200) {
-        Cookies.set('token', data.data.token, { expires: 7 });
+        Cookies.set('token', data.data.token);
         message.success('登录成功');
         // 使用 replace 而不是 push
         router.replace('/');
       } else {
         message.error(data.message || '登录失败');
       }
-    } catch (error) {
-      message.error('登录失败，请稍后重试');
+    } catch (error: any) {
+      message.error(error.message || '登录失败');
     } finally {
       setLoading(false);
     }

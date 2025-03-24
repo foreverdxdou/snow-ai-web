@@ -4,21 +4,16 @@ import { useEffect, useState } from 'react';
 import { Avatar, Dropdown, Space, Typography } from 'antd';
 import { UserOutlined, LogoutOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
-import Cookies from 'js-cookie';
+import { authService } from '@/app/services/auth';
+import { User } from '@/app/types/userinfo';
 
 const { Text } = Typography;
 
-interface UserInfo {
-  id: number;
-  username: string;
-  nickname: string;
-  email: string;
-  avatar: string;
-}
+
 
 export default function UserInfo() {
   const router = useRouter();
-  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+  const [userInfo, setUserInfo] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -27,12 +22,8 @@ export default function UserInfo() {
 
   const fetchUserInfo = async () => {
     try {
-      const response = await fetch('/api/auth/current-user', {
-        headers: {
-          'Authorization': `Bearer ${Cookies.get('token')}`
-        }
-      });
-      const data = await response.json();
+      const response = await authService.getCurrentUser();
+      const data = await response.data;
       if (data.code === 200) {
         setUserInfo(data.data);
       }
@@ -48,10 +39,10 @@ export default function UserInfo() {
       await fetch('/api/auth/logout', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${Cookies.get('token')}`
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       });
-      Cookies.remove('token');
+      localStorage.removeItem('token');
       router.push('/login');
     } catch (error) {
       console.error('退出登录失败:', error);

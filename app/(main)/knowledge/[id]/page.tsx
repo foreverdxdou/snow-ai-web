@@ -6,7 +6,7 @@ import { Card, Typography, Button, Space, Spin, message, Modal } from 'antd';
 import { ArrowLeftOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { knowledgeService } from '@/app/services/knowledge';
 import type { KnowledgeBaseVO, KnowledgeBasePermissionVO } from '@/app/types/knowledge';
-import { handleResponse } from '@/app/utils/message';
+import { handleResponse } from '@/app/utils/request';
 
 const { Title } = Typography;
 
@@ -21,7 +21,7 @@ export default function KnowledgeDetailPage() {
       try {
         setLoading(true);
         const response = await knowledgeService.getById(Number(params.id));
-        const data = handleResponse<KnowledgeBaseVO>(response, false);
+        const data = handleResponse<KnowledgeBaseVO>(response.data, false);
         setKnowledge(data);
       } catch (error) {
         console.error('获取知识库详情失败:', error);
@@ -40,7 +40,7 @@ export default function KnowledgeDetailPage() {
       onOk: async () => {
         try {
           const response = await knowledgeService.delete(Number(params.id));
-          handleResponse(response);
+          handleResponse(response.data);
           router.push('/knowledge');
         } catch (error) {
           console.error('删除知识库失败:', error);

@@ -8,7 +8,7 @@ import { Card, CardContent, CardActions, CardHeader, Avatar, IconButton, Box } f
 import { Edit as EditIcon, Delete as DeleteIcon, MenuBook as MenuBookIcon } from '@mui/icons-material';
 import { knowledgeService } from '@/app/services/knowledge';
 import type { KnowledgeBaseVO, PageKnowledgeBaseVO } from '@/app/types/knowledge';
-import { handleResponse } from '@/app/utils/message';
+import { handleResponse } from '@/app/utils/request';
 import { Pagination } from '@/app/components/common/Pagination';
 
 const { Title } = Typography;
@@ -30,7 +30,7 @@ export default function KnowledgePage() {
         current: pagination.current,
         size: pagination.pageSize,
       });
-      const { records, total } = handleResponse<PageKnowledgeBaseVO>(response, false);
+      const { records, total } = handleResponse<PageKnowledgeBaseVO>(response.data, false);
       setKnowledgeList(records);
       setPagination(prev => ({ ...prev, total }));
     } catch (error) {
@@ -51,7 +51,7 @@ export default function KnowledgePage() {
       onOk: async () => {
         try {
           const response = await knowledgeService.delete(id);
-          handleResponse(response);
+          handleResponse(response.data);
           fetchKnowledgeList();
         } catch (error) {
           console.error('删除知识库失败:', error);
@@ -63,7 +63,7 @@ export default function KnowledgePage() {
   const handleStatusChange = async (id: number, status: number) => {
     try {
       const response = await knowledgeService.updateStatus(id, status);
-      handleResponse(response);
+      handleResponse(response.data);
       fetchKnowledgeList();
     } catch (error) {
       console.error('更新知识库状态失败:', error);

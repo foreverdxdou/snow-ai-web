@@ -5,13 +5,15 @@ import type { NextRequest } from 'next/server';
 const publicRoutes = ['/login', '/register'];
 
 export function middleware(request: NextRequest) {
-  const token = request.cookies.get('token')?.value;
+
   const { pathname } = request.nextUrl;
 
   // 如果是公开路由，直接放行
   if (publicRoutes.includes(pathname)) {
     return NextResponse.next();
   }
+  
+  const token = request.cookies.get('token')?.value;
 
   // 如果没有 token，重定向到登录页
   if (!token) {
