@@ -49,6 +49,6 @@ export const handleResponse = <T>(response: Result<T>, showMessage: boolean = tr
     }
     throw new Error(response.message);
   }
-}; 
+};
 
-export default request; 
+export default request;

@@ -16,6 +16,8 @@ import {
   useTheme,
   useMediaQuery,
   alpha,
+  Divider,
+  Tooltip,
 } from '@mui/material';
 import {
   Menu as MenuIcon,
@@ -25,9 +27,11 @@ import {
   Description as DescriptionIcon,
   People as PeopleIcon,
   SmartToy as SmartToyIcon,
+  Folder as FolderIcon,
 } from '@mui/icons-material';
 
-const drawerWidth = 280;
+const drawerWidth = 256; // 调整为标准宽度
+const collapsedDrawerWidth = 68; // 稍微增加折叠时的宽度
 
 // 动态导入 UserInfo 组件
 const UserInfo = dynamic(() => import('../components/UserInfo'), {
@@ -35,54 +39,94 @@ const UserInfo = dynamic(() => import('../components/UserInfo'), {
   loading: () => null
 });
 
-// 使用 memo 包装菜单组件
-const SideMenu = memo(({ pathname, items, onSelect }: { pathname: string; items: any[]; onSelect: (key: string) => void }) => (
-  <List sx={{ px: 1 }}>
-    {items.map((item) => (
-      <ListItem key={item.key} disablePadding sx={{ mb: 0.5 }}>
-        <ListItemButton
-          selected={pathname === item.key}
-          onClick={() => onSelect(item.key)}
-          sx={{
-            borderRadius: 2,
-            transition: 'all 0.2s ease-in-out',
+// 优化菜单项组件
+const MenuItem = memo(({ 
+  item, 
+  selected, 
+  open, 
+  onSelect 
+}: { 
+  item: any; 
+  selected: boolean; 
+  open: boolean; 
+  onSelect: (key: string) => void;
+}) => (
+  <ListItem disablePadding sx={{ mb: 0.5 }}>
+    <Tooltip title={!open ? item.label : ''} placement="right">
+      <ListItemButton
+        selected={selected}
+        onClick={() => onSelect(item.key)}
+        sx={{
+          borderRadius: 1,
+          mx: 1,
+          minHeight: 48,
+          justifyContent: open ? 'initial' : 'center',
+          '&.Mui-selected': {
+            bgcolor: alpha('#1976d2', 0.08),
             '&:hover': {
-              backgroundColor: alpha('#6C8EF2', 0.08),
-              transform: 'translateX(4px)',
+              bgcolor: alpha('#1976d2', 0.12),
             },
-            '&.Mui-selected': {
-              backgroundColor: alpha('#6C8EF2', 0.12),
-              '&:hover': {
-                backgroundColor: alpha('#6C8EF2', 0.16),
-              },
-              '& .MuiListItemIcon-root': {
-                color: '#6C8EF2',
-                transform: 'scale(1.1)',
-              },
-              '& .MuiListItemText-primary': {
-                color: '#6C8EF2',
-                fontWeight: 600,
-              },
+            '& .MuiListItemIcon-root': {
+              color: 'primary.main',
             },
+            '& .MuiTypography-root': {
+              color: 'primary.main',
+              fontWeight: 600,
+            },
+          },
+        }}
+      >
+        <ListItemIcon 
+          sx={{ 
+            minWidth: 0,
+            mr: open ? 2 : 'auto',
+            justifyContent: 'center',
+            color: selected ? 'primary.main' : 'text.secondary',
           }}
         >
-          <ListItemIcon sx={{ 
-            minWidth: 48,
-            transition: 'all 0.2s ease-in-out',
-            color: 'text.secondary',
-          }}>
-            {item.icon}
-          </ListItemIcon>
+          {item.icon}
+        </ListItemIcon>
+        {open && (
           <Typography
+            variant="body2"
             sx={{
-              fontSize: '0.95rem',
-              transition: 'all 0.2s ease-in-out',
+              fontWeight: selected ? 600 : 400,
+              color: selected ? 'primary.main' : 'text.primary',
+              opacity: 1,
+              transition: 'all 0.2s',
             }}
           >
             {item.label}
           </Typography>
-        </ListItemButton>
-      </ListItem>
+        )}
+      </ListItemButton>
+    </Tooltip>
+  </ListItem>
+));
+
+MenuItem.displayName = 'MenuItem';
+
+// 优化菜单组件
+const SideMenu = memo(({ 
+  pathname, 
+  items, 
+  open, 
+  onSelect 
+}: { 
+  pathname: string; 
+  items: any[]; 
+  open: boolean;
+  onSelect: (key: string) => void;
+}) => (
+  <List sx={{ py: 1 }}>
+    {items.map((item) => (
+      <MenuItem
+        key={item.key}
+        item={item}
+        selected={pathname === item.key}
+        open={open}
+        onSelect={onSelect}
+      />
     ))}
   </List>
 ));
@@ -112,6 +156,11 @@ export default function MainLayout({
       label: '知识库',
     },
     {
+      key: '/category',
+      icon: <FolderIcon />,
+      label: '分类管理',
+    },
+    {
       key: '/documents',
       icon: <DescriptionIcon />,
       label: '文档管理',
@@ -135,159 +184,145 @@ export default function MainLayout({
     }
   };
 
-  const handleDrawerToggle = () => {
-    setOpen(!open);
-  };
-
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh' }}>
+    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
       <Box
         component="nav"
         sx={{ 
-          width: { sm: drawerWidth }, 
-          flexShrink: { sm: 0 },
-          position: 'fixed',
-          height: '100vh',
-          zIndex: 1200
+          width: open ? drawerWidth : collapsedDrawerWidth,
+          flexShrink: 0,
+          transition: theme.transitions.create('width', {
+            easing: theme.transitions.easing.sharp,
+            duration: theme.transitions.duration.enteringScreen,
+          }),
         }}
       >
         <Drawer
-          variant={isMobile ? "temporary" : "persistent"}
-          anchor="left"
-          open={open}
-          onClose={handleDrawerToggle}
-          ModalProps={{
-            keepMounted: true,
-            disableScrollLock: true,
-          }}
+          variant={isMobile ? "temporary" : "permanent"}
+          open={true}
           sx={{
+            width: open ? drawerWidth : collapsedDrawerWidth,
+            flexShrink: 0,
+            whiteSpace: 'nowrap',
+            boxSizing: 'border-box',
             '& .MuiDrawer-paper': {
+              width: open ? drawerWidth : collapsedDrawerWidth,
               boxSizing: 'border-box',
-              width: drawerWidth,
               bgcolor: 'background.paper',
               borderRight: '1px solid',
               borderColor: 'divider',
-              transition: theme.transitions.create(['width'], {
+              transition: theme.transitions.create('width', {
                 easing: theme.transitions.easing.sharp,
                 duration: theme.transitions.duration.enteringScreen,
               }),
+              overflowX: 'hidden',
               '&::-webkit-scrollbar': {
-                width: '6px',
-              },
-              '&::-webkit-scrollbar-track': {
-                background: 'transparent',
+                width: 6,
+                height: 6,
               },
               '&::-webkit-scrollbar-thumb': {
-                background: alpha('#000', 0.1),
-                borderRadius: '3px',
+                borderRadius: 3,
+                backgroundColor: alpha(theme.palette.text.primary, 0.1),
               },
             },
           }}
         >
+          {/* Logo区域 */}
           <Box sx={{ 
-            display: 'flex', 
-            alignItems: 'center', 
+            height: 64,
+            display: 'flex',
+            alignItems: 'center',
             justifyContent: 'space-between',
-            p: 2,
+            px: 2,
             borderBottom: '1px solid',
             borderColor: 'divider',
-            bgcolor: alpha('#6C8EF2', 0.04),
-            height: 64
           }}>
             <Typography 
-              variant="h5" 
-              component="div" 
+              variant="h6" 
               sx={{ 
-                fontWeight: 700,
-                background: 'linear-gradient(45deg, #6C8EF2 30%, #76E3C4 90%)',
+                fontWeight: 600,
+                background: 'linear-gradient(45deg, #1976d2 30%, #42a5f5 90%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
-                display: 'flex',
-                alignItems: 'center',
-                height: '100%'
+                opacity: open ? 1 : 0,
+                width: open ? 'auto' : 0,
+                overflow: 'hidden',
+                transition: theme.transitions.create(['opacity', 'width']),
               }}
             >
               Snow AI
             </Typography>
-            <IconButton 
-              onClick={handleDrawerToggle}
+            <IconButton
+              onClick={() => setOpen(!open)}
               sx={{
-                transition: 'all 0.2s ease-in-out',
-                '&:hover': {
-                  transform: 'rotate(180deg)',
-                }
+                p: 1,
+                transition: theme.transitions.create(['transform', 'margin']),
+                transform: open ? 'rotate(0deg)' : 'rotate(180deg)',
+                marginRight: open ? 0 : '6px',
               }}
             >
               <ChevronLeftIcon />
             </IconButton>
           </Box>
-          <Box sx={{ p: 1 }}>
-            <SideMenu 
-              pathname={pathname} 
-              items={menuItems} 
-              onSelect={handleMenuSelect}
-            />
-          </Box>
+
+          {/* 菜单区域 */}
+          <SideMenu 
+            pathname={pathname}
+            items={menuItems}
+            open={open}
+            onSelect={handleMenuSelect}
+          />
         </Drawer>
       </Box>
+
+      {/* 主内容区域 */}
       <Box
         component="main"
         sx={{
           flexGrow: 1,
-          width: { sm: `calc(100% - ${drawerWidth}px)` },
-          ml: { sm: `${drawerWidth}px` },
+          width: `calc(100% - ${open ? drawerWidth : collapsedDrawerWidth}px)`,
           minHeight: '100vh',
-          bgcolor: alpha('#f5f5f5', 0.5),
-          transition: theme.transitions.create(['margin', 'width'], {
+          display: 'flex',
+          flexDirection: 'column',
+          transition: theme.transitions.create(['width', 'margin'], {
             easing: theme.transitions.easing.sharp,
-            duration: theme.transitions.duration.leavingScreen,
+            duration: theme.transitions.duration.enteringScreen,
           }),
         }}
       >
-        <Box sx={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'space-between',
-          position: 'fixed',
-          top: 0,
-          right: 0,
-          left: { sm: `${drawerWidth}px` },
-          zIndex: 1100,
-          backdropFilter: 'blur(8px)',
-          bgcolor: alpha('#fff', 0.8),
-          height: 64,
-          px: 2,
-          borderBottom: '1px solid',
-          borderColor: 'divider',
-          transition: theme.transitions.create(['left'], {
-            easing: theme.transitions.easing.sharp,
-            duration: theme.transitions.duration.leavingScreen,
-          }),
-        }}>
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <IconButton
-              color="inherit"
-              aria-label="open drawer"
-              edge="start"
-              onClick={handleDrawerToggle}
-              sx={{ 
-                mr: 2, 
-                display: { sm: 'none' },
-                transition: 'all 0.2s ease-in-out',
-                '&:hover': {
-                  transform: 'scale(1.1)',
-                }
-              }}
-            >
-              <MenuIcon />
-            </IconButton>
+        {/* 顶部导航栏 */}
+        <Box
+          component="header"
+          sx={{
+            position: 'sticky',
+            top: 0,
+            zIndex: theme.zIndex.appBar,
+            backdropFilter: 'blur(8px)',
+            bgcolor: alpha(theme.palette.background.paper, 0.9),
+            borderBottom: '1px solid',
+            borderColor: 'divider',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            height: 64,
+            px: 3,
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            {isMobile && (
+              <IconButton
+                onClick={() => setOpen(!open)}
+                size="small"
+                sx={{ display: { sm: 'none' } }}
+              >
+                <MenuIcon />
+              </IconButton>
+            )}
             <Typography 
               variant="h6" 
-              component="div" 
               sx={{ 
-                fontWeight: 600,
+                fontWeight: 500,
                 color: 'text.primary',
-                display: { xs: 'none', sm: 'block' }
               }}
             >
               {menuItems.find(item => item.key === pathname)?.label || '首页'}
@@ -295,23 +330,29 @@ export default function MainLayout({
           </Box>
           <UserInfo />
         </Box>
-          <Box sx={{ 
-            bgcolor: 'background.paper',
-            borderRadius: 2,
-            p: { xs: 1, sm: 2 },
-            height: '100%',
-            boxShadow: 0,
-              transition: theme.transitions.create(['left'], {
-            easing: theme.transitions.easing.sharp,
-            duration: theme.transitions.duration.leavingScreen,
-          }),
-            '&:hover': {
-              boxShadow: 3,
+
+        {/* 页面内容区域 */}
+        <Box
+          component="div"
+          sx={{
+            flexGrow: 1,
+            p: 3,
+            bgcolor: alpha(theme.palette.background.paper, 0.8),
+            borderRadius: 0,
+            height: 'calc(100vh - 64px)',
+            overflow: 'auto',
+            '&::-webkit-scrollbar': {
+              width: 6,
+              height: 6,
             },
-        
-          }}>
-            {children}
-          </Box>
+            '&::-webkit-scrollbar-thumb': {
+              borderRadius: 3,
+              backgroundColor: alpha(theme.palette.text.primary, 0.1),
+            },
+          }}
+        >
+          {children}
+        </Box>
       </Box>
     </Box>
   );

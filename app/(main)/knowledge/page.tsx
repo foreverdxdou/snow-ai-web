@@ -2,21 +2,31 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { List, Typography, Button, Space, Spin, Empty, Modal, Switch } from 'antd';
+import { List,  Space, Spin, Empty, Modal, Switch} from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
-import { Card, CardContent, CardActions, CardHeader, Avatar, IconButton, Box } from '@mui/material';
-import { Edit as EditIcon, Delete as DeleteIcon, MenuBook as MenuBookIcon } from '@mui/icons-material';
+import { Card, CardContent, CardActions, CardHeader, Avatar, IconButton, Box, Alert, Snackbar, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, Typography } from '@mui/material';
+import { Edit as EditIcon, Delete as DeleteIcon, MenuBook as MenuBookIcon, Add as AddIcon } from '@mui/icons-material';
 import { knowledgeService } from '@/app/services/knowledge';
-import type { KnowledgeBaseVO, PageKnowledgeBaseVO } from '@/app/types/knowledge';
+import type { KnowledgeBaseVO, PageKnowledgeBaseVO, KnowledgeBaseDTO } from '@/app/types/knowledge';
 import { handleResponse } from '@/app/utils/request';
 import { Pagination } from '@/app/components/common/Pagination';
 
-const { Title } = Typography;
 
 export default function KnowledgePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [editingKnowledge, setEditingKnowledge] = useState<KnowledgeBaseVO | null>(null);
   const [knowledgeList, setKnowledgeList] = useState<KnowledgeBaseVO[]>([]);
+  const [formData, setFormData] = useState<KnowledgeBaseDTO>({
+    name: '',
+    description: '',
+  });
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'success' as 'success' | 'error',
+  });
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 12,
@@ -70,6 +80,58 @@ export default function KnowledgePage() {
     }
   };
 
+  const handleOpen = (knowledge?: KnowledgeBaseVO) => {
+    if (knowledge) {
+      setEditingKnowledge(knowledge);
+      setFormData({
+        name: knowledge.name,
+        description: knowledge.description,
+      });
+    } else {
+      setEditingKnowledge(null);
+      setFormData({
+        name: '',
+        description: '',
+      });
+    }
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+    setEditingKnowledge(null);
+    setFormData({
+      name: '',
+      description: '',
+    });
+  };
+
+  const handleSubmit = async () => {
+    try {
+      if (editingKnowledge) {
+        const response = await knowledgeService.update(editingKnowledge.id, formData);
+        handleResponse(response.data);
+      } else {
+        const response = await knowledgeService.create(formData);
+        handleResponse(response.data);
+      }
+      setSnackbar({
+        open: true,
+        message: `${editingKnowledge ? '更新' : '创建'}成功`,
+        severity: 'success',
+      });
+      handleClose();
+      fetchKnowledgeList();
+    } catch (error) {
+      console.error(`${editingKnowledge ? '更新' : '创建'}知识库失败:`, error);
+      setSnackbar({
+        open: true,
+        message: `${editingKnowledge ? '更新' : '创建'}失败`,
+        severity: 'error',
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -80,17 +142,31 @@ export default function KnowledgePage() {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <Title level={2}>知识库管理</Title>
-        <Button 
-          type="primary" 
-          icon={<PlusOutlined />} 
-          onClick={() => router.push('/knowledge/new')}
-          className="shadow-md hover:shadow-lg transition-shadow"
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        mb: 4 
+      }}>
+        <Typography variant="h5" sx={{ fontWeight: 600 }}>
+          知识库管理
+        </Typography>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={() => handleOpen()}
+          sx={{
+            background: 'linear-gradient(45deg, #6C8EF2 30%, #76E3C4 90%)',
+            '&:hover': {
+              background: 'linear-gradient(45deg, #5A7DE0 30%, #65D2B3 90%)',
+            },
+            height: '44px',
+            px: 3
+          }}
         >
           新建知识库
         </Button>
-      </div>
+      </Box>
 
       {knowledgeList.length === 0 ? (
         <Empty 
@@ -280,7 +356,7 @@ export default function KnowledgePage() {
                     }}
                   >
                     <IconButton 
-                      onClick={() => router.push(`/knowledge/${item.id}/edit`)}
+                      onClick={() => handleOpen(item)}
                       color="primary"
                       sx={{
                         '&:hover': {
@@ -326,6 +402,61 @@ export default function KnowledgePage() {
         
         </div>
       )}
+
+      <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+        <DialogTitle>
+          {editingKnowledge ? '编辑知识库' : '新建知识库'}
+        </DialogTitle>
+        <DialogContent>
+          <Box sx={{ pt: 2 }}>
+            <TextField
+              fullWidth
+              label="知识库名称"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              fullWidth
+              label="描述"
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              multiline
+              rows={4}
+              sx={{ mb: 2 }}
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose}>取消</Button>
+          <Button
+            onClick={handleSubmit}
+            variant="contained"
+            sx={{
+              background: 'linear-gradient(45deg, #6C8EF2 30%, #76E3C4 90%)',
+              '&:hover': {
+                background: 'linear-gradient(45deg, #5A7DE0 30%, #65D2B3 90%)',
+              },
+            }}
+          >
+            确定
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+      >
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.severity}
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </div>
   );
 } 
