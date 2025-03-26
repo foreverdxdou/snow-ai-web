@@ -281,7 +281,7 @@ export default function QaPage() {
 
             // 构建请求 URL 和参数
             const baseUrl = '/api/v1/kb/qa';
-            const endpoint = selectedKbs.length > 0 ? 'chat/stream' : 'general/stream';
+            const endpoint = selectedKbs.length > 0 ? 'chat/stream' : '/stream';
             const queryParams = selectedKbs.length > 0 ? `?kbIds=${selectedKbs[0]}` : '';
             const url = `${baseUrl}/${endpoint}${queryParams}`;
 
@@ -290,7 +290,11 @@ export default function QaPage() {
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ` + Cookies.get('token'),
-                    'cache-control': `no-cache`,
+                    'Cache-Control': 'no-cache, no-store, must-revalidate',
+                    'Pragma': 'no-cache',
+                    'Expires': '0',
+                    'Accept': 'text/event-stream',
+                    'Accept-Encoding': 'deflate, br, zstd',
                 },
                 body: JSON.stringify(requestData),
             });
