@@ -6,7 +6,7 @@ const BASE_URL = '/kb/category';
 
 export const categoryService = {
   // 获取分类列表
-  getList: (params: { kbId: number; current: number; size: number; name?: string; status?: number }) => {
+  getList: (params: { current: number; size: number; name?: string; status?: number }) => {
     return request.get<Result<PageKbCategoryVO>>(`${BASE_URL}/list`, { params });
   },
 
@@ -43,7 +43,7 @@ export const categoryService = {
   },
 
   // 获取知识库的分类树
-  getCategoryTree: (kbId: number) => {
-    return request.get<Result<KbCategory[]>>(`${BASE_URL}/tree/${kbId}`);
+  getCategoryTree: () => {
+    return request.get<Result<KbCategory[]>>(`${BASE_URL}/tree`);
   },
 }; 

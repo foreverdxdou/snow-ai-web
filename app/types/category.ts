@@ -3,7 +3,6 @@ export interface KbCategory {
   name: string;
   description: string;
   parentId: number;
-  kbId: number;
   sort: number;
   creatorId: number;
   creatorName: string;
@@ -15,7 +14,6 @@ export interface KbCategory {
 }
 
 export interface KbCategoryCreateDTO {
-  kbId: number;
   name: string;
   description: string;
   parentId: number | null;

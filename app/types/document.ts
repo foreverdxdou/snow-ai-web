@@ -1,6 +1,6 @@
 export interface Document {
   id: number;
-  name: string;
+  title: string;
   content: string;
   categoryId: number;
   categoryName: string;
@@ -16,7 +16,7 @@ export interface Document {
 }
 
 export interface DocumentCreateDTO {
-  name: string;
+  title: string;
   content: string;
   categoryId: number;
   kbId: number;
@@ -24,7 +24,7 @@ export interface DocumentCreateDTO {
 }
 
 export interface DocumentUpdateDTO {
-  name: string;
+  title: string;
   content: string;
   categoryId: number;
   tags?: string[];

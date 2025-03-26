@@ -1,55 +1,57 @@
 'use client';
 
-import { Card, Row, Col, Statistic } from 'antd';
-import { BookOutlined, UserOutlined, FileTextOutlined } from '@ant-design/icons';
-import { memo } from 'react';
+import { Box, Typography, Paper, Grid, Card, CardContent, useTheme } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 
-// 使用 memo 包装统计卡片组件
-const StatisticCard = memo(({ title, value, icon }: { title: string; value: number; icon: React.ReactNode }) => (
-  <Col xs={24} sm={8}>
-    <Card>
-      <Statistic
-        title={title}
-        value={value}
-        prefix={icon}
-      />
-    </Card>
-  </Col>
-));
+export default function HomePage() {
+    const { t } = useTranslation();
+    const theme = useTheme();
 
-StatisticCard.displayName = 'StatisticCard';
+    const stats = [
+        { label: t('stats.documents'), value: '1,234' },
+        { label: t('stats.categories'), value: '56' },
+        { label: t('stats.tags'), value: '89' },
+        { label: t('stats.users'), value: '45' },
+    ];
 
-export default function Home() {
-  return (
-    <div>
-      <h1 className="text-2xl font-bold mb-6">欢迎使用 AI 知识库系统</h1>
-      
-      <Row gutter={[16, 16]}>
-        <StatisticCard
-          title="知识库数量"
-          value={3}
-          icon={<BookOutlined />}
-        />
-        <StatisticCard
-          title="用户数量"
-          value={100}
-          icon={<UserOutlined />}
-        />
-        <StatisticCard
-          title="文档数量"
-          value={50}
-          icon={<FileTextOutlined />}
-        />
-      </Row>
+    return (
+        <Box>
+            <Box sx={{ mb: 4 }}>
+                <Typography variant="h4" gutterBottom>
+                    {t('home.welcome')}
+                </Typography>
+                <Typography variant="body1" color="text.secondary">
+                    {t('home.description')}
+                </Typography>
+            </Box>
 
-      <Card className="mt-6">
-        <h2 className="text-lg font-semibold mb-4">快速开始</h2>
-        <p className="text-gray-600">
-          欢迎使用 AI 知识库系统。您可以通过左侧菜单访问不同的功能模块。
-          在知识库中，您可以浏览和管理您的知识内容。
-          在设置中，您可以管理您的个人信息和系统偏好。
-        </p>
-      </Card>
-    </div>
-  );
+            <Grid container spacing={3}>
+                {stats.map((stat, index) => (
+                    <Grid item xs={12} sm={6} md={3} key={index}>
+                        <Card>
+                            <CardContent>
+                                <Typography variant="h3" sx={{ mb: 1, color: 'primary.main' }}>
+                                    {stat.value}
+                                </Typography>
+                                <Typography variant="subtitle2" color="text.secondary">
+                                    {stat.label}
+                                </Typography>
+                            </CardContent>
+                        </Card>
+                    </Grid>
+                ))}
+            </Grid>
+
+            <Box sx={{ mt: 4 }}>
+                <Paper sx={{ p: 3 }}>
+                    <Typography variant="h5" gutterBottom>
+                        {t('home.recentActivity')}
+                    </Typography>
+                    <Typography color="text.secondary">
+                        {t('home.noRecentActivity')}
+                    </Typography>
+                </Paper>
+            </Box>
+        </Box>
+    );
 } 

@@ -12,7 +12,7 @@ const BASE_URL = '/kb';
 
 export const knowledgeService = {
   // 获取知识库列表
-  getList: (params: { current: number; size: number }) => {
+  getList: (params: { current: number; size: number; categoryId?: number }) => {
     return request.get<Result<PageKnowledgeBaseVO>>(`${BASE_URL}/list`, { params });
   },
 
@@ -52,6 +52,6 @@ export const knowledgeService = {
 
   // 获取用户可访问的知识库列表
   getUserKnowledgeBases: () => {
-    return request.get<Result<KnowledgeBaseVO[]>>(`${BASE_URL}/user`);
+    return request.get<Result<KnowledgeBaseVO[]>>(`${BASE_URL}/user/list`);
   },
 }; 

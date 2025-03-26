@@ -9,7 +9,7 @@ import type {
   PageDocumentVO 
 } from '@/app/types/document';
 
-const BASE_URL = '/document';
+const BASE_URL = '/kb/document';
 
 export const documentService = {
   // 获取文档列表
@@ -21,7 +21,7 @@ export const documentService = {
     name?: string;
     status?: number;
   }) => {
-    return request.get<Result<PageDocumentVO>>(`${BASE_URL}/list`, { params });
+    return request.get<Result<PageDocumentVO>>(`${BASE_URL}/page`, { params });
   },
 
   // 获取文档详情

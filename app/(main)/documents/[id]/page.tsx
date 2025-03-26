@@ -30,6 +30,7 @@ import {
 } from '@mui/icons-material';
 import { documentService } from '@/app/services/document';
 import type { Document, DocumentVersion, DocumentTag } from '@/app/types/document';
+import { alpha } from '@mui/material/styles';
 
 export default function DocumentDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter();
@@ -145,7 +146,7 @@ export default function DocumentDetailPage({ params }: { params: { id: string } 
             <ArrowBackIcon />
           </IconButton>
           <Typography variant="h5" sx={{ fontWeight: 600 }}>
-            {document.name}
+            {document.title}
           </Typography>
         </Box>
         <Button
