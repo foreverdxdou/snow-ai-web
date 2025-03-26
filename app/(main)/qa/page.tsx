@@ -193,13 +193,14 @@ export default function QaPage() {
 
                 const chunk = decoder.decode(value);
                 const lines = chunk.split('\n');
+                console.log(lines);
 
                 for (const line of lines) {
                     if (line.startsWith('data:')) {
                         try {
-                            const data = JSON.parse(line.slice(5));
-                            if (data.content) {
-                                answer += data.content;
+                            const data = line.replaceAll('data:','');
+                            if (data) {
+                                answer += data;
                                 setChatHistory(prev => {
                                     const newHistory = [...prev];
                                     newHistory[newHistory.length - 1].answer = answer;
