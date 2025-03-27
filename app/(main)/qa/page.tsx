@@ -37,6 +37,7 @@ import rehypeSanitize from 'rehype-sanitize';
 import rehypeHighlight from 'rehype-highlight';
 import 'highlight.js/styles/github-dark.css';
 import { Theme } from '@mui/material/styles';
+import { fetchEventSource } from '@microsoft/fetch-event-source';
 
 // 添加自定义样式
 const markdownStyles = {
@@ -281,64 +282,53 @@ export default function QaPage() {
 
             // 构建请求 URL 和参数
             const baseUrl = '/api/v1/kb/qa';
-            const endpoint = selectedKbs.length > 0 ? 'chat/stream' : '/stream';
-            const queryParams = selectedKbs.length > 0 ? `?kbIds=${selectedKbs[0]}` : '';
+            const endpoint = selectedKbs.length > 0 ? 'chat/stream' : 'general/stream';
+            const queryParams = selectedKbs.length > 0 ? `?kbId=${selectedKbs[0]}` : '';
             const url = `${baseUrl}/${endpoint}${queryParams}`;
 
-            const response = await fetch(url, {
+            let answer = '';
+
+            await fetchEventSource(url, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ` + Cookies.get('token'),
-                    'Cache-Control': 'no-cache, no-store, must-revalidate',
-                    'Pragma': 'no-cache',
-                    'Expires': '0',
-                    'Accept': 'text/event-stream',
-                    'Accept-Encoding': 'deflate, br, zstd',
+                    'Authorization': `Bearer ${Cookies.get('token')}`,
+                    'Accept-Encoding': 'identity',
+                    'X-Accept-Encoding-Override': 'identity'
                 },
                 body: JSON.stringify(requestData),
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const reader = response.body?.getReader();
-            const decoder = new TextDecoder();
-            let answer = '';
-
-            if (!reader) {
-                throw new Error('Failed to get response reader');
-            }
-
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-
-                const chunk = decoder.decode(value);
-                const lines = chunk.split('\n');
-
-                for (const line of lines) {
-                    if (line.startsWith('data:')) {
-                        const data = line.replaceAll('data:', '').trim();
-                        if (data) {
-                            if (data === '[DONE]') {
-                                setLoading(false);
-                                return;
-                            }
-                            answer += data;
-                            setChatHistory(prev => {
-                                const newHistory = [...prev];
-                                newHistory[newHistory.length - 1].answer = answer;
-                                return newHistory;
-                            });
-                            scrollToBottom();
-                        }
+                onmessage(ev) {
+                    if (ev.event === 'done' || ev.event === 'complete') {
+                        setLoading(false);
+                        return;
                     }
-                }
-            }
-
-            setLoading(false);
+                    const data = ev.data.trim();
+                    if (data === '[DONE]') {
+                        setLoading(false);
+                        return;
+                    }
+                    answer += data;
+                    setChatHistory(prev => {
+                        const newHistory = [...prev];
+                        newHistory[newHistory.length - 1].answer = answer;
+                        return newHistory;
+                    });
+                    scrollToBottom();
+                },
+                onclose() {
+                    setLoading(false);
+                },
+                onerror(err) {
+                    console.error('Stream error:', err);
+                    setSnackbar({
+                        open: true,
+                        message: t('qa.systemError'),
+                        severity: 'error',
+                    });
+                    setLoading(false);
+                    throw err;
+                },
+            });
         } catch (error) {
             console.error('发送消息失败:', error);
             setSnackbar({
