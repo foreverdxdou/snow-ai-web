@@ -145,6 +145,7 @@ export default function QaPage() {
     const [loading, setLoading] = useState(false);
     const [sessionId] = useState(uuidv4());
     const chatBoxRef = useRef<HTMLDivElement>(null);
+    const abortControllerRef = useRef<AbortController | null>(null);
 
     const [snackbar, setSnackbar] = useState({
         open: false,
@@ -248,13 +249,28 @@ export default function QaPage() {
         }
     };
 
+    // 中断会话
+    const handleAbort = () => {
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+            abortControllerRef.current = null;
+            setLoading(false);
+        }
+    };
+
     // 发送消息
     const handleSend = async () => {
         if (!question.trim() || loading) return;
 
+        // 如果有正在进行的会话，先中断它
+        handleAbort();
+
         setLoading(true);
         const questionText = question;
         setQuestion('');
+
+        // 创建新的 AbortController
+        abortControllerRef.current = new AbortController();
 
         // 添加用户问题到历史记录
         const newQuestion: KbChatHistory = {
@@ -283,7 +299,7 @@ export default function QaPage() {
             // 构建请求 URL 和参数
             const baseUrl = '/api/v1/kb/qa';
             const endpoint = selectedKbs.length > 0 ? 'chat/stream' : 'general/stream';
-            const queryParams = selectedKbs.length > 0 ? `?kbId=${selectedKbs[0]}` : '';
+            const queryParams = selectedKbs.length > 0 ? `?kbIds=${selectedKbs}` : '';
             const url = `${baseUrl}/${endpoint}${queryParams}`;
 
             let answer = '';
@@ -297,16 +313,14 @@ export default function QaPage() {
                     'X-Accept-Encoding-Override': 'identity'
                 },
                 body: JSON.stringify(requestData),
+                signal: abortControllerRef.current.signal,
                 onmessage(ev) {
                     if (ev.event === 'done' || ev.event === 'complete') {
                         setLoading(false);
+                        abortControllerRef.current = null;
                         return;
                     }
-                    const data = ev.data.trim();
-                    if (data === '[DONE]') {
-                        setLoading(false);
-                        return;
-                    }
+                    const data = ev.data;
                     answer += data;
                     setChatHistory(prev => {
                         const newHistory = [...prev];
@@ -317,8 +331,13 @@ export default function QaPage() {
                 },
                 onclose() {
                     setLoading(false);
+                    abortControllerRef.current = null;
                 },
                 onerror(err) {
+                    // 如果是用户主动中断，不显示错误提示
+                    if (err.name === 'AbortError') {
+                        return;
+                    }
                     console.error('Stream error:', err);
                     setSnackbar({
                         open: true,
@@ -326,10 +345,15 @@ export default function QaPage() {
                         severity: 'error',
                     });
                     setLoading(false);
+                    abortControllerRef.current = null;
                     throw err;
                 },
             });
         } catch (error) {
+            // 如果是用户主动中断，不显示错误提示
+            if (error instanceof Error && error.name === 'AbortError') {
+                return;
+            }
             console.error('发送消息失败:', error);
             setSnackbar({
                 open: true,
@@ -337,8 +361,16 @@ export default function QaPage() {
                 severity: 'error',
             });
             setLoading(false);
+            abortControllerRef.current = null;
         }
     };
+
+    // 在组件卸载时中断会话
+    useEffect(() => {
+        return () => {
+            handleAbort();
+        };
+    }, []);
 
     return (
         <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -518,14 +550,19 @@ export default function QaPage() {
                     />
                     <IconButton
                         color="primary"
-                        onClick={handleSend}
-                        disabled={!question.trim() || loading}
+                        onClick={loading ? handleAbort : handleSend}
+                        disabled={!question.trim() && !loading}
+                        title={loading ? t('qa.clickToStop') : t('qa.send')}
                         sx={{
                             alignSelf: 'flex-end',
-                            bgcolor: 'primary.main',
+                            width: 56,
+                            height: 56,
+                            bgcolor: loading ? 'error.main' : 'primary.main',
                             color: 'primary.contrastText',
+                            transition: 'all 0.3s ease',
                             '&:hover': {
-                                bgcolor: 'primary.dark',
+                                bgcolor: loading ? 'error.dark' : 'primary.dark',
+                                transform: loading ? 'rotate(90deg)' : 'none',
                             },
                             '&.Mui-disabled': {
                                 bgcolor: 'action.disabledBackground',
@@ -534,7 +571,37 @@ export default function QaPage() {
                         }}
                     >
                         {loading ? (
-                            <CircularProgress size={24} color="inherit" />
+                            <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+                                <CircularProgress
+                                    size={24}
+                                    color="inherit"
+                                    sx={{
+                                        position: 'absolute',
+                                        left: '50%',
+                                        top: '50%',
+                                        marginLeft: '-12px',
+                                        marginTop: '-12px',
+                                    }}
+                                />
+                                <DeleteIcon
+                                    sx={{
+                                        position: 'absolute',
+                                        left: '50%',
+                                        top: '50%',
+                                        marginLeft: '-12px',
+                                        marginTop: '-12px',
+                                        animation: 'fadeIn 0.3s ease-in-out',
+                                        '@keyframes fadeIn': {
+                                            '0%': {
+                                                opacity: 0,
+                                            },
+                                            '100%': {
+                                                opacity: 1,
+                                            },
+                                        },
+                                    }}
+                                />
+                            </Box>
                         ) : (
                             <SendIcon />
                         )}

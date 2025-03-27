@@ -35,6 +35,8 @@ import {
     Delete as DeleteIcon,
     Visibility as VisibilityIcon,
     Upload as UploadIcon,
+    Close as CloseIcon,
+    InsertDriveFile as InsertDriveFileIcon,
 } from '@mui/icons-material';
 import { documentService } from '@/app/services/document';
 import { knowledgeService } from '@/app/services/knowledge';
@@ -58,6 +60,7 @@ export default function DocumentsPage() {
     const [selectedKbId, setSelectedKbId] = useState<number | null>(null);
     const [uploadOpen, setUploadOpen] = useState(false);
     const [file, setFile] = useState<File | null>(null);
+    const [uploadLoading, setUploadLoading] = useState(false);
 
     const [formData, setFormData] = useState<DocumentCreateDTO>({
         title: '',
@@ -205,14 +208,39 @@ export default function DocumentsPage() {
 
     // 处理文件上传
     const handleUpload = async () => {
-        if (!file || !selectedKbId) return;
+        console.log('开始上传文件:', file?.name);
+        console.log('选择的知识库ID:', selectedKbId);
 
+        if (!file) {
+            console.error('未选择文件');
+            setSnackbar({
+                open: true,
+                message: t('documents.uploadError'),
+                severity: 'error',
+            });
+            return;
+        }
+
+        if (!selectedKbId) {
+            console.error('未选择知识库');
+            setSnackbar({
+                open: true,
+                message: t('documents.selectKbFirst'),
+                severity: 'error',
+            });
+            return;
+        }
+
+        setUploadLoading(true);
         const formData = new FormData();
         formData.append('file', file);
         formData.append('kbId', selectedKbId.toString());
 
         try {
-            await documentService.upload(formData);
+            console.log('发送上传请求...');
+            const response = await documentService.upload(formData);
+            console.log('上传响应:', response);
+
             setSnackbar({
                 open: true,
                 message: t('documents.uploadSuccess'),
@@ -228,6 +256,8 @@ export default function DocumentsPage() {
                 message: t('documents.uploadError'),
                 severity: 'error',
             });
+        } finally {
+            setUploadLoading(false);
         }
     };
 
@@ -272,7 +302,10 @@ export default function DocumentsPage() {
                         <Button
                             variant="contained"
                             startIcon={<UploadIcon />}
-                            onClick={() => setUploadOpen(true)}
+                            onClick={async () => {
+                                setUploadOpen(true);
+                                await fetchKnowledgeBases();
+                            }}
                             sx={{
                                 background: 'linear-gradient(45deg, #6C8EF2 30%, #76E3C4 90%)',
                                 '&:hover': {
@@ -475,28 +508,154 @@ export default function DocumentsPage() {
             <Dialog open={uploadOpen} onClose={() => setUploadOpen(false)} maxWidth="sm" fullWidth>
                 <DialogTitle>{t('documents.uploadDocument')}</DialogTitle>
                 <DialogContent>
-                    <Box sx={{ pt: 2 }}>
-                        <input
-                            type="file"
-                            onChange={(e) => setFile(e.target.files?.[0] || null)}
-                            accept=".txt,.md,.pdf,.doc,.docx"
-                        />
+                    <Box
+                        sx={{
+                            pt: 2,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            gap: 2
+                        }}
+                    >
+                        <FormControl fullWidth>
+                            <InputLabel>{t('knowledge.title')}</InputLabel>
+                            <Select
+                                value={selectedKbId || ''}
+                                onChange={(e) => setSelectedKbId(e.target.value as number)}
+                                label={t('knowledge.title')}
+                                disabled={uploadLoading}
+                            >
+                                <MenuItem value="">
+                                    <em>{t('documents.selectKbFirst')}</em>
+                                </MenuItem>
+                                {knowledgeBases.map((kb) => (
+                                    <MenuItem key={kb.id} value={kb.id}>
+                                        {kb.name}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
+
+                        <Box
+                            sx={{
+                                width: '100%',
+                                height: '200px',
+                                border: '2px dashed',
+                                borderColor: 'primary.main',
+                                borderRadius: 2,
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                cursor: 'pointer',
+                                bgcolor: alpha('#6C8EF2', 0.05),
+                                transition: 'all 0.3s ease',
+                                '&:hover': {
+                                    bgcolor: alpha('#6C8EF2', 0.1),
+                                    borderColor: 'primary.dark',
+                                }
+                            }}
+                            onClick={() => document.getElementById('file-upload')?.click()}
+                        >
+                            <input
+                                id="file-upload"
+                                type="file"
+                                onChange={(e) => setFile(e.target.files?.[0] || null)}
+                                accept=".txt,.md,.pdf,.doc,.docx"
+                                style={{ display: 'none' }}
+                            />
+                            <UploadIcon sx={{ fontSize: 48, color: 'primary.main', mb: 1 }} />
+                            <Typography variant="h6" color="primary">
+                                {file ? file.name : t('documents.dragAndDrop')}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                                {t('documents.supportedFormats')}
+                            </Typography>
+                        </Box>
+                        {file && (
+                            <Box
+                                sx={{
+                                    width: '100%',
+                                    p: 2,
+                                    bgcolor: 'background.paper',
+                                    borderRadius: 1,
+                                    border: '1px solid',
+                                    borderColor: 'divider',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between'
+                                }}
+                            >
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <InsertDriveFileIcon color="primary" />
+                                    <Box>
+                                        <Typography variant="body2" noWrap>
+                                            {file.name}
+                                        </Typography>
+                                        <Typography variant="caption" color="text.secondary">
+                                            {(file.size / 1024 / 1024).toFixed(2)} MB
+                                        </Typography>
+                                    </Box>
+                                </Box>
+                                <IconButton
+                                    size="small"
+                                    onClick={() => setFile(null)}
+                                    disabled={uploadLoading}
+                                >
+                                    <CloseIcon />
+                                </IconButton>
+                            </Box>
+                        )}
                     </Box>
                 </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setUploadOpen(false)}>{t('common.cancel')}</Button>
+                <DialogActions sx={{ p: 2, pt: 0 }}>
                     <Button
-                        onClick={handleUpload}
+                        onClick={() => {
+                            setUploadOpen(false);
+                            setFile(null);
+                        }}
+                        disabled={uploadLoading}
+                        sx={{ minWidth: 100 }}
+                    >
+                        {t('common.cancel')}
+                    </Button>
+                    <Button
+                        onClick={() => {
+                            console.log('点击上传按钮');
+                            handleUpload();
+                        }}
                         variant="contained"
-                        disabled={!file || !selectedKbId}
+                        disabled={!file || !selectedKbId || uploadLoading}
                         sx={{
+                            minWidth: 120,
+                            position: 'relative',
                             background: 'linear-gradient(45deg, #6C8EF2 30%, #76E3C4 90%)',
                             '&:hover': {
                                 background: 'linear-gradient(45deg, #5A7DE0 30%, #65D2B3 90%)',
                             },
+                            '&.Mui-disabled': {
+                                background: 'rgba(0, 0, 0, 0.12)',
+                            }
                         }}
                     >
-                        {t('common.upload')}
+                        {uploadLoading ? (
+                            <CircularProgress
+                                size={24}
+                                sx={{
+                                    color: 'white',
+                                    position: 'absolute',
+                                    top: '50%',
+                                    left: '50%',
+                                    marginTop: '-12px',
+                                    marginLeft: '-12px',
+                                }}
+                            />
+                        ) : (
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <UploadIcon fontSize="small" />
+                                {t('common.upload')}
+                            </Box>
+                        )}
                     </Button>
                 </DialogActions>
             </Dialog>
