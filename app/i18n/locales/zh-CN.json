@@ -138,7 +138,13 @@
   },
   "documents": {
     "title": "文档管理",
-    "parseStatus": "解析状态",
+    "parseStatus": {
+      "title": "解析状态",
+      "unparsed": "未解析",
+      "parsing": "解析中",
+      "success": "解析成功",
+      "failed": "解析失败"
+    },
     "createDocument": "创建文档",
     "editDocument": "编辑文档",
     "deleteDocument": "删除文档",
@@ -182,6 +188,7 @@
     "category": "分类",
     "documents": "文档",
     "llm": "LLM 配置",
+    "embeddingConfig": "Embedding配置",
     "users": "用户",
     "tags": "标签",
     "systemConfig": "系统配置"
@@ -223,5 +230,30 @@
     "pleaseEnterRemark": "请输入备注",
     "deleteConfirm": "确定要删除该配置吗？",
     "operateSuccess": "操作成功"
+  },
+  "embeddingConfig": {
+    "title": "Embedding模型配置",
+    "add": "新增配置",
+    "edit": "编辑配置",
+    "delete": "删除配置",
+    "deleteConfirm": "确定要删除该配置吗？",
+    "search": "搜索",
+    "reset": "重置",
+    "name": "配置名称",
+    "modelType": "模型编码",
+    "apiKey": "API密钥",
+    "baseUrl": "基础URL",
+    "dimensions": "维度",
+    "enabled": "启用状态",
+    "createTime": "创建时间",
+    "updateTime": "更新时间",
+    "remark": "备注",
+    "pleaseEnterName": "请输入配置名称",
+    "pleaseEnterModelType": "请输入模型编码",
+    "pleaseEnterApiKey": "请输入API密钥",
+    "pleaseEnterBaseUrl": "请输入基础URL",
+    "pleaseEnterDimensions": "请输入维度",
+    "operateSuccess": "操作成功",
+    "operateError": "操作失败"
   }
 } 

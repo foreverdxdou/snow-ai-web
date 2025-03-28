@@ -33,6 +33,7 @@ import {
     QuestionAnswer as QuestionAnswerIcon,
     SettingsOutlined,
     SettingsApplicationsOutlined,
+    Memory as MemoryIcon,
 } from '@mui/icons-material';
 import { ThemeLanguageSwitch } from '@/app/components/common/ThemeLanguageSwitch';
 import { useTranslation } from 'react-i18next';
@@ -85,6 +86,11 @@ export default function MainLayout({
             label: t('menu.llm'),
         },
         {
+            key: '/embedding-config',
+            icon: <MemoryIcon />,
+            label: t('menu.embeddingConfig'),
+        },
+        {
             key: '/users',
             icon: <PeopleIcon />,
             label: t('menu.users'),
@@ -97,14 +103,7 @@ export default function MainLayout({
         {
             key: '/system-config',
             icon: <SettingsOutlined />,
-            label: t('menu.systemConfig'),
-            children: [
-                {
-                    key: '/system-config',
-                    icon: <SettingsApplicationsOutlined />,
-                    label: t('systemConfig.title'),
-                },
-            ]
+            label: t('menu.systemConfig')
         },
     ];
 

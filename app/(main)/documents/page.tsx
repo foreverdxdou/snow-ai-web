@@ -28,6 +28,7 @@ import {
     Select,
     MenuItem,
     CircularProgress,
+    Chip,
 } from '@mui/material';
 import {
     Add as AddIcon,
@@ -363,7 +364,7 @@ export default function DocumentsPage() {
                                 <TableCell>{t('knowledge.title')}</TableCell>
                                 <TableCell>{t('documents.category')}</TableCell>
                                 <TableCell>{t('documents.tags')}</TableCell>
-                                <TableCell>{t('documents.parseStatus')}</TableCell>
+                                <TableCell>{t('documents.parseStatus.title')}</TableCell>
                                 <TableCell>{t('common.creator')}</TableCell>
                                 <TableCell>{t('common.createTime')}</TableCell>
                                 <TableCell>{t('common.operation')}</TableCell>
@@ -395,7 +396,57 @@ export default function DocumentsPage() {
                                         <TableCell>
                                             {document.tags?.map(tag => tag.name).join(', ') || '-'}
                                         </TableCell>
-                                        <TableCell>{document.parseStatus}</TableCell>
+                                        <TableCell>
+                                            {(() => {
+                                                switch (document.parseStatus) {
+                                                    case 0:
+                                                        return (
+                                                            <Chip
+                                                                label={t('documents.parseStatus.unparsed') || '未解析'}
+                                                                size="small"
+                                                                color="default"
+                                                                variant="outlined"
+                                                            />
+                                                        );
+                                                    case 1:
+                                                        return (
+                                                            <Chip
+                                                                label={t('documents.parseStatus.parsing') || '解析中'}
+                                                                size="small"
+                                                                color="info"
+                                                                variant="outlined"
+                                                            />
+                                                        );
+                                                    case 2:
+                                                        return (
+                                                            <Chip
+                                                                label={t('documents.parseStatus.success') || '解析成功'}
+                                                                size="small"
+                                                                color="success"
+                                                                variant="outlined"
+                                                            />
+                                                        );
+                                                    case 3:
+                                                        return (
+                                                            <Chip
+                                                                label={t('documents.parseStatus.failed') || '解析失败'}
+                                                                size="small"
+                                                                color="error"
+                                                                variant="outlined"
+                                                            />
+                                                        );
+                                                    default:
+                                                        return (
+                                                            <Chip
+                                                                label={t('documents.parseStatus.unparsed') || '未解析'}
+                                                                size="small"
+                                                                color="default"
+                                                                variant="outlined"
+                                                            />
+                                                        );
+                                                }
+                                            })()}
+                                        </TableCell>
                                         <TableCell>{document.creatorName}</TableCell>
                                         <TableCell>
                                             {new Date(document.createTime).toLocaleString()}
