@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
     Box,
@@ -48,6 +48,115 @@ import type { KbCategory } from '@/app/types/category';
 import { Pagination } from '@/app/components/common/Pagination';
 import { alpha } from '@mui/material/styles';
 import { useTranslation } from 'react-i18next';
+import { useDebouncedCallback, useThrottledCallback } from '@/app/utils/performance';
+import { useVirtualizer } from '@tanstack/react-virtual';
+
+interface DocumentRowProps {
+    document: Document;
+    onEdit: (document: Document) => void;
+    onDelete: (id: number) => void;
+    onPreview: (id: number) => void;
+    categories: KbCategory[];
+    t: (key: string) => string;
+}
+
+// 使用React.memo优化表格行组件
+const DocumentRow = React.memo(({ document, onEdit, onDelete, onPreview, categories, t }: DocumentRowProps) => (
+    <TableRow>
+        <TableCell>{document.title}</TableCell>
+        <TableCell>{document.kbName}</TableCell>
+        <TableCell>
+            {categories.find((c: KbCategory) => c.id === document.categoryId)?.name || '-'}
+        </TableCell>
+        <TableCell>
+            {document.tags?.map(tag => tag.name).join(', ') || '-'}
+        </TableCell>
+        <TableCell>
+            {(() => {
+                switch (document.parseStatus) {
+                    case 0:
+                        return (
+                            <Chip
+                                label={t('documents.parseStatus.unparsed') || '未解析'}
+                                size="small"
+                                color="default"
+                                variant="outlined"
+                            />
+                        );
+                    case 1:
+                        return (
+                            <Chip
+                                label={t('documents.parseStatus.parsing') || '解析中'}
+                                size="small"
+                                color="info"
+                                variant="outlined"
+                            />
+                        );
+                    case 2:
+                        return (
+                            <Chip
+                                label={t('documents.parseStatus.success') || '解析成功'}
+                                size="small"
+                                color="success"
+                                variant="outlined"
+                            />
+                        );
+                    case 3:
+                        return (
+                            <Chip
+                                label={t('documents.parseStatus.failed') || '解析失败'}
+                                size="small"
+                                color="error"
+                                variant="outlined"
+                            />
+                        );
+                    default:
+                        return (
+                            <Chip
+                                label={t('documents.parseStatus.unparsed') || '未解析'}
+                                size="small"
+                                color="default"
+                                variant="outlined"
+                            />
+                        );
+                }
+            })()}
+        </TableCell>
+        <TableCell>{document.creatorName}</TableCell>
+        <TableCell>
+            {new Date(document.createTime).toLocaleString()}
+        </TableCell>
+        <TableCell>
+            <Tooltip title={t('common.preview')}>
+                <IconButton
+                    onClick={() => onPreview(document.id)}
+                    size="small"
+                >
+                    <VisibilityIcon />
+                </IconButton>
+            </Tooltip>
+            <Tooltip title={t('common.edit')}>
+                <IconButton
+                    onClick={() => onEdit(document)}
+                    size="small"
+                >
+                    <EditIcon />
+                </IconButton>
+            </Tooltip>
+            <Tooltip title={t('common.delete')}>
+                <IconButton
+                    onClick={() => onDelete(document.id)}
+                    size="small"
+                    color="error"
+                >
+                    <DeleteIcon />
+                </IconButton>
+            </Tooltip>
+        </TableCell>
+    </TableRow>
+));
+
+DocumentRow.displayName = 'DocumentRow';
 
 export default function DocumentsPage() {
     const { t } = useTranslation();
@@ -83,8 +192,8 @@ export default function DocumentsPage() {
         severity: 'success' as 'success' | 'error',
     });
 
-    // 获取文档列表
-    const fetchDocuments = async () => {
+    // 使用useCallback优化函数
+    const fetchDocuments = useCallback(async () => {
         try {
             setLoading(true);
             const response = await documentService.getList({
@@ -104,20 +213,18 @@ export default function DocumentsPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [pagination.current, pagination.pageSize, selectedKbId, t]);
 
-    // 获取知识库列表
-    const fetchKnowledgeBases = async () => {
+    const fetchKnowledgeBases = useCallback(async () => {
         try {
             const response = await knowledgeService.getUserKnowledgeBases();
             setKnowledgeBases(response.data.data);
         } catch (error) {
             console.error('获取知识库列表失败:', error);
         }
-    };
+    }, []);
 
-    // 获取分类列表
-    const fetchCategories = async (kbId: number) => {
+    const fetchCategories = useCallback(async (kbId: number) => {
         try {
             const response = await categoryService.getList({
                 current: 1,
@@ -127,25 +234,26 @@ export default function DocumentsPage() {
         } catch (error) {
             console.error('获取分类列表失败:', error);
         }
-    };
+    }, []);
 
+    // 使用useEffect优化副作用
     useEffect(() => {
         fetchDocuments();
-    }, [pagination.current, pagination.pageSize, selectedKbId]);
+    }, [fetchDocuments]);
 
     useEffect(() => {
         fetchKnowledgeBases();
-    }, []);
+    }, [fetchKnowledgeBases]);
 
-    // 处理知识库选择变化
-    const handleKbChange = (kbId: number) => {
+    // 使用防抖优化搜索
+    const handleKbChange = useDebouncedCallback((kbId: number) => {
         setSelectedKbId(kbId);
         setFormData(prev => ({ ...prev, kbId }));
         fetchCategories(kbId);
-    };
+    }, [fetchCategories], 300);
 
-    // 打开新增/编辑对话框
-    const handleOpen = (document?: Document) => {
+    // 使用useCallback优化事件处理函数
+    const handleOpen = useCallback((document?: Document) => {
         if (document) {
             setEditingDocument(document);
             setFormData({
@@ -167,10 +275,9 @@ export default function DocumentsPage() {
             });
         }
         setOpen(true);
-    };
+    }, [selectedKbId, fetchCategories]);
 
-    // 关闭对话框
-    const handleClose = () => {
+    const handleClose = useCallback(() => {
         setOpen(false);
         setEditingDocument(null);
         setFormData({
@@ -180,10 +287,9 @@ export default function DocumentsPage() {
             kbId: selectedKbId || 0,
             tags: [],
         });
-    };
+    }, [selectedKbId]);
 
-    // 提交表单
-    const handleSubmit = async () => {
+    const handleSubmit = useCallback(async () => {
         try {
             if (editingDocument) {
                 await documentService.update(editingDocument.id, formData);
@@ -198,14 +304,27 @@ export default function DocumentsPage() {
             handleClose();
             fetchDocuments();
         } catch (error) {
-            console.error(`${editingDocument ? '更新' : '创建'}文档失败:`, error);
+            console.error('保存文档失败:', error);
             setSnackbar({
                 open: true,
-                message: editingDocument ? t('documents.updateError') : t('documents.createError'),
+                message: t('documents.saveError'),
                 severity: 'error',
             });
         }
-    };
+    }, [editingDocument, formData, handleClose, fetchDocuments, t]);
+
+    // 使用useMemo优化计算属性
+    const tableHeight = useMemo(() => {
+        return Math.min(600, window.innerHeight - 300);
+    }, []);
+
+    // 使用虚拟滚动优化长列表
+    const rowVirtualizer = useVirtualizer({
+        count: documents.length,
+        getScrollElement: () => document.querySelector('.MuiTableBody-root'),
+        estimateSize: () => 53, // 估计每行高度
+        overscan: 5,
+    });
 
     // 处理文件上传
     const handleUpload = async () => {
@@ -373,7 +492,7 @@ export default function DocumentsPage() {
                         <TableBody>
                             {loading ? (
                                 <TableRow>
-                                    <TableCell colSpan={6} align="center">
+                                    <TableCell colSpan={8} align="center">
                                         <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
                                             <CircularProgress />
                                         </Box>
@@ -381,104 +500,21 @@ export default function DocumentsPage() {
                                 </TableRow>
                             ) : documents.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={6} align="center">
+                                    <TableCell colSpan={8} align="center">
                                         {t('common.noData')}
                                     </TableCell>
                                 </TableRow>
                             ) : (
-                                documents.map((document) => (
-                                    <TableRow key={document.id}>
-                                        <TableCell>{document.title}</TableCell>
-                                        <TableCell>{document.kbName}</TableCell>
-                                        <TableCell>
-                                            {categories.find(c => c.id === document.categoryId)?.name || '-'}
-                                        </TableCell>
-                                        <TableCell>
-                                            {document.tags?.map(tag => tag.name).join(', ') || '-'}
-                                        </TableCell>
-                                        <TableCell>
-                                            {(() => {
-                                                switch (document.parseStatus) {
-                                                    case 0:
-                                                        return (
-                                                            <Chip
-                                                                label={t('documents.parseStatus.unparsed') || '未解析'}
-                                                                size="small"
-                                                                color="default"
-                                                                variant="outlined"
-                                                            />
-                                                        );
-                                                    case 1:
-                                                        return (
-                                                            <Chip
-                                                                label={t('documents.parseStatus.parsing') || '解析中'}
-                                                                size="small"
-                                                                color="info"
-                                                                variant="outlined"
-                                                            />
-                                                        );
-                                                    case 2:
-                                                        return (
-                                                            <Chip
-                                                                label={t('documents.parseStatus.success') || '解析成功'}
-                                                                size="small"
-                                                                color="success"
-                                                                variant="outlined"
-                                                            />
-                                                        );
-                                                    case 3:
-                                                        return (
-                                                            <Chip
-                                                                label={t('documents.parseStatus.failed') || '解析失败'}
-                                                                size="small"
-                                                                color="error"
-                                                                variant="outlined"
-                                                            />
-                                                        );
-                                                    default:
-                                                        return (
-                                                            <Chip
-                                                                label={t('documents.parseStatus.unparsed') || '未解析'}
-                                                                size="small"
-                                                                color="default"
-                                                                variant="outlined"
-                                                            />
-                                                        );
-                                                }
-                                            })()}
-                                        </TableCell>
-                                        <TableCell>{document.creatorName}</TableCell>
-                                        <TableCell>
-                                            {new Date(document.createTime).toLocaleString()}
-                                        </TableCell>
-                                        <TableCell>
-                                            <Tooltip title={t('common.preview')}>
-                                                <IconButton
-                                                    onClick={() => router.push(`/documents/${document.id}`)}
-                                                    size="small"
-                                                >
-                                                    <VisibilityIcon />
-                                                </IconButton>
-                                            </Tooltip>
-                                            <Tooltip title={t('common.edit')}>
-                                                <IconButton
-                                                    onClick={() => handleOpen(document)}
-                                                    size="small"
-                                                >
-                                                    <EditIcon />
-                                                </IconButton>
-                                            </Tooltip>
-                                            <Tooltip title={t('common.delete')}>
-                                                <IconButton
-                                                    onClick={() => handleDelete(document.id)}
-                                                    size="small"
-                                                    color="error"
-                                                >
-                                                    <DeleteIcon />
-                                                </IconButton>
-                                            </Tooltip>
-                                        </TableCell>
-                                    </TableRow>
+                                rowVirtualizer.getVirtualItems().map((virtualItem: { index: number }) => (
+                                    <DocumentRow
+                                        key={documents[virtualItem.index].id}
+                                        document={documents[virtualItem.index]}
+                                        onEdit={(document: Document) => handleOpen(document)}
+                                        onDelete={(id: number) => handleDelete(id)}
+                                        onPreview={(id: number) => router.push(`/documents/${id}`)}
+                                        categories={categories}
+                                        t={t}
+                                    />
                                 ))
                             )}
                         </TableBody>
