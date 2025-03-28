@@ -138,6 +138,7 @@
   },
   "documents": {
     "title": "Document Management",
+    "parseStatus": "Parse Status",
     "createDocument": "Create Document",
     "editDocument": "Edit Document",
     "deleteDocument": "Delete Document",
@@ -182,7 +183,8 @@
     "documents": "Documents",
     "llm": "LLM Config",
     "users": "Users",
-    "tags": "Tags"
+    "tags": "Tags",
+    "systemConfig": "System Config"
   },
   "qa": {
     "title": "AI Assistant",
@@ -201,5 +203,25 @@
     "connecting": "Connecting...",
     "thinking": "Thinking...",
     "noKbSelected": "No knowledge base selected, using general Q&A mode"
+  },
+  "systemConfig": {
+    "title": "System Configuration",
+    "configKey": "Config Key",
+    "configValue": "Config Value",
+    "configName": "Config Name",
+    "description": "Description",
+    "createTime": "Create Time",
+    "updateTime": "Update Time",
+    "search": "Search",
+    "reset": "Reset",
+    "add": "Add Config",
+    "edit": "Edit Config",
+    "delete": "Delete Config",
+    "pleaseEnterConfigKey": "Please enter config key",
+    "pleaseEnterConfigType": "Please enter config type",
+    "pleaseEnterConfigValue": "Please enter config value",
+    "pleaseEnterRemark": "Please enter remark",
+    "deleteConfirm": "Are you sure to delete this config?",
+    "operateSuccess": "Operation successful"
   }
 } 

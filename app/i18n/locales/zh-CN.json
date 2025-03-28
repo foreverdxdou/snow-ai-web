@@ -138,6 +138,7 @@
   },
   "documents": {
     "title": "文档管理",
+    "parseStatus": "解析状态",
     "createDocument": "创建文档",
     "editDocument": "编辑文档",
     "deleteDocument": "删除文档",
@@ -182,7 +183,8 @@
     "documents": "文档",
     "llm": "LLM 配置",
     "users": "用户",
-    "tags": "标签"
+    "tags": "标签",
+    "systemConfig": "系统配置"
   },
   "qa": {
     "title": "智能问答",
@@ -201,5 +203,25 @@
     "connecting": "正在连接...",
     "thinking": "思考中...",
     "noKbSelected": "未选择知识库，将使用通用问答模式"
+  },
+  "systemConfig": {
+    "title": "系统配置管理",
+    "configKey": "配置键",
+    "configValue": "配置值",
+    "configType": "配置类型",
+    "description": "描述",
+    "createTime": "创建时间",
+    "updateTime": "更新时间",
+    "search": "搜索",
+    "reset": "重置",
+    "add": "新增配置",
+    "edit": "编辑配置",
+    "delete": "删除配置",
+    "pleaseEnterConfigKey": "请输入配置键",
+    "pleaseEnterConfigType": "请输入配置类型",
+    "pleaseEnterConfigValue": "请输入配置值",
+    "pleaseEnterRemark": "请输入备注",
+    "deleteConfirm": "确定要删除该配置吗？",
+    "operateSuccess": "操作成功"
   }
 } 

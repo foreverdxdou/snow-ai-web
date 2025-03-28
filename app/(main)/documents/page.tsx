@@ -360,8 +360,10 @@ export default function DocumentsPage() {
                         <TableHead>
                             <TableRow>
                                 <TableCell>{t('common.name')}</TableCell>
+                                <TableCell>{t('knowledge.title')}</TableCell>
                                 <TableCell>{t('documents.category')}</TableCell>
                                 <TableCell>{t('documents.tags')}</TableCell>
+                                <TableCell>{t('documents.parseStatus')}</TableCell>
                                 <TableCell>{t('common.creator')}</TableCell>
                                 <TableCell>{t('common.createTime')}</TableCell>
                                 <TableCell>{t('common.operation')}</TableCell>
@@ -386,12 +388,14 @@ export default function DocumentsPage() {
                                 documents.map((document) => (
                                     <TableRow key={document.id}>
                                         <TableCell>{document.title}</TableCell>
+                                        <TableCell>{document.kbName}</TableCell>
                                         <TableCell>
                                             {categories.find(c => c.id === document.categoryId)?.name || '-'}
                                         </TableCell>
                                         <TableCell>
                                             {document.tags?.map(tag => tag.name).join(', ') || '-'}
                                         </TableCell>
+                                        <TableCell>{document.parseStatus}</TableCell>
                                         <TableCell>{document.creatorName}</TableCell>
                                         <TableCell>
                                             {new Date(document.createTime).toLocaleString()}

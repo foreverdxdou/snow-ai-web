@@ -31,6 +31,8 @@ import {
     LocalOffer as LocalOfferIcon,
     ChevronLeft as ChevronLeftIcon,
     QuestionAnswer as QuestionAnswerIcon,
+    SettingsOutlined,
+    SettingsApplicationsOutlined,
 } from '@mui/icons-material';
 import { ThemeLanguageSwitch } from '@/app/components/common/ThemeLanguageSwitch';
 import { useTranslation } from 'react-i18next';
@@ -91,6 +93,18 @@ export default function MainLayout({
             key: '/tags',
             icon: <LocalOfferIcon />,
             label: t('menu.tags'),
+        },
+        {
+            key: '/system-config',
+            icon: <SettingsOutlined />,
+            label: t('menu.systemConfig'),
+            children: [
+                {
+                    key: '/system-config',
+                    icon: <SettingsApplicationsOutlined />,
+                    label: t('systemConfig.title'),
+                },
+            ]
         },
     ];
 

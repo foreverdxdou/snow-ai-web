@@ -9,6 +9,7 @@ export interface Document {
   creatorId: number;
   creatorName: string;
   status: number;
+  parseStatus: number;
   version: number;
   createTime: string;
   updateTime: string;
