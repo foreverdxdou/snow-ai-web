@@ -13,8 +13,7 @@ import {
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import type { Document, DocumentCreateDTO } from '@/app/types/document';
-import type { KbCategory } from '@/app/types/category';
-import type { Tag } from '@/app/types/tag';
+import { useDocumentData } from '@/app/(main)/documents/hooks/useDocumentData';
 import { CommonButton } from '@/app/components/common/CommonButton';
 
 interface DocumentDialogProps {
@@ -24,8 +23,6 @@ interface DocumentDialogProps {
     formData: DocumentCreateDTO;
     setFormData: (data: DocumentCreateDTO) => void;
     onSubmit: () => void;
-    categories: KbCategory[];
-    tags: Tag[];
 }
 
 export const DocumentDialog: React.FC<DocumentDialogProps> = ({
@@ -34,10 +31,13 @@ export const DocumentDialog: React.FC<DocumentDialogProps> = ({
     editingDocument,
     formData,
     setFormData,
-    onSubmit,
-    categories,
-    tags,
+    onSubmit
 }) => {
+    if(!open) return null;
+    const {
+        categories,
+        tags,
+    } = useDocumentData();
     const { t } = useTranslation();
 
     const handleFormDataChange = (field: keyof DocumentCreateDTO, value: any) => {

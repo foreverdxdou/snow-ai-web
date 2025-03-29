@@ -55,19 +55,12 @@ export default function DocumentsPage() {
         handleOpen,
         handleClose,
         handleSubmit,
-        handleUpload,
         open,
         editingDocument,
         formData,
         setFormData,
         uploadOpen,
         setUploadOpen,
-        file,
-        setFile,
-        uploadLoading,
-        setUploadLoading,
-        selectedKbId,
-        setSelectedKbId,
         snackbar,
         setSnackbar,
     } = useDocumentActions(refresh);
@@ -171,6 +164,15 @@ export default function DocumentsPage() {
         }
     ], [t, handleOpen, handleDelete, router]);
 
+    // 处理分页变化
+    const handlePageChange = (page: number, pageSize: number) => {
+        setParams({
+            ...params,
+            current: Number(page),
+            size: Number(pageSize),
+        });
+    };
+
     return (
         <PerformanceLayout>
             <Box 
@@ -227,16 +229,10 @@ export default function DocumentsPage() {
                         }}
                     >
                         <Pagination
-                            current={parseInt(String(params.current))}
-                            pageSize={parseInt(String(params.size))}
+                            current={params.current}
+                            pageSize={params.size}
                             total={total}
-                            onChange={(page, pageSize) => {
-                                setParams((prev: SearchParams) => ({
-                                    ...prev,
-                                    current: parseInt(String(page)),
-                                    size: parseInt(String(pageSize)),
-                                }));
-                            }}
+                            onChange={handlePageChange}
                         />
                     </Box>
                 </Box>
@@ -249,8 +245,6 @@ export default function DocumentsPage() {
                     formData={formData}
                     setFormData={setFormData}
                     onSubmit={handleSubmit}
-                    categories={categories}
-                    tags={tags}
                 />
 
                 {/* 文档上传对话框 */}

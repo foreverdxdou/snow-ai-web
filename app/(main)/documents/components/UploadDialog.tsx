@@ -28,6 +28,7 @@ export const UploadDialog: React.FC<UploadDialogProps> = ({
     open,
     onClose,
 }) => {
+    if(!open) return null;
     const {
         refresh,
         tags,

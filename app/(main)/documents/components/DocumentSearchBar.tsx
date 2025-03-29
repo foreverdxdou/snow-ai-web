@@ -99,8 +99,7 @@ export const DocumentSearchBar: React.FC<DocumentSearchBarProps> = ({
                     value={params.kbId}
                     options={knowledgeBases.map(kb => ({ 
                         id: kb.id, 
-                        name: kb.name,
-                        description: kb.description 
+                        name: kb.name
                     }))}
                     onChange={(value) => handleSearch({ kbId: value as number })}
                     showDescription

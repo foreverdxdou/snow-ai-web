@@ -24,6 +24,7 @@ export const useDocumentData = () => {
         params,
         setParams,
         refresh,
+        pagination,
     } = usePerformanceData<Document>({
         fetchData: documentService.getList,
         defaultParams: {
@@ -92,5 +93,6 @@ export const useDocumentData = () => {
         categories,
         tags,
         knowledgeBases,
+        pagination
     };
 }; 
