@@ -49,7 +49,8 @@
       "page": "页",
       "go": "确定"
     },
-    "profile": "个人资料"
+    "profile": "个人资料",
+    "detail": "查看详情"
   },
   "auth": {
     "loginTitle": "登录 Snow AI",
@@ -149,6 +150,7 @@
     "searchByName": "按名称搜索",
     "searchByCategory": "按分类筛选",
     "searchByStatus": "按状态筛选",
+    "searchByKb": "按知识库筛选",
     "enabled": "已启用",
     "disabled": "已禁用",
     "all": "全部状态",
@@ -192,9 +194,15 @@
     "selectTags": "选择标签",
     "content": "内容",
     "noContent": "暂无内容",
-    "dragAndDrop": "拖放文件到此处或点击上传",
-    "supportedFormats": "支持 .txt, .md, .pdf, .doc, .docx 格式",
-    "selectKbFirst": "请先选择知识库"
+    "dragAndDrop": "拖拽文件到此处或点击上传",
+    "supportedFormats": "支持的格式：txt, md, pdf, doc, docx, ppt, pptx, xls, xlsx",
+    "selectKb": "选择知识库",
+    "selectKbPlaceholder": "请选择知识库",
+    "noDescription": "暂无描述",
+    "maxFileSize": "最大文件大小：{{size}}",
+    "fileTooLarge": "文件过大",
+    "uploading": "上传中...",
+    "kbName": "知识库"
   },
   "menu": {
     "home": "首页",

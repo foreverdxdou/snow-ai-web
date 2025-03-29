@@ -37,7 +37,6 @@ import {
 import { categoryService } from '@/app/services/category';
 import type { KbCategory } from '@/app/types/category';
 import { Pagination } from '@/app/components/common/Pagination';
-import { alpha } from '@mui/material/styles';
 import { useTranslation } from 'react-i18next';
 
 export default function CategoryPage() {
@@ -63,7 +62,6 @@ export default function CategoryPage() {
         message: '',
         severity: 'success' as 'success' | 'error',
     });
-    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [selectedCategory, setSelectedCategory] = useState<KbCategory | null>(null);
     const [parentCategories, setParentCategories] = useState<KbCategory[]>([]);
     const [menuPosition, setMenuPosition] = useState<{

@@ -49,7 +49,8 @@
       "page": "page",
       "go": "Go"
     },
-    "profile": "Profile"
+    "profile": "Profile",
+    "detail": "View Details"
   },
   "auth": {
     "loginTitle": "Login to Snow AI",
@@ -185,17 +186,24 @@
     "selectTags": "Select Tags",
     "content": "Content",
     "noContent": "No content",
-    "dragAndDrop": "Drag and drop files here or click to upload",
-    "supportedFormats": "Supported formats: .txt, .md, .pdf, .doc, .docx",
-    "selectKbFirst": "Please select a knowledge base first",
+    "dragAndDrop": "Drag and drop file here or click to upload",
+    "supportedFormats": "Supported formats: txt, md, pdf, doc, docx, ppt, pptx, xls, xlsx",
+    "selectKb": "Select Knowledge Base",
+    "selectKbPlaceholder": "Please select a knowledge base",
+    "noDescription": "No description",
     "searchByName": "Search by name",
     "searchByCategory": "Filter by category",
     "searchByTags": "Filter by tags",
     "searchByStatus": "Filter by status",
+    "searchByKb": "Filter by knowledge base",
     "enabled": "Enabled",
     "disabled": "Disabled",
     "all": "All status",
-    "resetButton": "Reset"
+    "resetButton": "Reset",
+    "maxFileSize": "Maximum file size: {{size}}",
+    "fileTooLarge": "File too large",
+    "uploading": "Uploading...",
+    "kbName": "Knowledge Base"
   },
   "menu": {
     "home": "Home",

@@ -16,6 +16,7 @@ export interface Document {
   updateTime: string;
   fileSize?: number;
   fileType?: string;
+  fileUrl?: string;
   tags?: DocumentTag[];
 }
 
