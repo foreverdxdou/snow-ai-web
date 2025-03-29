@@ -3,31 +3,24 @@
 import React, { useMemo } from 'react';
 import {
     Box,
-    Button,
-    IconButton,
     Tooltip,
     Alert,
     Snackbar,
     Stack,
 } from '@mui/material';
-import {
-    Edit as EditIcon,
-    Delete as DeleteIcon,
-    Download as DownloadIcon,
-    Visibility as VisibilityIcon,
-} from '@mui/icons-material';
 import type { Document } from '@/app/types/document';
 import { Pagination } from '@/app/components/common/Pagination';
 import { useTranslation } from 'react-i18next';
 import { PerformanceLayout } from '@/app/components/common/PerformanceLayout';
 import { PerformanceTable } from '@/app/components/common/PerformanceTable';
 import { formatDate, formatFileSize } from '@/app/utils/format';
-import { SearchBar } from '@/app/(main)/documents/components/SearchBar';
+import { CommonButton} from '@/app/components/common/CommonButton';
 import { DocumentDialog } from '@/app/(main)/documents/components/DocumentDialog';
 import { UploadDialog } from '@/app/(main)/documents/components/UploadDialog';
 import { useDocumentActions } from '@/app/(main)/documents/hooks/useDocumentActions';
 import { useDocumentData } from '@/app/(main)/documents/hooks/useDocumentData';
 import { useRouter } from 'next/navigation';
+import { DocumentSearchBar } from '@/app/(main)/documents/components/DocumentSearchBar';
 
 // 定义搜索参数类型
 interface SearchParams { 
@@ -47,7 +40,6 @@ export default function DocumentsPage() {
     const {
         documents,
         loading,
-        error,
         total,
         params,
         setParams,
@@ -63,7 +55,6 @@ export default function DocumentsPage() {
         handleOpen,
         handleClose,
         handleSubmit,
-        handleDownload,
         handleUpload,
         open,
         editingDocument,
@@ -74,6 +65,7 @@ export default function DocumentsPage() {
         file,
         setFile,
         uploadLoading,
+        setUploadLoading,
         selectedKbId,
         setSelectedKbId,
         snackbar,
@@ -151,35 +143,28 @@ export default function DocumentsPage() {
         {
             key: 'id' as keyof Document,
             title: t('common.actions'),
-            width: 120,
             render: (_: any, record: Document) => record && (
                 <Stack direction="row" spacing={1}>
                     <Tooltip title={t('common.detail')}>
-                        <IconButton 
-                            size="small" 
+                        <CommonButton
+                            buttonVariant="detail"
                             onClick={() => router.push(`/documents/${record.id}`)}
-                            color="primary"
                         >
-                            <VisibilityIcon fontSize="small" />
-                        </IconButton>
+                        </CommonButton>
                     </Tooltip>
                     <Tooltip title={t('common.edit')}>
-                        <IconButton 
-                            size="small" 
+                        <CommonButton
+                            buttonVariant="edit"
                             onClick={() => handleOpen(record)}
-                            color="primary"
                         >
-                            <EditIcon fontSize="small" />
-                        </IconButton>
+                        </CommonButton>
                     </Tooltip>
                     <Tooltip title={t('common.delete')}>
-                        <IconButton 
-                            size="small" 
+                        <CommonButton
+                            buttonVariant="delete"
                             onClick={() => handleDelete(record.id)}
-                            color="error"
                         >
-                            <DeleteIcon fontSize="small" />
-                        </IconButton>
+                        </CommonButton>
                     </Tooltip>
                 </Stack>
             )
@@ -197,7 +182,7 @@ export default function DocumentsPage() {
                 }}
             >
                 {/* 搜索栏组件 */}
-                <SearchBar 
+                <DocumentSearchBar 
                     params={params as SearchParams}
                     setParams={setParams}
                     refresh={refresh}
@@ -272,13 +257,6 @@ export default function DocumentsPage() {
                 <UploadDialog
                     open={uploadOpen}
                     onClose={() => setUploadOpen(false)}
-                    file={file}
-                    setFile={setFile}
-                    uploadLoading={uploadLoading}
-                    selectedKbId={selectedKbId}
-                    setSelectedKbId={setSelectedKbId}
-                    onUpload={handleUpload}
-                    knowledgeBases={knowledgeBases}
                 />
 
                 {/* 提示消息 */}

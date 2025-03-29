@@ -50,6 +50,7 @@
       "go": "Go"
     },
     "profile": "Profile",
+    "dragAndDrop": "Drag and drop file here or click to upload",
     "detail": "View Details"
   },
   "auth": {
@@ -186,8 +187,9 @@
     "selectTags": "Select Tags",
     "content": "Content",
     "noContent": "No content",
-    "dragAndDrop": "Drag and drop file here or click to upload",
-    "supportedFormats": "Supported formats: txt, md, pdf, doc, docx, ppt, pptx, xls, xlsx",
+    "accept": "txt, md, pdf, doc, docx, ppt, pptx, xls, xlsx",
+    "supportedFormats": "Supported formats: {{accept}}",
+    "selectKb": "Select Tag",
     "selectKb": "Select Knowledge Base",
     "selectKbPlaceholder": "Please select a knowledge base",
     "noDescription": "No description",

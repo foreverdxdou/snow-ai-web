@@ -50,6 +50,7 @@
       "go": "确定"
     },
     "profile": "个人资料",
+    "dragAndDrop": "拖拽文件到此处或点击上传",
     "detail": "查看详情"
   },
   "auth": {
@@ -194,8 +195,9 @@
     "selectTags": "选择标签",
     "content": "内容",
     "noContent": "暂无内容",
-    "dragAndDrop": "拖拽文件到此处或点击上传",
-    "supportedFormats": "支持的格式：txt, md, pdf, doc, docx, ppt, pptx, xls, xlsx",
+    "accept": "txt, md, pdf, doc, docx, ppt, pptx, xls, xlsx",
+    "supportedFormats": "支持的格式：{{accept}}",
+    "selectTag": "选择标签",
     "selectKb": "选择知识库",
     "selectKbPlaceholder": "请选择知识库",
     "noDescription": "暂无描述",

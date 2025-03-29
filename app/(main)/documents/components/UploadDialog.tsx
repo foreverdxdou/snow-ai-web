@@ -1,36 +1,25 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
     Dialog,
     DialogTitle,
     DialogContent,
     DialogActions,
-    Button,
     FormControl,
-    InputLabel,
-    Select,
-    MenuItem,
     Box,
-    CircularProgress,
     Typography,
-    Paper,
     IconButton,
-    Alert,
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
-import type { KnowledgeBaseVO } from '@/app/types/knowledge';
-import { CloudUpload as CloudUploadIcon, Close as CloseIcon, Warning as WarningIcon } from '@mui/icons-material';
-import { formatFileSize } from '@/app/utils/format';
+import { Close as CloseIcon } from '@mui/icons-material';
+import { CommonButton } from '@/app/components/common/CommonButton';
+import { CommonSelect } from '@/app/components/common/CommonSelect';
+import { CommonFileUpload } from '@/app/components/common/CommonFileUpload';
+import { useDocumentActions } from '@/app/(main)/documents/hooks/useDocumentActions';
+import { useDocumentData } from '@/app/(main)/documents/hooks/useDocumentData';
 
 interface UploadDialogProps {
     open: boolean;
     onClose: () => void;
-    file: File | null;
-    setFile: (file: File | null) => void;
-    uploadLoading: boolean;
-    selectedKbId: number | null;
-    setSelectedKbId: (id: number | null) => void;
-    onUpload: () => void;
-    knowledgeBases: KnowledgeBaseVO[];
 }
 
 const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
@@ -38,56 +27,74 @@ const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
 export const UploadDialog: React.FC<UploadDialogProps> = ({
     open,
     onClose,
-    file,
-    setFile,
-    uploadLoading,
-    selectedKbId,
-    setSelectedKbId,
-    onUpload,
-    knowledgeBases,
 }) => {
+    const {
+        refresh,
+        tags,
+        knowledgeBases,
+    } = useDocumentData();
+
+    // 使用自定义 Hook 管理文档操作
+    const {
+        file,
+        setFile,
+        uploadLoading,
+        setUploadLoading,
+        selectedKbId,
+        setSelectedKbId,
+        selectedTagId,
+        setSelectedTagId,
+        handleUpload,
+    } = useDocumentActions(refresh);
+
     const { t } = useTranslation();
+    const [isFileTooLarge, setIsFileTooLarge] = useState(false);
 
     const handleClose = () => {
         setFile(null);
+        setIsFileTooLarge(false);
         setSelectedKbId(null);
+        setSelectedTagId(null);
         onClose();
     };
 
-    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const selectedFile = event.target.files?.[0];
-        if (selectedFile) {
-            if (selectedFile.size > MAX_FILE_SIZE) {
-                setFile(null);
-                return;
-            }
-            setFile(selectedFile);
-        }
+    const handleFileChange = (file: File) => {
+        setFile(file);
+        setIsFileTooLarge(file.size > MAX_FILE_SIZE);
     };
 
-    const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
-        event.preventDefault();
-        event.stopPropagation();
+    const handleDragOver = (e: React.DragEvent<Element>) => {
+        e.preventDefault();
+        e.stopPropagation();
     };
 
-    const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
-        event.preventDefault();
-        event.stopPropagation();
-        const droppedFile = event.dataTransfer.files?.[0];
+    const handleDrop = (e: React.DragEvent<Element>) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const droppedFile = e.dataTransfer.files?.[0];
         if (droppedFile) {
-            if (droppedFile.size > MAX_FILE_SIZE) {
-                setFile(null);
-                return;
-            }
-            setFile(droppedFile);
+            handleFileChange(droppedFile);
         }
     };
 
-    const handleRemoveFile = () => {
-        setFile(null);
+    const clickUpload = async () => {
+        if (!file || !selectedKbId) {
+            return;
+        }
+        setUploadLoading(true);
+        try {
+            handleUpload();
+            handleClose();
+        } finally {
+            setUploadLoading(false);
+        }
     };
 
-    const isFileTooLarge = file?.size ? file.size > MAX_FILE_SIZE : false;
+    const getUploadButtonText = () => {
+        if (uploadLoading) return t('documents.uploading');
+        if (isFileTooLarge) return t('documents.fileTooLarge');
+        return t('common.upload');
+    };
 
     return (
         <Dialog 
@@ -124,74 +131,18 @@ export const UploadDialog: React.FC<UploadDialogProps> = ({
             </DialogTitle>
             <DialogContent>
                 <Box sx={{ pt: 2 }}>
-                    {/* 文件大小限制提示 */}
-                    <Alert 
-                        severity="info" 
-                        sx={{ mb: 2 }}
-                        icon={<WarningIcon />}
-                    >
-                        {t('documents.maxFileSize', { size: formatFileSize(MAX_FILE_SIZE) })}
-                    </Alert>
-
                     {/* 文件上传区域 */}
-                    <Paper
-                        variant="outlined"
-                        sx={{
-                            p: 3,
-                            textAlign: 'center',
-                            border: '2px dashed',
-                            borderColor: file ? (isFileTooLarge ? 'error.main' : 'primary.main') : 'divider',
-                            bgcolor: file ? (isFileTooLarge ? 'error.lighter' : 'primary.lighter') : 'background.paper',
-                            transition: 'all 0.3s ease',
-                            cursor: 'pointer',
-                            '&:hover': {
-                                borderColor: isFileTooLarge ? 'error.main' : 'primary.main',
-                                bgcolor: isFileTooLarge ? 'error.lighter' : 'primary.lighter',
-                            }
-                        }}
+                    <CommonFileUpload
+                        file={file}
+                        maxFileSize={MAX_FILE_SIZE}
+                        onFileChange={handleFileChange}
                         onDragOver={handleDragOver}
                         onDrop={handleDrop}
-                        onClick={() => document.getElementById('file-upload')?.click()}
-                    >
-                        <input
-                            id="file-upload"
-                            type="file"
-                            style={{ display: 'none' }}
-                            onChange={handleFileChange}
-                            accept=".txt,.md,.pdf,.doc,.docx"
-                        />
-                        <CloudUploadIcon 
-                            sx={{ 
-                                fontSize: 48, 
-                                color: file ? (isFileTooLarge ? 'error.main' : 'primary.main') : 'text.secondary',
-                                mb: 1
-                            }} 
-                        />
-                        <Typography 
-                            variant="body1" 
-                            color={isFileTooLarge ? 'error.main' : 'text.secondary'} 
-                            gutterBottom
-                        >
-                            {file ? (
-                                <Box>
-                                    <Typography component="span" color="inherit">
-                                        {file.name}
-                                    </Typography>
-                                    <Typography 
-                                        component="span" 
-                                        variant="body2" 
-                                        color="text.secondary"
-                                        sx={{ display: 'block', mt: 0.5 }}
-                                    >
-                                        {formatFileSize(file.size)}
-                                    </Typography>
-                                </Box>
-                            ) : t('documents.dragAndDrop')}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                            {t('documents.supportedFormats')}
-                        </Typography>
-                    </Paper>
+                        error={isFileTooLarge}
+                        errorMessage={t('documents.fileTooLarge')}
+                        accept= {t('documents.accept')}
+                        supportedFormats= {t('documents.supportedFormats', { accept: t('documents.accept') })}
+                    />
 
                     {/* 知识库选择 */}
                     <FormControl 
@@ -214,82 +165,55 @@ export const UploadDialog: React.FC<UploadDialogProps> = ({
                             }
                         }}
                     >
-                        <InputLabel>{t('documents.selectKb')}</InputLabel>
-                        <Select
-                            value={selectedKbId || ''}
+                        <CommonSelect
                             label={t('documents.selectKb')}
-                            onChange={(e) => setSelectedKbId(e.target.value as number)}
+                            value={selectedKbId || ''}
+                            options={knowledgeBases.map((kb) => ({ id: kb.id, name: kb.name }))}
+                            onChange={(value) => setSelectedKbId(value as number)}
                             sx={{
                                 '& .MuiSelect-select': {
                                     py: 1.5
                                 }
                             }}
-                        >
-                            <MenuItem value="">
-                            {t('documents.selectKbPlaceholder')}
-                            </MenuItem>
-                            {knowledgeBases.map((kb) => (
-                                <MenuItem key={kb.id} value={kb.id}>
-                                    <Box sx={{ py: 0.5 }}>
-                                        <Typography 
-                                            variant="body1" 
-                                            sx={{ 
-                                                fontWeight: 500,
-                                                color: 'text.primary'
-                                            }}
-                                        >
-                                            {kb.name}
-                                        </Typography>
-              
-                                    </Box>
-                                </MenuItem>
-                            ))}
-                        </Select>
+                            showAll
+                            allValue = {null as unknown as string | number}
+                            showAllLabel = {t('documents.selectKbPlaceholder')}
+                            formControlSx = {{ }}
+                        />
+
+                        <CommonSelect
+                            label={t('documents.selectTag')}
+                            value={selectedTagId || ''}
+                            options={tags.map((tag) => ({ id: tag.id, name: tag.name }))}
+                            onChange={(value) => setSelectedTagId(value as number)}
+                            sx={{
+                                '& .MuiSelect-select': {
+                                    py: 1.5
+                                }
+                            }}
+                            showAll
+                            allValue = {null as unknown as string | number}
+                            showAllLabel = {t('documents.selectKbPlaceholder')}
+                            formControlSx = {{ mt:3 }}
+                        />
+  
                     </FormControl>
                 </Box>
             </DialogContent>
             <DialogActions sx={{ px: 3, pb: 3 }}>
-                <Button 
+                <CommonButton 
                     onClick={handleClose}
-                    variant="outlined"
-                    sx={{
-                        minWidth: 100,
-                        borderColor: 'primary.main',
-                        color: 'primary.main',
-                        '&:hover': {
-                            borderColor: 'primary.dark',
-                            bgcolor: 'action.hover'
-                        }
-                    }}
+                    buttonVariant="cancel"
                 >
                     {t('common.cancel')}
-                </Button>
-                <Button
-                    onClick={onUpload}
-                    variant="contained"
-                    disabled={!file || uploadLoading || isFileTooLarge}
-                    startIcon={uploadLoading ? <CircularProgress size={20} color="inherit" /> : undefined}
-                    sx={{
-                        minWidth: 120,
-                        background: isFileTooLarge 
-                            ? 'error.main'
-                            : 'linear-gradient(45deg, #6C8EF2 30%, #76E3C4 90%)',
-                        '&:hover': {
-                            background: isFileTooLarge 
-                                ? 'error.dark'
-                                : 'linear-gradient(45deg, #5A7DE0 30%, #65D2B3 90%)',
-                        },
-                        '&.Mui-disabled': {
-                            background: 'action.disabledBackground',
-                        }
-                    }}
+                </CommonButton>
+                <CommonButton
+                    onClick={clickUpload}
+                    buttonVariant="submit"
+                    disabled={!file || !selectedKbId || uploadLoading || isFileTooLarge}
                 >
-                    {uploadLoading 
-                        ? t('documents.uploading') 
-                        : isFileTooLarge 
-                            ? t('documents.fileTooLarge') 
-                            : t('common.upload')}
-                </Button>
+                    {getUploadButtonText()}
+                </CommonButton>
             </DialogActions>
         </Dialog>
     );

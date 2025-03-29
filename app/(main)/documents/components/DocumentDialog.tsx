@@ -4,7 +4,6 @@ import {
     DialogTitle,
     DialogContent,
     DialogActions,
-    Button,
     TextField,
     FormControl,
     InputLabel,
@@ -16,6 +15,7 @@ import { useTranslation } from 'react-i18next';
 import type { Document, DocumentCreateDTO } from '@/app/types/document';
 import type { KbCategory } from '@/app/types/category';
 import type { Tag } from '@/app/types/tag';
+import { CommonButton } from '@/app/components/common/CommonButton';
 
 interface DocumentDialogProps {
     open: boolean;
@@ -100,20 +100,15 @@ export const DocumentDialog: React.FC<DocumentDialogProps> = ({
                 </Box>
             </DialogContent>
             <DialogActions>
-                <Button onClick={onClose}>{t('common.cancel')}</Button>
-                <Button
+                <CommonButton buttonVariant="cancel" onClick={onClose}>{t('common.cancel')}</CommonButton>
+
+                <CommonButton
                     onClick={onSubmit}
-                    variant="contained"
+                    buttonVariant="submit"
                     disabled={!formData.title}
-                    sx={{
-                        background: 'linear-gradient(45deg, #6C8EF2 30%, #76E3C4 90%)',
-                        '&:hover': {
-                            background: 'linear-gradient(45deg, #5A7DE0 30%, #65D2B3 90%)',
-                        },
-                    }}
                 >
                     {t('common.submit')}
-                </Button>
+                </CommonButton>
             </DialogActions>
         </Dialog>
     );

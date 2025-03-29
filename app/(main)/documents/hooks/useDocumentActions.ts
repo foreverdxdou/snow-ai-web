@@ -17,6 +17,7 @@ export const useDocumentActions = (refresh: () => void) => {
     const [file, setFile] = useState<File | null>(null);
     const [uploadLoading, setUploadLoading] = useState(false);
     const [selectedKbId, setSelectedKbId] = useState<number | null>(null);
+    const [selectedTagId, setSelectedTagId] = useState<number | null>(null);
     const [snackbar, setSnackbar] = useState<SnackbarState>({
         open: false,
         message: '',
@@ -157,6 +158,7 @@ export const useDocumentActions = (refresh: () => void) => {
         }
 
         if (!selectedKbId) {
+            console.log('selectedKbId');
             setSnackbar({
                 open: true,
                 message: t('documents.selectKbFirst'),
@@ -169,6 +171,9 @@ export const useDocumentActions = (refresh: () => void) => {
         const formData = new FormData();
         formData.append('file', file);
         formData.append('kbId', selectedKbId.toString());
+        if (selectedTagId) {
+            formData.append('tagIds', selectedTagId.toString());
+        }
 
         try {
             await documentService.upload(formData);
@@ -209,8 +214,11 @@ export const useDocumentActions = (refresh: () => void) => {
         file,
         setFile,
         uploadLoading,
+        setUploadLoading,
         selectedKbId,
         setSelectedKbId,
+        selectedTagId,
+        setSelectedTagId,
         snackbar,
         setSnackbar,
     };
