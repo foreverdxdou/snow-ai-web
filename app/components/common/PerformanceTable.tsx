@@ -1,4 +1,6 @@
-import React, { useMemo } from 'react';
+'use client';
+
+import React, { useMemo, useState, useEffect } from 'react';
 import {
     Table,
     TableBody,
@@ -15,9 +17,10 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 interface PerformanceTableProps<T> {
     data: T[];
     columns: {
-        key: string;
-        header: string;
-        render: (item: T) => React.ReactNode;
+        key: keyof T;
+        title: string;
+        width?: number;
+        render?: (value: any, record: T) => React.ReactNode;
     }[];
     loading?: boolean;
     emptyMessage?: string;
@@ -25,24 +28,38 @@ interface PerformanceTableProps<T> {
     overscan?: number;
 }
 
-export function PerformanceTable<T extends { id: number | string }>({
+export function PerformanceTable<T>({
     data,
     columns,
     loading = false,
     emptyMessage = '暂无数据',
-    rowHeight = 53,
-    overscan = 5,
+    rowHeight = 48,
+    overscan = 10,
 }: PerformanceTableProps<T>) {
-    const tableHeight = useMemo(() => {
-        return Math.min(600, window.innerHeight - 300);
+    const [tableHeight, setTableHeight] = useState(600);
+
+    useEffect(() => {
+        // 在客户端计算表格高度
+        const calculateHeight = () => {
+            if (typeof window !== 'undefined') {
+                setTableHeight(Math.min(600, window.innerHeight - 300));
+            }
+        };
+
+        calculateHeight();
+        window.addEventListener('resize', calculateHeight);
+        return () => window.removeEventListener('resize', calculateHeight);
     }, []);
 
     const rowVirtualizer = useVirtualizer({
         count: data.length,
-        getScrollElement: () => document.querySelector('.MuiTableBody-root'),
+        getScrollElement: () => document.getElementById('table-container'),
         estimateSize: () => rowHeight,
         overscan,
     });
+
+    const paddingTop = rowVirtualizer.getVirtualItems()[0]?.start || 0;
+    const paddingBottom = rowVirtualizer.getTotalSize() - (paddingTop + rowVirtualizer.getVirtualItems().length * rowHeight);
 
     if (loading) {
         return (
@@ -61,40 +78,57 @@ export function PerformanceTable<T extends { id: number | string }>({
     }
 
     return (
-        <TableContainer component={Paper} sx={{ height: tableHeight }}>
-            <Table stickyHeader>
+        <Paper 
+            id="table-container" 
+            sx={{ 
+                height: tableHeight, 
+                overflow: 'auto',
+                position: 'relative',
+            }}
+        >
+            <Table stickyHeader sx={{ borderCollapse: 'separate' }}>
                 <TableHead>
                     <TableRow>
                         {columns.map((column) => (
-                            <TableCell key={column.key}>{column.header}</TableCell>
+                            <TableCell 
+                                key={String(column.key)}
+                                sx={{ 
+                                    width: column.width,
+                                    backgroundColor: 'background.paper',
+                                }}
+                            >
+                                {column.title}
+                            </TableCell>
                         ))}
                     </TableRow>
                 </TableHead>
                 <TableBody>
-                    {rowVirtualizer.getVirtualItems().map((virtualItem) => {
-                        const item = data[virtualItem.index];
+                    {paddingTop > 0 && (
+                        <TableRow>
+                            <TableCell style={{ height: paddingTop }} colSpan={columns.length} />
+                        </TableRow>
+                    )}
+                    {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                        const row = data[virtualRow.index];
                         return (
-                            <TableRow
-                                key={item.id}
-                                style={{
-                                    height: `${virtualItem.size}px`,
-                                    transform: `translateY(${virtualItem.start}px)`,
-                                    position: 'absolute',
-                                    top: 0,
-                                    left: 0,
-                                    width: '100%',
-                                }}
-                            >
+                            <TableRow key={virtualRow.index}>
                                 {columns.map((column) => (
-                                    <TableCell key={column.key}>
-                                        {column.render(item)}
+                                    <TableCell key={String(column.key)}>
+                                        {column.render
+                                            ? column.render(row[column.key], row)
+                                            : row[column.key]?.toString()}
                                     </TableCell>
                                 ))}
                             </TableRow>
                         );
                     })}
+                    {paddingBottom > 0 && (
+                        <TableRow>
+                            <TableCell style={{ height: paddingBottom }} colSpan={columns.length} />
+                        </TableRow>
+                    )}
                 </TableBody>
             </Table>
-        </TableContainer>
+        </Paper>
     );
 } 

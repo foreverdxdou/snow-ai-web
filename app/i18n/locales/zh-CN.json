@@ -48,7 +48,8 @@
       "jumpTo": "跳转到",
       "page": "页",
       "go": "确定"
-    }
+    },
+    "profile": "个人资料"
   },
   "auth": {
     "loginTitle": "登录 Snow AI",
@@ -93,6 +94,13 @@
   },
   "category": {
     "title": "分类管理",
+    "searchByName": "按名称搜索",
+    "searchByStatus": "按状态筛选",
+    "enabled": "已启用",
+    "disabled": "已禁用",
+    "all": "全部状态",
+    "searchButton": "搜索",
+    "resetButton": "重置",
     "createCategory": "创建分类",
     "editCategory": "编辑分类",
     "deleteCategory": "删除分类",
@@ -138,6 +146,13 @@
   },
   "documents": {
     "title": "文档管理",
+    "searchByName": "按名称搜索",
+    "searchByCategory": "按分类筛选",
+    "searchByStatus": "按状态筛选",
+    "enabled": "已启用",
+    "disabled": "已禁用",
+    "all": "全部状态",
+    "resetButton": "重置",
     "parseStatus": {
       "title": "解析状态",
       "unparsed": "未解析",

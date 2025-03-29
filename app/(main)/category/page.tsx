@@ -70,6 +70,10 @@ export default function CategoryPage() {
         mouseX: number;
         mouseY: number;
     } | null>(null);
+    const [searchParams, setSearchParams] = useState({
+        name: '',
+        status: undefined as number | undefined
+    });
 
     const fetchCategories = async () => {
         try {
@@ -77,6 +81,7 @@ export default function CategoryPage() {
             const response = await categoryService.getList({
                 current: pagination.current,
                 size: pagination.pageSize,
+                ...searchParams
             });
             setCategories(response.data.data.records);
             setPagination(prev => ({ ...prev, total: response.data.data.total }));
@@ -107,7 +112,7 @@ export default function CategoryPage() {
     useEffect(() => {
         fetchCategories();
         fetchParentCategories();
-    }, [pagination.current, pagination.pageSize]);
+    }, [pagination.current, pagination.pageSize, searchParams]);
 
     const handleOpen = async (category?: KbCategory, parentCategory?: KbCategory) => {
         await fetchParentCategories();
@@ -223,33 +228,124 @@ export default function CategoryPage() {
         setSelectedCategory(null);
     };
 
+    const handleSearch = () => {
+        fetchCategories();
+    };
+
+    const handleReset = () => {
+        setSearchParams({
+            name: '',
+            status: undefined
+        });
+    };
+
     return (
-        <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-            <Box sx={{
-                p: 3,
-                borderBottom: '1px solid',
-                borderColor: 'divider',
-                bgcolor: 'background.paper',
-            }}>
-                <Box sx={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                }}>
-                    <Typography variant="h5" sx={{ fontWeight: 600 }}>
-                        {t('category.title')}
-                    </Typography>
+        <Box 
+            sx={{ 
+                height: '100%', 
+                display: 'flex', 
+                flexDirection: 'column',
+                bgcolor: 'background.default'
+            }}
+        >
+            {/* 顶部搜索区域 */}
+            <Box 
+                sx={{
+                    p: 4,
+                }}
+            >
+                <Box 
+                    sx={{
+                        display: 'flex',
+                        flexDirection: { xs: 'column', md: 'row' },
+                        justifyContent: 'space-between',
+                        alignItems: { xs: 'stretch', md: 'center' },
+                        gap: 2
+                    }}
+                >
+                    {/* 搜索条件组 */}
+                    <Box 
+                        sx={{ 
+                            display: 'flex', 
+                            flexDirection: { xs: 'column', sm: 'row' },
+                            alignItems: { xs: 'stretch', sm: 'center' },
+                            gap: 2,
+                            flex: 1
+                        }}
+                    >
+                        <TextField
+                            size="small"
+                            placeholder={t('category.searchByName')}
+                            value={searchParams.name}
+                            onChange={(e) => setSearchParams(prev => ({ ...prev, name: e.target.value }))}
+                            sx={{ 
+                                width: { xs: '100%', sm: 200 },
+                                '& .MuiOutlinedInput-root': {
+                                    bgcolor: 'background.paper',
+                                    '&:hover': {
+                                        '& > fieldset': {
+                                            borderColor: 'primary.main',
+                                        }
+                                    }
+                                }
+                            }}
+                        />
+                        <FormControl 
+                            size="small" 
+                            sx={{ 
+                                width: { xs: '100%', sm: 150 },
+                                '& .MuiOutlinedInput-root': {
+                                    bgcolor: 'background.paper'
+                                }
+                            }}
+                        >
+                            <InputLabel>{t('category.searchByStatus')}</InputLabel>
+                            <Select
+                                value={searchParams.status === undefined ? '' : searchParams.status}
+                                onChange={(e) => setSearchParams(prev => ({ 
+                                    ...prev, 
+                                    status: e.target.value === '' ? undefined : Number(e.target.value) 
+                                }))}
+                                label={t('category.searchByStatus')}
+                            >
+                                <MenuItem value="">{t('category.all')}</MenuItem>
+                                <MenuItem value={1}>{t('category.enabled')}</MenuItem>
+                                <MenuItem value={0}>{t('category.disabled')}</MenuItem>
+                            </Select>
+                        </FormControl>
+                        <Box sx={{ display: 'flex', gap: 1 }}>
+                            <Button
+                                variant="outlined"
+                                onClick={handleReset}
+                                sx={{
+                                    minWidth: { xs: '100%', sm: '120px' },
+                                    height: '40px',
+                                    borderColor: 'primary.main',
+                                    color: 'primary.main',
+                                    '&:hover': {
+                                        borderColor: 'primary.dark',
+                                        bgcolor: 'action.hover'
+                                    }
+                                }}
+                            >
+                                {t('category.resetButton')}
+                            </Button>
+                        </Box>
+                    </Box>
+                    {/* 新增按钮 */}
                     <Button
                         variant="contained"
                         startIcon={<AddIcon />}
                         onClick={() => handleOpen()}
                         sx={{
+                            minWidth: { xs: '100%', md: 'auto' },
+                            height: '44px',
+                            px: 3,
                             background: 'linear-gradient(45deg, #6C8EF2 30%, #76E3C4 90%)',
                             '&:hover': {
                                 background: 'linear-gradient(45deg, #5A7DE0 30%, #65D2B3 90%)',
                             },
-                            height: '44px',
-                            px: 3
+                            boxShadow: '0 3px 5px 2px rgba(108, 142, 242, .3)'
                         }}
                     >
                         {t('category.createCategory')}
@@ -257,14 +353,46 @@ export default function CategoryPage() {
                 </Box>
             </Box>
 
-            <Box sx={{ p: 3, flex: 1, overflow: 'auto' }}>
+            {/* 表格内容区域 */}
+            <Box 
+                sx={{ 
+                    p: 3, 
+                    flex: 1, 
+                    overflow: 'auto',
+                    '& .MuiPaper-root': {
+                        borderRadius: 2,
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                    }
+                }}
+            >
                 {loading ? (
-                    <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+                    <Box 
+                        sx={{ 
+                            display: 'flex', 
+                            justifyContent: 'center', 
+                            alignItems: 'center',
+                            height: '200px'
+                        }}
+                    >
                         <CircularProgress />
                     </Box>
                 ) : (
                     <>
-                        <TableContainer component={Paper}>
+                        <TableContainer 
+                            component={Paper}
+                            sx={{
+                                '& .MuiTableCell-head': {
+                                    bgcolor: 'background.neutral',
+                                    fontWeight: 600
+                                },
+                                '& .MuiTableRow-root:hover': {
+                                    bgcolor: 'action.hover'
+                                },
+                                '& .MuiTableCell-root': {
+                                    borderColor: 'divider'
+                                }
+                            }}
+                        >
                             <Table>
                                 <TableHead>
                                     <TableRow>
@@ -272,7 +400,7 @@ export default function CategoryPage() {
                                         <TableCell>{t('common.description')}</TableCell>
                                         <TableCell>{t('category.parentCategory')}</TableCell>
                                         <TableCell>{t('common.status')}</TableCell>
-                                        <TableCell>{t('common.operation')}</TableCell>
+                                        <TableCell align="right">{t('common.operation')}</TableCell>
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
@@ -282,9 +410,7 @@ export default function CategoryPage() {
                                             onContextMenu={(e) => handleContextMenu(e, category)}
                                             sx={{
                                                 cursor: 'context-menu',
-                                                '&:hover': {
-                                                    bgcolor: (theme) => alpha(theme.palette.primary.main, 0.04),
-                                                },
+                                                transition: 'background-color 0.2s'
                                             }}
                                         >
                                             <TableCell>{category.name}</TableCell>
@@ -296,27 +422,40 @@ export default function CategoryPage() {
                                                 <Switch
                                                     checked={category.status === 1}
                                                     onChange={(e) => handleStatusChange(category.id, e.target.checked ? 1 : 0)}
+                                                    color="primary"
                                                 />
                                             </TableCell>
-                                            <TableCell>
-                                                <Tooltip title={t('common.edit')}>
-                                                    <IconButton
-                                                        onClick={() => handleOpen(category)}
-                                                        color="primary"
-                                                        size="small"
-                                                    >
-                                                        <EditIcon />
-                                                    </IconButton>
-                                                </Tooltip>
-                                                <Tooltip title={t('common.delete')}>
-                                                    <IconButton
-                                                        onClick={() => handleDelete(category.id)}
-                                                        color="error"
-                                                        size="small"
-                                                    >
-                                                        <DeleteIcon />
-                                                    </IconButton>
-                                                </Tooltip>
+                                            <TableCell align="right">
+                                                <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+                                                    <Tooltip title={t('common.edit')}>
+                                                        <IconButton
+                                                            onClick={() => handleOpen(category)}
+                                                            color="primary"
+                                                            size="small"
+                                                            sx={{
+                                                                '&:hover': {
+                                                                    bgcolor: 'primary.lighter'
+                                                                }
+                                                            }}
+                                                        >
+                                                            <EditIcon fontSize="small" />
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                    <Tooltip title={t('common.delete')}>
+                                                        <IconButton
+                                                            onClick={() => handleDelete(category.id)}
+                                                            color="error"
+                                                            size="small"
+                                                            sx={{
+                                                                '&:hover': {
+                                                                    bgcolor: 'error.lighter'
+                                                                }
+                                                            }}
+                                                        >
+                                                            <DeleteIcon fontSize="small" />
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                </Box>
                                             </TableCell>
                                         </TableRow>
                                     ))}
@@ -324,7 +463,22 @@ export default function CategoryPage() {
                             </Table>
                         </TableContainer>
 
-                        <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
+                        <Box 
+                            sx={{ 
+                                mt: 2, 
+                                display: 'flex', 
+                                justifyContent: 'flex-end',
+                                '& .MuiPaginationItem-root': {
+                                    '&.Mui-selected': {
+                                        bgcolor: 'primary.main',
+                                        color: 'primary.contrastText',
+                                        '&:hover': {
+                                            bgcolor: 'primary.dark'
+                                        }
+                                    }
+                                }
+                            }}
+                        >
                             <Pagination
                                 current={pagination.current}
                                 pageSize={pagination.pageSize}
@@ -342,18 +496,28 @@ export default function CategoryPage() {
                 )}
             </Box>
 
-            <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-                <DialogTitle>
+            {/* 其他弹窗和提示组件保持不变 */}
+            <Dialog 
+                open={open} 
+                onClose={handleClose} 
+                maxWidth="sm" 
+                fullWidth
+                PaperProps={{
+                    sx: {
+                        borderRadius: 2
+                    }
+                }}
+            >
+                <DialogTitle sx={{ pb: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
                     {editingCategory ? t('category.editCategory') : t('category.createCategory')}
                 </DialogTitle>
-                <DialogContent>
-                    <Box sx={{ pt: 2 }}>
+                <DialogContent sx={{ mt: 2 }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                         <TextField
                             fullWidth
                             label={t('common.name')}
                             value={formData.name}
                             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                            sx={{ mb: 2 }}
                             required
                             error={!formData.name}
                             helperText={!formData.name ? t('category.nameRequired') : ''}
@@ -365,9 +529,8 @@ export default function CategoryPage() {
                             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                             multiline
                             rows={4}
-                            sx={{ mb: 2 }}
                         />
-                        <FormControl fullWidth sx={{ mb: 2 }}>
+                        <FormControl fullWidth>
                             <InputLabel>{t('category.parentCategory')}</InputLabel>
                             <Select
                                 value={formData.parentId || ''}
@@ -384,17 +547,28 @@ export default function CategoryPage() {
                         </FormControl>
                     </Box>
                 </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleClose}>{t('common.cancel')}</Button>
+                <DialogActions sx={{ p: 2, borderTop: '1px solid', borderColor: 'divider' }}>
+                    <Button 
+                        onClick={handleClose}
+                        sx={{
+                            minWidth: '100px'
+                        }}
+                    >
+                        {t('common.cancel')}
+                    </Button>
                     <Button
                         onClick={handleSubmit}
                         variant="contained"
                         disabled={!formData.name}
                         sx={{
+                            minWidth: '100px',
                             background: 'linear-gradient(45deg, #6C8EF2 30%, #76E3C4 90%)',
                             '&:hover': {
                                 background: 'linear-gradient(45deg, #5A7DE0 30%, #65D2B3 90%)',
                             },
+                            '&:disabled': {
+                                background: 'rgba(0, 0, 0, 0.12)'
+                            }
                         }}
                     >
                         {t('common.submit')}
@@ -411,13 +585,28 @@ export default function CategoryPage() {
                         ? { top: menuPosition.mouseY, left: menuPosition.mouseX }
                         : undefined
                 }
-            >
-                <MenuItem onClick={() => {
-                    if (selectedCategory) {
-                        handleOpen(undefined, selectedCategory);
+                PaperProps={{
+                    sx: {
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                        borderRadius: 1
                     }
-                    handleCloseMenu();
-                }}>
+                }}
+            >
+                <MenuItem 
+                    onClick={() => {
+                        if (selectedCategory) {
+                            handleOpen(undefined, selectedCategory);
+                        }
+                        handleCloseMenu();
+                    }}
+                    sx={{
+                        py: 1,
+                        px: 2,
+                        '&:hover': {
+                            bgcolor: 'action.hover'
+                        }
+                    }}
+                >
                     {t('category.addSubCategory')}
                 </MenuItem>
             </Menu>
@@ -426,11 +615,16 @@ export default function CategoryPage() {
                 open={snackbar.open}
                 autoHideDuration={3000}
                 onClose={() => setSnackbar({ ...snackbar, open: false })}
+                anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
             >
                 <Alert
                     onClose={() => setSnackbar({ ...snackbar, open: false })}
                     severity={snackbar.severity}
-                    sx={{ width: '100%' }}
+                    sx={{ 
+                        width: '100%',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                        borderRadius: 1
+                    }}
                 >
                     {snackbar.message}
                 </Alert>

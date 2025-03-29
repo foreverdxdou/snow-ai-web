@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslation } from 'react-i18next';
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
     Box,
     Typography,
@@ -34,6 +34,50 @@ import {
 import { SystemConfig, SystemConfigQuery, SystemConfigSaveRequest } from '@/app/types/system-config';
 import { systemConfigService } from '@/app/services/system-config';
 import { Pagination } from '@/app/components/common/Pagination';
+import { PerformanceLayout } from '@/app/components/common/PerformanceLayout';
+import { useDebouncedCallback } from '@/app/utils/performance';
+import { useVirtualizer } from '@tanstack/react-virtual';
+
+// 使用 React.memo 优化表格行组件
+const ConfigRow = React.memo(({ 
+    row, 
+    onEdit, 
+    onDelete 
+}: { 
+    row: SystemConfig; 
+    onEdit: (record: SystemConfig) => void; 
+    onDelete: (id: number) => void;
+}) => (
+    <TableRow>
+        <TableCell>{row.configKey}</TableCell>
+        <TableCell>{row.configType}</TableCell>
+        <TableCell>{row.configValue}</TableCell>
+        <TableCell>{row.description}</TableCell>
+        <TableCell>{new Date(row.createTime).toLocaleString()}</TableCell>
+        <TableCell>{new Date(row.updateTime).toLocaleString()}</TableCell>
+        <TableCell align="right">
+            <Tooltip title="编辑">
+                <IconButton
+                    size="small"
+                    onClick={() => onEdit(row)}
+                >
+                    <EditIcon />
+                </IconButton>
+            </Tooltip>
+            <Tooltip title="删除">
+                <IconButton
+                    size="small"
+                    color="error"
+                    onClick={() => onDelete(row.id)}
+                >
+                    <DeleteIcon />
+                </IconButton>
+            </Tooltip>
+        </TableCell>
+    </TableRow>
+));
+
+ConfigRow.displayName = 'ConfigRow';
 
 export default function SystemConfigPage() {
     const { t } = useTranslation();
@@ -63,7 +107,8 @@ export default function SystemConfigPage() {
         severity: 'success' as 'success' | 'error',
     });
 
-    const fetchData = async (params: SystemConfigQuery) => {
+    // 使用 useCallback 优化函数
+    const fetchData = useCallback(async (params: SystemConfigQuery) => {
         try {
             setLoading(true);
             const res = await systemConfigService.getList(params);
@@ -72,7 +117,7 @@ export default function SystemConfigPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
     useEffect(() => {
         fetchData({
@@ -80,29 +125,32 @@ export default function SystemConfigPage() {
             pageNum: current,
             pageSize: pageSize,
         });
-    }, [current, pageSize]);
+    }, [current, pageSize, fetchData, searchForm]);
 
-    const handleSearch = () => {
+    // 使用防抖优化搜索
+    const handleSearch = useDebouncedCallback(() => {
         setCurrent(1);
         fetchData({
             ...searchForm,
             pageNum: 1,
         });
-    };
+    }, [searchForm, fetchData], 300);
 
-    const handleReset = () => {
+    const handleReset = useCallback(() => {
         setSearchForm({
             pageNum: 1,
             pageSize: pageSize,
+            configKey: '',
+            configType: '',
         });
         setCurrent(1);
         fetchData({
             pageNum: 1,
             pageSize: pageSize,
         });
-    };
+    }, [pageSize, fetchData]);
 
-    const handleAdd = () => {
+    const handleAdd = useCallback(() => {
         setDialogTitle(t('systemConfig.add'));
         setEditingRecord(null);
         setFormData({
@@ -112,9 +160,9 @@ export default function SystemConfigPage() {
             configType: '',
         });
         setDialogOpen(true);
-    };
+    }, [t]);
 
-    const handleEdit = (record: SystemConfig) => {
+    const handleEdit = useCallback((record: SystemConfig) => {
         setDialogTitle(t('systemConfig.edit'));
         setEditingRecord(record);
         setFormData({
@@ -125,9 +173,9 @@ export default function SystemConfigPage() {
             configType: record.configType,
         });
         setDialogOpen(true);
-    };
+    }, [t]);
 
-    const handleDelete = async (id: number) => {
+    const handleDelete = useCallback(async (id: number) => {
         if (!window.confirm(t('systemConfig.deleteConfirm'))) return;
         try {
             await systemConfigService.delete(id);
@@ -149,17 +197,16 @@ export default function SystemConfigPage() {
                 severity: 'error',
             });
         }
-    };
+    }, [t, searchForm, current, pageSize, fetchData]);
 
-    const handleDialogClose = () => {
+    const handleDialogClose = useCallback(() => {
         setDialogOpen(false);
         setEditingRecord(null);
-    };
+    }, []);
 
-    const handleDialogSubmit = async () => {
+    const handleDialogSubmit = useCallback(async () => {
         try {
             if (editingRecord) {
-                console.log(formData);
                 await systemConfigService.update(editingRecord.id, formData);
             } else {
                 await systemConfigService.add(formData);
@@ -183,231 +230,225 @@ export default function SystemConfigPage() {
                 severity: 'error',
             });
         }
-    };
+    }, [editingRecord, formData, t, searchForm, current, pageSize, fetchData]);
 
-    const handlePageChange = (page: number, size: number) => {
+    const handlePageChange = useCallback((page: number, size: number) => {
         setCurrent(page);
         setPageSize(size);
-    };
+    }, []);
+
+    // 使用 useMemo 优化计算属性
+    const tableHeight = useMemo(() => {
+        return Math.min(600, window.innerHeight - 300);
+    }, []);
+
+    // 使用虚拟滚动优化长列表
+    const rowVirtualizer = useVirtualizer({
+        count: data.length,
+        getScrollElement: () => document.querySelector('.MuiTableBody-root'),
+        estimateSize: () => 53, // 估计每行高度
+        overscan: 5,
+    });
 
     return (
-        <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-            <Box sx={{
-                p: 3,
-                borderBottom: '1px solid',
-                borderColor: 'divider',
-                bgcolor: 'background.paper',
-            }}>
+        <PerformanceLayout>
+            <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                 <Box sx={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    mb: 2,
+                    p: 3,
+                    borderBottom: '1px solid',
+                    borderColor: 'divider',
+                    bgcolor: 'background.paper',
                 }}>
-                    <Typography variant="h5" sx={{ fontWeight: 600 }}>
-                        {t('systemConfig.title')}
-                    </Typography>
-                    <Button
-                        variant="contained"
-                        startIcon={<AddIcon />}
-                        onClick={handleAdd}
-                        sx={{
-                            background: 'linear-gradient(45deg, #6C8EF2 30%, #76E3C4 90%)',
-                            '&:hover': {
-                                background: 'linear-gradient(45deg, #5A7DE0 30%, #65D2B3 90%)',
-                            },
-                            height: '44px',
-                            px: 3
-                        }}
-                    >
-                        {t('systemConfig.add')}
-                    </Button>
+                    <Box sx={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        mb: 2,
+                    }}>
+                        <Typography variant="h5" sx={{ fontWeight: 600 }}>
+                            {t('systemConfig.title')}
+                        </Typography>
+                        <Button
+                            variant="contained"
+                            startIcon={<AddIcon />}
+                            onClick={handleAdd}
+                            sx={{
+                                background: 'linear-gradient(45deg, #6C8EF2 30%, #76E3C4 90%)',
+                                '&:hover': {
+                                    background: 'linear-gradient(45deg, #5A7DE0 30%, #65D2B3 90%)',
+                                },
+                                height: '44px',
+                                px: 3
+                            }}
+                        >
+                            {t('systemConfig.add')}
+                        </Button>
+                    </Box>
+
+                    <Box sx={{ display: 'flex', gap: 2 }}>
+                        <TextField
+                            size="small"
+                            label={t('systemConfig.configKey')}
+                            value={searchForm.configKey || ''}
+                            onChange={(e) => setSearchForm({ ...searchForm, configKey: e.target.value })}
+                            sx={{ width: 200 }}
+                        />
+                        <TextField
+                            size="small"
+                            label={t('systemConfig.configType')}
+                            value={searchForm.configType || ''}
+                            onChange={(e) => setSearchForm({ ...searchForm, configType: e.target.value })}
+                            sx={{ width: 200 }}
+                        />
+                        <Button
+                            variant="contained"
+                            startIcon={<SearchIcon />}
+                            onClick={handleSearch}
+                            sx={{
+                                background: 'linear-gradient(45deg, #6C8EF2 30%, #76E3C4 90%)',
+                                '&:hover': {
+                                    background: 'linear-gradient(45deg, #5A7DE0 30%, #65D2B3 90%)',
+                                },
+                            }}
+                        >
+                            {t('systemConfig.search')}
+                        </Button>
+                        <Button
+                            variant="outlined"
+                            startIcon={<RefreshIcon />}
+                            onClick={handleReset}
+                        >
+                            {t('systemConfig.reset')}
+                        </Button>
+                    </Box>
                 </Box>
 
-                <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-                    <TextField
-                        size="small"
-                        label={t('systemConfig.configKey')}
-                        value={searchForm.configKey || ''}
-                        onChange={(e) => setSearchForm({ ...searchForm, configKey: e.target.value })}
-                        sx={{ width: 200 }}
-                    />
-                    <TextField
-                        size="small"
-                        label={t('systemConfig.configType')}
-                        value={searchForm.configType || ''}
-                        onChange={(e) => setSearchForm({ ...searchForm, configType: e.target.value })}
-                        sx={{ width: 200 }}
-                    />
-                    <Button
-                        variant="contained"
-                        startIcon={<SearchIcon />}
-                        onClick={handleSearch}
-                        sx={{
-                            background: 'linear-gradient(45deg, #6C8EF2 30%, #76E3C4 90%)',
-                            '&:hover': {
-                                background: 'linear-gradient(45deg, #5A7DE0 30%, #65D2B3 90%)',
-                            },
-                        }}
-                    >
-                        {t('systemConfig.search')}
-                    </Button>
-                    <Button
-                        variant="outlined"
-                        startIcon={<RefreshIcon />}
-                        onClick={handleReset}
-                    >
-                        {t('systemConfig.reset')}
-                    </Button>
-                </Box>
-            </Box>
-
-            <Box sx={{ flex: 1, overflow: 'auto', p: 3 }}>
-                <TableContainer component={Paper}>
-                    <Table stickyHeader>
-                        <TableHead>
-                            <TableRow>
-                                <TableCell width="15%">{t('systemConfig.configKey')}</TableCell>
-                                <TableCell width="15%">{t('systemConfig.configType')}</TableCell>
-                                <TableCell width="20%">{t('systemConfig.configValue')}</TableCell>
-                                <TableCell width="15%">{t('systemConfig.description')}</TableCell>
-                                <TableCell width="15%">{t('systemConfig.createTime')}</TableCell>
-                                <TableCell width="15%">{t('systemConfig.updateTime')}</TableCell>
-                                <TableCell width="5%" align="right">{t('common.actions')}</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {loading ? (
+                <Box sx={{ p: 3, flex: 1, overflow: 'auto' }}>
+                    <TableContainer component={Paper}>
+                        <Table stickyHeader>
+                            <TableHead>
                                 <TableRow>
-                                    <TableCell colSpan={7} align="center">
-                                        <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-                                            <CircularProgress />
-                                        </Box>
-                                    </TableCell>
+                                    <TableCell width="15%">{t('systemConfig.configKey')}</TableCell>
+                                    <TableCell width="15%">{t('systemConfig.configType')}</TableCell>
+                                    <TableCell width="20%">{t('systemConfig.configValue')}</TableCell>
+                                    <TableCell width="15%">{t('systemConfig.description')}</TableCell>
+                                    <TableCell width="15%">{t('systemConfig.createTime')}</TableCell>
+                                    <TableCell width="15%">{t('systemConfig.updateTime')}</TableCell>
+                                    <TableCell width="5%" align="right">{t('common.actions')}</TableCell>
                                 </TableRow>
-                            ) : data.length === 0 ? (
-                                <TableRow>
-                                    <TableCell colSpan={7} align="center">
-                                        {t('common.noData')}
-                                    </TableCell>
-                                </TableRow>
-                            ) : (
-                                data.map((row) => (
-                                    <TableRow key={row.id}>
-                                        <TableCell>{row.configKey}</TableCell>
-                                        <TableCell>{row.configType}</TableCell>
-                                        <TableCell>{row.configValue}</TableCell>
-                                        <TableCell>{row.description}</TableCell>
-                                        <TableCell>{new Date(row.createTime).toLocaleString()}</TableCell>
-                                        <TableCell>{new Date(row.updateTime).toLocaleString()}</TableCell>
-                                        <TableCell align="right">
-                                            <Tooltip title={t('systemConfig.edit')}>
-                                                <IconButton
-                                                    size="small"
-                                                    onClick={() => handleEdit(row)}
-                                                >
-                                                    <EditIcon />
-                                                </IconButton>
-                                            </Tooltip>
-                                            <Tooltip title={t('systemConfig.delete')}>
-                                                <IconButton
-                                                    size="small"
-                                                    color="error"
-                                                    onClick={() => handleDelete(row.id)}
-                                                >
-                                                    <DeleteIcon />
-                                                </IconButton>
-                                            </Tooltip>
+                            </TableHead>
+                            <TableBody>
+                                {loading ? (
+                                    <TableRow>
+                                        <TableCell colSpan={7} align="center">
+                                            <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+                                                <CircularProgress />
+                                            </Box>
                                         </TableCell>
                                     </TableRow>
-                                ))
-                            )}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
+                                ) : data.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell colSpan={7} align="center">
+                                            {t('common.noData')}
+                                        </TableCell>
+                                    </TableRow>
+                                ) : (
+                                    rowVirtualizer.getVirtualItems().map((virtualItem) => (
+                                        <ConfigRow
+                                            key={data[virtualItem.index].id}
+                                            row={data[virtualItem.index]}
+                                            onEdit={handleEdit}
+                                            onDelete={handleDelete}
+                                        />
+                                    ))
+                                )}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
 
-                <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
-                    <Pagination
-                        total={total}
-                        current={current}
-                        pageSize={pageSize}
-                        onChange={handlePageChange}
-                    />
-                </Box>
-            </Box>
-
-            <Dialog open={dialogOpen} onClose={handleDialogClose} maxWidth="sm" fullWidth>
-                <DialogTitle>{dialogTitle}</DialogTitle>
-                <DialogContent>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
-                        <TextField
-                            label={t('systemConfig.configKey')}
-                            value={formData.configKey}
-                            onChange={(e) => setFormData({ ...formData, configKey: e.target.value })}
-                            fullWidth
-                            required
-                            error={!formData.configKey}
-                            helperText={!formData.configKey ? t('systemConfig.pleaseEnterConfigKey') : ''}
-                        />
-                        <TextField
-                            label={t('systemConfig.configType')}
-                            value={formData.configType}
-                            onChange={(e) => setFormData({ ...formData, configType: e.target.value })}
-                            fullWidth
-                            required
-                            error={!formData.configType}
-                            helperText={!formData.configType ? t('systemConfig.pleaseEnterConfigType') : ''}
-                        />
-                        <TextField
-                            label={t('systemConfig.configValue')}
-                            value={formData.configValue}
-                            onChange={(e) => setFormData({ ...formData, configValue: e.target.value })}
-                            fullWidth
-                            required
-                            error={!formData.configValue}
-                            helperText={!formData.configValue ? t('systemConfig.pleaseEnterConfigValue') : ''}
-                        />
-                        <TextField
-                            label={t('systemConfig.description')}
-                            value={formData.description}
-                            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                            fullWidth
-                            multiline
-                            rows={3}
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+                        <Pagination
+                            total={total}
+                            current={current}
+                            pageSize={pageSize}
+                            onChange={handlePageChange}
                         />
                     </Box>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleDialogClose}>{t('common.cancel')}</Button>
-                    <Button
-                        onClick={handleDialogSubmit}
-                        variant="contained"
-                        disabled={!formData.configKey || !formData.configType || !formData.configValue}
-                        sx={{
-                            background: 'linear-gradient(45deg, #6C8EF2 30%, #76E3C4 90%)',
-                            '&:hover': {
-                                background: 'linear-gradient(45deg, #5A7DE0 30%, #65D2B3 90%)',
-                            },
-                        }}
-                    >
-                        {t('common.save')}
-                    </Button>
-                </DialogActions>
-            </Dialog>
+                </Box>
 
-            <Snackbar
-                open={snackbar.open}
-                autoHideDuration={3000}
-                onClose={() => setSnackbar({ ...snackbar, open: false })}
-            >
-                <Alert
+                <Dialog open={dialogOpen} onClose={handleDialogClose} maxWidth="sm" fullWidth>
+                    <DialogTitle>{dialogTitle}</DialogTitle>
+                    <DialogContent>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
+                            <TextField
+                                label={t('systemConfig.configKey')}
+                                value={formData.configKey}
+                                onChange={(e) => setFormData({ ...formData, configKey: e.target.value })}
+                                fullWidth
+                                required
+                                error={!formData.configKey}
+                                helperText={!formData.configKey ? t('systemConfig.pleaseEnterConfigKey') : ''}
+                            />
+                            <TextField
+                                label={t('systemConfig.configType')}
+                                value={formData.configType}
+                                onChange={(e) => setFormData({ ...formData, configType: e.target.value })}
+                                fullWidth
+                                required
+                                error={!formData.configType}
+                                helperText={!formData.configType ? t('systemConfig.pleaseEnterConfigType') : ''}
+                            />
+                            <TextField
+                                label={t('systemConfig.configValue')}
+                                value={formData.configValue}
+                                onChange={(e) => setFormData({ ...formData, configValue: e.target.value })}
+                                fullWidth
+                                required
+                                error={!formData.configValue}
+                                helperText={!formData.configValue ? t('systemConfig.pleaseEnterConfigValue') : ''}
+                            />
+                            <TextField
+                                label={t('systemConfig.description')}
+                                value={formData.description}
+                                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                fullWidth
+                                multiline
+                                rows={3}
+                            />
+                        </Box>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={handleDialogClose}>{t('common.cancel')}</Button>
+                        <Button
+                            onClick={handleDialogSubmit}
+                            variant="contained"
+                            disabled={!formData.configKey || !formData.configType || !formData.configValue}
+                            sx={{
+                                background: 'linear-gradient(45deg, #6C8EF2 30%, #76E3C4 90%)',
+                                '&:hover': {
+                                    background: 'linear-gradient(45deg, #5A7DE0 30%, #65D2B3 90%)',
+                                },
+                            }}
+                        >
+                            {t('common.save')}
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+
+                <Snackbar
+                    open={snackbar.open}
+                    autoHideDuration={3000}
                     onClose={() => setSnackbar({ ...snackbar, open: false })}
-                    severity={snackbar.severity}
-                    sx={{ width: '100%' }}
                 >
-                    {snackbar.message}
-                </Alert>
-            </Snackbar>
-        </Box>
+                    <Alert
+                        onClose={() => setSnackbar({ ...snackbar, open: false })}
+                        severity={snackbar.severity}
+                        sx={{ width: '100%' }}
+                    >
+                        {snackbar.message}
+                    </Alert>
+                </Snackbar>
+            </Box>
+        </PerformanceLayout>
     );
 } 

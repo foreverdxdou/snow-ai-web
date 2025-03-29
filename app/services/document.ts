@@ -18,7 +18,7 @@ export const documentService = {
     categoryId?: number;
     current: number; 
     size: number;
-    name?: string;
+    title?: string;
     status?: number;
   }) => {
     return request.get<Result<PageDocumentVO>>(`${BASE_URL}/page`, { params });

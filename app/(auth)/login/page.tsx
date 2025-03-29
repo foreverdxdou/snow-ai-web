@@ -1,130 +1,128 @@
 'use client';
 
-import { Button, Form, Input, message } from 'antd';
-import { UserOutlined, LockOutlined } from '@ant-design/icons';
+import React, { useState, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
-import { authService } from '@/app/services/auth';
-import Link from 'next/link';
-import Cookies from 'js-cookie';
+import {
+    Box,
+    Card,
+    CardContent,
+    TextField,
+    Button,
+    Typography,
+    Alert,
+    CircularProgress,
+} from '@mui/material';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '@/app/hooks/useAuth';
+import { PerformanceLayout } from '@/app/components/common/PerformanceLayout';
+import { useDebouncedCallback } from '@/app/utils/performance';
 
-interface LoginForm {
-    username: string;
-    password: string;
-}
+// 使用 React.memo 优化表单组件
+const LoginForm = React.memo(({
+    onSubmit,
+    loading,
+    error,
+}: {
+    onSubmit: (username: string, password: string) => void;
+    loading: boolean;
+    error: string | null;
+}) => {
+    const { t } = useTranslation();
+    const [username, setUsername] = useState('');
+    const [password, setPassword] = useState('');
+
+    const handleSubmit = useCallback((e: React.FormEvent) => {
+        e.preventDefault();
+        onSubmit(username, password);
+    }, [username, password, onSubmit]);
+
+    return (
+        <form onSubmit={handleSubmit}>
+            <TextField
+                fullWidth
+                label={t('login.username')}
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                margin="normal"
+                required
+                disabled={loading}
+            />
+            <TextField
+                fullWidth
+                label={t('login.password')}
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                margin="normal"
+                required
+                disabled={loading}
+            />
+            {error && (
+                <Alert severity="error" sx={{ mt: 2 }}>
+                    {error}
+                </Alert>
+            )}
+            <Button
+                fullWidth
+                type="submit"
+                variant="contained"
+                disabled={loading}
+                sx={{ mt: 3 }}
+            >
+                {loading ? <CircularProgress size={24} /> : t('login.submit')}
+            </Button>
+        </form>
+    );
+});
+
+LoginForm.displayName = 'LoginForm';
 
 export default function LoginPage() {
-    const router = useRouter();
-    const [loading, setLoading] = useState(false);
     const { t } = useTranslation();
+    const router = useRouter();
+    const { login } = useAuth();
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
-    // 预加载首页
-    useEffect(() => {
-        router.prefetch('/');
-    }, [router]);
-
-    const onFinish = async (values: LoginForm) => {
+    // 使用 useCallback 优化登录处理函数
+    const handleLogin = useCallback(async (username: string, password: string) => {
         try {
             setLoading(true);
-            const response = await authService.login(values.username, values.password);
-            console.log(response);
-            const data = response.data;
-            if (data.code === 200) {
-                Cookies.set('token', data.data.token);
-                Cookies.set('username', values.username);
-                message.success(t('auth.loginSuccess'));
-                // 使用 replace 而不是 push
-                router.replace('/');
-            } else {
-                message.error(data.message || t('auth.loginFailed'));
-            }
-        } catch (error: any) {
-            message.error(error.message || t('auth.loginFailed'));
+            setError(null);
+            await login(username, password);
+            router.push('/');
+        } catch (err) {
+            setError(t('login.error'));
+            console.error('登录失败:', err);
         } finally {
             setLoading(false);
         }
-    };
+    }, [login, router, t]);
 
-    const inputStyle = {
-        height: '44px',
-        borderRadius: '8px',
-        fontSize: '14px',
-        backgroundColor: '#F9FAFB',
-        border: '1px solid #E5E7EB',
-        boxShadow: 'none',
-        ':hover': {
-            borderColor: '#1890FF',
-            boxShadow: 'none'
-        },
-        ':focus': {
-            borderColor: '#1890FF',
-            boxShadow: 'none'
-        }
-    };
+    // 使用 useMemo 优化卡片样式
+    const cardStyle = useMemo(() => ({
+        width: '100%',
+        maxWidth: 400,
+        mx: 'auto',
+        p: 3,
+    }), []);
 
     return (
-        <Form
-            name="login"
-            onFinish={onFinish}
-            size="large"
-            layout="vertical"
-            style={{ width: '100%' }}
-        >
-            <Form.Item
-                name="username"
-                rules={[{ required: true, message: t('auth.usernameRequired') }]}
-            >
-                <Input
-                    prefix={<UserOutlined style={{ color: '#9CA3AF' }} />}
-                    placeholder={t('common.username')}
-                    style={inputStyle}
-                    className="custom-input"
-                />
-            </Form.Item>
-
-            <Form.Item
-                name="password"
-                rules={[{ required: true, message: t('auth.passwordRequired') }]}
-            >
-                <Input.Password
-                    prefix={<LockOutlined style={{ color: '#9CA3AF' }} />}
-                    placeholder={t('common.password')}
-                    style={inputStyle}
-                    className="custom-input"
-                />
-            </Form.Item>
-
-            <Form.Item style={{ marginBottom: '12px' }}>
-                <Button
-                    type="primary"
-                    htmlType="submit"
-                    loading={loading}
-                    style={{
-                        width: '100%',
-                        height: '44px',
-                        borderRadius: '8px',
-                        fontSize: '16px',
-                        fontWeight: '500',
-                        boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
-                    }}
-                >
-                    {t('auth.loginButton')}
-                </Button>
-            </Form.Item>
-
-            <div style={{ textAlign: 'center' }}>
-                <Link
-                    href="/register"
-                    style={{
-                        color: '#1890FF',
-                        fontSize: '14px',
-                        textDecoration: 'none',
-                    }}
-                >
-                    {t('auth.registerNow')}
-                </Link>
-            </div>
-        </Form>
+        <PerformanceLayout>
+            <Box sx={cardStyle}>
+                <Card>
+                    <CardContent>
+                        <Typography variant="h5" component="h1" gutterBottom align="center">
+                            {t('login.title')}
+                        </Typography>
+                        <LoginForm
+                            onSubmit={handleLogin}
+                            loading={loading}
+                            error={error}
+                        />
+                    </CardContent>
+                </Card>
+            </Box>
+        </PerformanceLayout>
     );
 } 

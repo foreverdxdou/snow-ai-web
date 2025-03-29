@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
     Box,
     Typography,
@@ -11,21 +11,11 @@ import {
     DialogContent,
     DialogActions,
     TextField,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
-    Paper,
     Tooltip,
     Alert,
     Snackbar,
-    FormControl,
-    InputLabel,
-    Select,
-    MenuItem,
     CircularProgress,
+    Stack,
 } from '@mui/material';
 import {
     Add as AddIcon,
@@ -33,27 +23,60 @@ import {
     Delete as DeleteIcon,
 } from '@mui/icons-material';
 import { tagService } from '@/app/services/tag';
-import { knowledgeService } from '@/app/services/knowledge';
 import type { Tag, TagCreateDTO } from '@/app/types/tag';
-import type { KnowledgeBaseVO } from '@/app/types/knowledge';
-import { Pagination } from '@/app/components/common/Pagination';
 import { useTranslation } from 'react-i18next';
+import { PerformanceLayout } from '@/app/components/common/PerformanceLayout';
+import { PerformanceTable } from '@/app/components/common/PerformanceTable';
+import { usePerformanceData } from '@/app/hooks/usePerformanceData';
+import { useDebouncedCallback } from '@/app/utils/performance';
+import { useThemeMode } from '@/app/hooks/useThemeMode';
+import { Pagination } from '@/app/components/common/Pagination';
+import { formatDate } from '@/app/utils/format';
+
+// 使用 React.memo 优化表格行组件
+const TagRow = React.memo(({ 
+    tag, 
+    onEdit, 
+    onDelete,
+    t
+}: { 
+    tag: Tag; 
+    onEdit: (tag: Tag) => void; 
+    onDelete: (id: number) => void;
+    t: (key: string) => string;
+}) => (
+    <tr>
+        <td>{tag.name}</td>
+        <td>{tag.creatorName}</td>
+        <td>{new Date(tag.createTime).toLocaleString()}</td>
+        <td>
+            <Tooltip title={t('common.edit')}>
+                <IconButton onClick={() => onEdit(tag)} size="small">
+                    <EditIcon />
+                </IconButton>
+            </Tooltip>
+            <Tooltip title={t('common.delete')}>
+                <IconButton
+                    onClick={() => onDelete(tag.id)}
+                    size="small"
+                    color="error"
+                >
+                    <DeleteIcon />
+                </IconButton>
+            </Tooltip>
+        </td>
+    </tr>
+));
+
+TagRow.displayName = 'TagRow';
 
 export default function TagsPage() {
     const { t } = useTranslation();
-    const [tags, setTags] = useState<Tag[]>([]);
-    const [loading, setLoading] = useState(false);
+    const { toggleThemeMode } = useThemeMode();
     const [open, setOpen] = useState(false);
     const [editingTag, setEditingTag] = useState<Tag | null>(null);
-
     const [formData, setFormData] = useState<TagCreateDTO>({
         name: ''
-    });
-
-    const [pagination, setPagination] = useState({
-        current: 1,
-        pageSize: 10,
-        total: 0,
     });
 
     const [snackbar, setSnackbar] = useState({
@@ -62,34 +85,29 @@ export default function TagsPage() {
         severity: 'success' as 'success' | 'error',
     });
 
-    // 获取标签列表
-    const fetchTags = async () => {
-        try {
-            setLoading(true);
-            const response = await tagService.getList({
-                current: pagination.current,
-                size: pagination.pageSize
-            });
-            setTags(response.data.data.records);
-            setPagination(prev => ({ ...prev, total: response.data.data.total }));
-        } catch (error) {
-            console.error('获取标签列表失败:', error);
-            setSnackbar({
-                open: true,
-                message: t('tags.fetchError'),
-                severity: 'error',
-            });
-        } finally {
-            setLoading(false);
-        }
-    };
+    // 使用 useMemo 优化 defaultParams，避免每次渲染都创建新对象
+    const defaultParams = useMemo(() => ({
+        current: 1,
+        size: 10,
+    }), []);
 
-    useEffect(() => {
-        fetchTags();
-    }, [pagination.current, pagination.pageSize]);
+    // 使用 usePerformanceData 优化数据获取
+    const {
+        data: tags,
+        loading,
+        error,
+        total,
+        params,
+        setParams,
+        refresh,
+    } = usePerformanceData<Tag>({
+        fetchData: tagService.getList,
+        defaultParams,
+        autoFetch: true
+    });
 
-    // 打开新增/编辑对话框
-    const handleOpen = (tag?: Tag) => {
+    // 使用 useCallback 优化事件处理函数
+    const handleOpen = useCallback((tag?: Tag) => {
         if (tag) {
             setEditingTag(tag);
             setFormData({
@@ -102,32 +120,35 @@ export default function TagsPage() {
             });
         }
         setOpen(true);
-    };
+    }, []);
 
-    // 关闭对话框
-    const handleClose = () => {
+    const handleClose = useCallback(() => {
         setOpen(false);
         setEditingTag(null);
         setFormData({
             name: ''
         });
-    };
+    }, []);
 
-    // 提交表单
-    const handleSubmit = async () => {
+    const handleSubmit = useCallback(async () => {
         try {
             if (editingTag) {
-                await tagService.update(editingTag.id, { name: formData.name });
+                await tagService.update(editingTag.id, formData);
+                setSnackbar({
+                    open: true,
+                    message: t('tags.updateSuccess'),
+                    severity: 'success',
+                });
             } else {
                 await tagService.create(formData);
+                setSnackbar({
+                    open: true,
+                    message: t('tags.createSuccess'),
+                    severity: 'success',
+                });
             }
-            setSnackbar({
-                open: true,
-                message: editingTag ? t('tags.updateSuccess') : t('tags.createSuccess'),
-                severity: 'success',
-            });
             handleClose();
-            fetchTags();
+            refresh();
         } catch (error) {
             console.error(`${editingTag ? '更新' : '创建'}标签失败:`, error);
             setSnackbar({
@@ -136,10 +157,9 @@ export default function TagsPage() {
                 severity: 'error',
             });
         }
-    };
+    }, [editingTag, formData, handleClose, refresh, t]);
 
-    // 删除标签
-    const handleDelete = async (id: number) => {
+    const handleDelete = useCallback(async (id: number) => {
         if (!window.confirm(t('tags.deleteConfirm'))) return;
         try {
             await tagService.delete(id);
@@ -148,7 +168,7 @@ export default function TagsPage() {
                 message: t('tags.deleteSuccess'),
                 severity: 'success',
             });
-            fetchTags();
+            refresh();
         } catch (error) {
             console.error('删除标签失败:', error);
             setSnackbar({
@@ -157,161 +177,171 @@ export default function TagsPage() {
                 severity: 'error',
             });
         }
-    };
+    }, [refresh, t]);
+
+    // 使用 useDebouncedCallback 优化分页处理
+    const handlePageChange = useDebouncedCallback((page: number, size: number) => {
+        setParams((prev: { current: number; size: number; categoryId?: number }) => ({
+            ...prev,
+            current: page,
+            size: size,
+        }));
+    }, [], 300);
+
+    // 使用 useMemo 优化表格配置
+    const columns = useMemo(() => [
+        {
+            key: 'name' as keyof Tag,
+            title: t('common.name'),
+            render: (_: any, record: Tag) => record?.name || '-'
+        },
+        {
+            key: 'creatorName' as keyof Tag,
+            title: t('common.creator'),
+            render: (_: any, record: Tag) => record?.creatorName || '-'
+        },
+        {
+            key: 'createTime' as keyof Tag,
+            title: t('common.createTime'),
+            render: (_: any, record: Tag) => record?.createTime ? formatDate(record.createTime) : '-'
+        },
+        {
+            key: 'updateTime' as keyof Tag,
+            title: t('common.updateTime'),
+            render: (_: any, record: Tag) => record?.updateTime ? formatDate(record.updateTime) : '-'
+        },
+        {
+            key: 'id' as keyof Tag,
+            title: t('common.actions'),
+            width: 120,
+            render: (_: any, record: Tag) => record && (
+                <Stack direction="row" spacing={1}>
+                    <Tooltip title={t('common.edit')}>
+                        <IconButton 
+                            size="small" 
+                            onClick={() => handleOpen(record)}
+                            color="primary"
+                        >
+                            <EditIcon fontSize="small" />
+                        </IconButton>
+                    </Tooltip>
+                    <Tooltip title={t('common.delete')}>
+                        <IconButton 
+                            size="small" 
+                            onClick={() => handleDelete(record.id)}
+                            color="error"
+                        >
+                            <DeleteIcon fontSize="small" />
+                        </IconButton>
+                    </Tooltip>
+                </Stack>
+            )
+        }
+    ], [t, handleOpen, handleDelete]);
 
     return (
-        <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-            <Box sx={{
-                p: 3,
-                borderBottom: '1px solid',
-                borderColor: 'divider',
-                bgcolor: 'background.paper',
-            }}>
+        <PerformanceLayout>
+            <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                 <Box sx={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
+                    p: 3,
+                    borderBottom: '1px solid',
+                    borderColor: 'divider',
+                    bgcolor: 'background.paper',
                 }}>
-                    <Typography variant="h5" sx={{ fontWeight: 600 }}>
-                        {t('tags.title')}
-                    </Typography>
-                    <Button
-                        variant="contained"
-                        startIcon={<AddIcon />}
-                        onClick={() => handleOpen()}
-                        sx={{
-                            background: 'linear-gradient(45deg, #6C8EF2 30%, #76E3C4 90%)',
-                            '&:hover': {
-                                background: 'linear-gradient(45deg, #5A7DE0 30%, #65D2B3 90%)',
-                            },
-                            height: '44px',
-                            px: 3
-                        }}
-                    >
-                        {t('tags.createTag')}
-                    </Button>
+                    <Box sx={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        mb: 2,
+                    }}>
+                        <Typography variant="h5" sx={{ fontWeight: 600 }}>
+                            {t('tags.title')}
+                        </Typography>
+                        <Button
+                            variant="contained"
+                            startIcon={<AddIcon />}
+                            onClick={() => handleOpen()}
+                            sx={{
+                                background: 'linear-gradient(45deg, #6C8EF2 30%, #76E3C4 90%)',
+                                '&:hover': {
+                                    background: 'linear-gradient(45deg, #5A7DE0 30%, #65D2B3 90%)',
+                                },
+                                height: '44px',
+                                px: 3
+                            }}
+                        >
+                            {t('tags.createTag')}
+                        </Button>
+                    </Box>
                 </Box>
-            </Box>
 
-            <Box sx={{ p: 3, flex: 1, overflow: 'auto' }}>
-                <TableContainer component={Paper}>
-                    <Table stickyHeader>
-                        <TableHead>
-                            <TableRow>
-                                <TableCell width="25%">{t('common.name')}</TableCell>
-                                <TableCell width="15%">{t('common.creator')}</TableCell>
-                                <TableCell width="15%">{t('common.createTime')}</TableCell>
-                                <TableCell width="15%">{t('common.operation')}</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {loading ? (
-                                <TableRow>
-                                    <TableCell colSpan={5} align="center">
-                                        <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-                                            <CircularProgress />
-                                        </Box>
-                                    </TableCell>
-                                </TableRow>
-                            ) : tags.length === 0 ? (
-                                <TableRow>
-                                    <TableCell colSpan={5} align="center">
-                                        {t('common.noData')}
-                                    </TableCell>
-                                </TableRow>
-                            ) : (
-                                tags.map((tag) => (
-                                    <TableRow key={tag.id}>
-                                        <TableCell>{tag.name}</TableCell>
-                                        <TableCell>{tag.creatorName}</TableCell>
-                                        <TableCell>{new Date(tag.createTime).toLocaleString()}</TableCell>
-                                        <TableCell>
-                                            <Tooltip title={t('common.edit')}>
-                                                <IconButton onClick={() => handleOpen(tag)} size="small">
-                                                    <EditIcon />
-                                                </IconButton>
-                                            </Tooltip>
-                                            <Tooltip title={t('common.delete')}>
-                                                <IconButton
-                                                    onClick={() => handleDelete(tag.id)}
-                                                    size="small"
-                                                    color="error"
-                                                >
-                                                    <DeleteIcon />
-                                                </IconButton>
-                                            </Tooltip>
-                                        </TableCell>
-                                    </TableRow>
-                                ))
-                            )}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
-
-                <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
-                    <Pagination
-                        current={pagination.current}
-                        pageSize={pagination.pageSize}
-                        total={pagination.total}
-                        onChange={(page, pageSize) => {
-                            setPagination(prev => ({
-                                ...prev,
-                                current: page,
-                                pageSize: pageSize,
-                            }));
-                        }}
+                <Box sx={{ p: 3, flex: 1, overflow: 'auto' }}>
+                    <PerformanceTable
+                        loading={loading}
+                        data={tags}
+                        columns={columns}
+                        emptyMessage={t('common.noData')}
                     />
-                </Box>
-            </Box>
 
-            <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-                <DialogTitle>
-                    {editingTag ? t('tags.editTag') : t('tags.createTag')}
-                </DialogTitle>
-                <DialogContent>
-                    <Box sx={{ pt: 2 }}>
-                        <TextField
-                            fullWidth
-                            label={t('common.name')}
-                            value={formData.name}
-                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                            required
-                            error={!formData.name}
-                            helperText={!formData.name ? t('tags.nameRequired') : ''}
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+                        <Pagination
+                            total={total}
+                            current={params.current}
+                            pageSize={params.size}
+                            onChange={handlePageChange}
                         />
                     </Box>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleClose}>{t('common.cancel')}</Button>
-                    <Button
-                        onClick={handleSubmit}
-                        variant="contained"
-                        disabled={!formData.name}
-                        sx={{
-                            background: 'linear-gradient(45deg, #6C8EF2 30%, #76E3C4 90%)',
-                            '&:hover': {
-                                background: 'linear-gradient(45deg, #5A7DE0 30%, #65D2B3 90%)',
-                            },
-                        }}
-                    >
-                        {t('common.submit')}
-                    </Button>
-                </DialogActions>
-            </Dialog>
+                </Box>
 
-            <Snackbar
-                open={snackbar.open}
-                autoHideDuration={3000}
-                onClose={() => setSnackbar({ ...snackbar, open: false })}
-            >
-                <Alert
+                <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+                    <DialogTitle>
+                        {editingTag ? t('tags.editTag') : t('tags.createTag')}
+                    </DialogTitle>
+                    <DialogContent>
+                        <Box sx={{ pt: 2 }}>
+                            <TextField
+                                fullWidth
+                                label={t('common.name')}
+                                value={formData.name}
+                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                required
+                                error={!formData.name}
+                                helperText={!formData.name ? t('tags.nameRequired') : ''}
+                            />
+                        </Box>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={handleClose}>{t('common.cancel')}</Button>
+                        <Button
+                            onClick={handleSubmit}
+                            variant="contained"
+                            disabled={!formData.name}
+                            sx={{
+                                background: 'linear-gradient(45deg, #6C8EF2 30%, #76E3C4 90%)',
+                                '&:hover': {
+                                    background: 'linear-gradient(45deg, #5A7DE0 30%, #65D2B3 90%)',
+                                },
+                            }}
+                        >
+                            {t('common.save')}
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+
+                <Snackbar
+                    open={snackbar.open}
+                    autoHideDuration={3000}
                     onClose={() => setSnackbar({ ...snackbar, open: false })}
-                    severity={snackbar.severity}
-                    sx={{ width: '100%' }}
                 >
-                    {snackbar.message}
-                </Alert>
-            </Snackbar>
-        </Box>
+                    <Alert
+                        onClose={() => setSnackbar({ ...snackbar, open: false })}
+                        severity={snackbar.severity}
+                        sx={{ width: '100%' }}
+                    >
+                        {snackbar.message}
+                    </Alert>
+                </Snackbar>
+            </Box>
+        </PerformanceLayout>
     );
 } 

@@ -48,7 +48,8 @@
       "jumpTo": "Jump to",
       "page": "page",
       "go": "Go"
-    }
+    },
+    "profile": "Profile"
   },
   "auth": {
     "loginTitle": "Login to Snow AI",
@@ -93,6 +94,13 @@
   },
   "category": {
     "title": "Category Management",
+    "searchByName": "Search by name",
+    "searchByStatus": "Filter by status",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "all": "All status",
+    "searchButton": "Search",
+    "resetButton": "Reset",
     "createCategory": "Create Category",
     "editCategory": "Edit Category",
     "deleteCategory": "Delete Category",
@@ -179,7 +187,15 @@
     "noContent": "No content",
     "dragAndDrop": "Drag and drop files here or click to upload",
     "supportedFormats": "Supported formats: .txt, .md, .pdf, .doc, .docx",
-    "selectKbFirst": "Please select a knowledge base first"
+    "selectKbFirst": "Please select a knowledge base first",
+    "searchByName": "Search by name",
+    "searchByCategory": "Filter by category",
+    "searchByTags": "Filter by tags",
+    "searchByStatus": "Filter by status",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "all": "All status",
+    "resetButton": "Reset"
   },
   "menu": {
     "home": "Home",
