@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { ThemeProvider as MuiThemeProvider, createTheme } from '@mui/material/styles';
 import { getCookie, setCookie } from 'cookies-next';
 import { zhCN } from '@mui/material/locale';
@@ -103,6 +103,11 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
         
         syncThemeToDocument(themeMode);
         setMounted(true);
+
+        // 清理函数
+        return () => {
+            setMounted(false);
+        };
     }, [themeMode, syncThemeToDocument]);
 
     // 同步语言设置
@@ -114,7 +119,8 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
         setCookie('language', language, { maxAge: 365 * 24 * 60 * 60 });
     }, [language]);
 
-    const theme = createAppTheme(themeMode, language);
+    // 使用 useMemo 缓存主题对象
+    const theme = useMemo(() => createAppTheme(themeMode, language), [themeMode, language]);
 
     const toggleTheme = useCallback(() => {
         setThemeMode(prev => {
@@ -128,15 +134,18 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
         setLanguage(prev => prev === 'zh' ? 'en' : 'zh');
     }, []);
 
-    // 在组件挂载前不渲染内容
-    if (!mounted) {
-        return null;
-    }
+    // 使用 useMemo 缓存 context value
+    const contextValue = useMemo(() => ({
+        themeMode,
+        language,
+        toggleTheme,
+        toggleLanguage,
+    }), [themeMode, language, toggleTheme, toggleLanguage]);
 
     return (
-        <ThemeContext.Provider value={{ themeMode, language, toggleTheme, toggleLanguage }}>
+        <ThemeContext.Provider value={contextValue}>
             <MuiThemeProvider theme={theme}>
-                {children}
+                {mounted ? children : null}
             </MuiThemeProvider>
         </ThemeContext.Provider>
     );

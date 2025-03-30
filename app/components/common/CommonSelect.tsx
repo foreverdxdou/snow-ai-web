@@ -22,12 +22,26 @@ interface Option {
 
 // 基础选择器样式
 const BaseSelect = styled(Select)(({ theme }) => ({
-
+   
 }));
 
 // 下拉菜单样式
 const StyledMenu = styled(MenuItem)(({ theme }) => ({
-
+    padding: '6px 14px',
+    fontSize: '0.875rem',
+    letterSpacing: '0.01em',
+    minHeight: '32px',
+    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+    '&:hover': {
+        backgroundColor: alpha(theme.palette.primary.main, 0.08),
+    },
+    '&.Mui-selected': {
+        backgroundColor: alpha(theme.palette.primary.main, 0.12),
+        color: theme.palette.primary.main,
+        '&:hover': {
+            backgroundColor: alpha(theme.palette.primary.main, 0.16),
+        }
+    }
 }));
 
 interface CommonSelectProps extends Omit<SelectProps, 'value' | 'onChange'> {

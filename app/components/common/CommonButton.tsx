@@ -24,45 +24,33 @@ import {
 // 基础按钮样式
 const BaseButton = styled(Button)(({ theme }) => ({
     borderRadius: '8px',
-    textTransform: 'none',
+    padding: '8px 16px',
+    height: '40px',
+    fontSize: '0.875rem',
     fontWeight: 500,
-    padding: '8px 20px',
-    fontSize: '14px',
+    letterSpacing: '0.01em',
     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-    position: 'relative',
-    overflow: 'hidden',
-    '&::before': {
-        content: '""',
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        background: 'linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent)',
-        transform: 'translateX(-100%)',
-        transition: 'transform 0.6s',
-    },
-    '&:hover::before': {
-        transform: 'translateX(100%)',
-    },
+    textTransform: 'none',
     '&:hover': {
-        transform: 'translateY(-2px)',
-        boxShadow: theme.shadows[4],
+        transform: 'translateY(-1px)',
+        boxShadow: `0 4px 12px ${alpha(theme.palette.common.black, 0.1)}`,
     },
     '&:active': {
         transform: 'translateY(0)',
     },
-    '&:disabled': {
-        transform: 'none',
-        boxShadow: 'none',
+    '&.Mui-disabled': {
+        backgroundColor: alpha(theme.palette.action.disabled, 0.12),
+        color: alpha(theme.palette.action.disabled, 0.38),
     }
 }));
 
 // 查看详情按钮 - 图标按钮
 export const DetailButton = styled(IconButton)(({ theme }) => ({
     color: theme.palette.primary.main,
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
     '&:hover': {
         backgroundColor: alpha(theme.palette.primary.main, 0.08),
+        transform: 'translateY(-1px)',
     }
 }));
 
@@ -80,16 +68,20 @@ export const AddButton = styled(BaseButton)(({ theme }) => ({
 // 修改按钮 - 主题色图标按钮
 export const EditButton = styled(IconButton)(({ theme }) => ({
     color: theme.palette.primary.main,
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
     '&:hover': {
         backgroundColor: alpha(theme.palette.primary.main, 0.08),
+        transform: 'translateY(-1px)',
     }
 }));
 
 // 删除按钮 - 错误色图标按钮
 export const DeleteButton = styled(IconButton)(({ theme }) => ({
     color: theme.palette.error.main,
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
     '&:hover': {
         backgroundColor: alpha(theme.palette.error.main, 0.08),
+        transform: 'translateY(-1px)',
     }
 }));
 
@@ -141,7 +133,7 @@ export const ExpandButton = styled(BaseButton)(({ theme }) => ({
     color: theme.palette.primary.main,
     border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
     minWidth: 'auto',
-    padding: '4px 12px',
+    padding: '6px 16px',
     '&:hover': {
         backgroundColor: alpha(theme.palette.primary.main, 0.12),
         borderColor: alpha(theme.palette.primary.main, 0.3),

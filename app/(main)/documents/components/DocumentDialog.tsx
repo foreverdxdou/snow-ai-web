@@ -63,6 +63,7 @@ export const DocumentDialog: React.FC<DocumentDialogProps> = ({
                     <FormControl fullWidth>
                         <InputLabel>{t('documents.category')}</InputLabel>
                         <Select
+                        
                             value={formData.categoryId || ''}
                             label={t('documents.category')}
                             onChange={(e) => handleFormDataChange('categoryId', e.target.value as number)}

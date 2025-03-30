@@ -336,31 +336,18 @@ export default function QaPage() {
     const handleSend = useCallback(async () => {
         if (!question.trim() || loading) return;
 
-        handleAbort();
-        setLoading(true);
-        const questionText = question;
-        setQuestion('');
-
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+        }
         abortControllerRef.current = new AbortController();
 
-        const newQuestion: KbChatHistory = {
-            id: Date.now(),
-            sessionId,
-            kbId: selectedKbs[0] || 0,
-            userId: 0,
-            question: questionText,
-            answer: t('qa.thinking'),
-            tokensUsed: 0,
-            processTime: 0,
-            createTime: new Date().toISOString(),
-            updateTime: new Date().toISOString(),
-        };
-        setChatHistory(prev => [...prev, newQuestion]);
-        scrollToBottom();
+        setLoading(true);
+        const currentQuestion = question;
+        setQuestion('');
 
         try {
             const requestData: QaRequest = {
-                question: questionText,
+                question: currentQuestion,
                 sessionId,
                 temperature: 0.7,
                 maxTokens: 2000
@@ -427,6 +414,7 @@ export default function QaPage() {
                 message: t('qa.systemError'),
                 severity: 'error',
             });
+        } finally {
             setLoading(false);
             abortControllerRef.current = null;
         }
@@ -435,6 +423,9 @@ export default function QaPage() {
     useEffect(() => {
         return () => {
             handleAbort();
+            if (abortControllerRef.current) {
+                abortControllerRef.current.abort();
+            }
         };
     }, [handleAbort]);
 

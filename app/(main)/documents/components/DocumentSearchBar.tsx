@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Box, Stack, Divider } from '@mui/material';
 import type { KbCategory } from '@/app/types/category';
 import type { KnowledgeBaseVO } from '@/app/types/knowledge';
 import type { SearchParams } from '@/app/(main)/documents/types';
@@ -79,52 +80,96 @@ export const DocumentSearchBar: React.FC<DocumentSearchBarProps> = ({
     }, [params.size, setParams]);
 
     return (
-        <SearchBar>
-            <CommonInput
-                placeholder={t('documents.searchByName')}
-                value={searchName}
-                onChange={handleSearchNameChange}
-            />
+        <Box sx={{ mb: 2 }}>
+            <SearchBar>
+                <Stack 
+                    direction={{ xs: 'column', sm: 'row' }} 
+                    spacing={1.5} 
+                    sx={{ width: '100%' }}
+                >
+                    <Box sx={{ 
+                        display: 'flex', 
+                        gap: 1.5,
+                        flex: 1,
+                        flexWrap: 'wrap',
+                        minWidth: 0
+                    }}>
+                        <CommonInput
+                            placeholder={t('documents.searchByName')}
+                            value={searchName}
+                            onChange={handleSearchNameChange}
+                         
+                        />
 
-            <CommonSelect
-                label={t('documents.searchByCategory')}
-                value={params.categoryId}
-                onChange={handleCategoryChange}
-                options={categories.map(cat => ({ id: cat.id, name: cat.name }))}
-            />
+                        <CommonSelect
+                            label={t('documents.searchByCategory')}
+                            value={params.categoryId}
+                            onChange={handleCategoryChange}
+                            options={categories.map(cat => ({ id: cat.id, name: cat.name }))}
+      
+                        />
 
-            <CommonSelect
-                label={t('documents.searchByKb')}
-                value={params.kbId}
-                onChange={handleKbChange}
-                options={knowledgeBases.map(kb => ({ id: kb.id, name: kb.name }))}
-                showDescription
-            />
+                        <CommonSelect
+                            label={t('documents.searchByKb')}
+                            value={params.kbId}
+                            onChange={handleKbChange}
+                            options={knowledgeBases.map(kb => ({ id: kb.id, name: kb.name }))}
+                            showDescription
+                        />
 
-            <CommonSelect
-                label={t('documents.searchByStatus')}
-                value={params.status}
-                onChange={handleStatusChange}
-                options={[
-                    { id: 1, name: t('documents.enabled') },
-                    { id: 0, name: t('documents.disabled') }
-                ]}
-            />
+                        <CommonSelect
+                            label={t('documents.searchByStatus')}
+                            value={params.status}
+                            onChange={handleStatusChange}
+                            options={[
+                                { id: 1, name: t('documents.enabled') },
+                                { id: 0, name: t('documents.disabled') }
+                            ]}
+                        />
+                    </Box>
 
+                    <Divider 
+                        orientation="vertical" 
+                        flexItem 
+                        sx={{ 
+                            display: { xs: 'none', sm: 'block' },
+                            mx: 0.5,
+                            borderColor: 'divider'
+                        }} 
+                    />
 
-            <CommonButton
-                buttonVariant="reset"
-                onClick={handleReset}
-            >
-                {t('documents.resetButton')}
-            </CommonButton>
+                    <Stack 
+                        direction="row" 
+                        spacing={1}
+                        sx={{ 
+                            flex: { xs: '0 0 auto', sm: '0 0 auto' },
+                            width: { xs: '100%', sm: 'auto' }
+                        }}
+                    >
+                        <CommonButton
+                            buttonVariant="reset"
+                            onClick={handleReset}
+                            sx={{ 
+                                flex: { xs: 1, sm: '0 0 auto' },
+                                minWidth: { sm: 100 }
+                            }}
+                        >
+                            {t('documents.resetButton')}
+                        </CommonButton>
 
-            <CommonButton
-                buttonVariant="upload"
-                onClick={onUploadClick}
-            >
-                {t('documents.uploadDocument')}
-            </CommonButton>
-        </SearchBar>
+                        <CommonButton
+                            buttonVariant="upload"
+                            onClick={onUploadClick}
+                            sx={{ 
+                                flex: { xs: 1, sm: '0 0 auto' },
+                                minWidth: { sm: 120 }
+                            }}
+                        >
+                            {t('documents.uploadDocument')}
+                        </CommonButton>
+                    </Stack>
+                </Stack>
+            </SearchBar>
+        </Box>
     );
 }; 

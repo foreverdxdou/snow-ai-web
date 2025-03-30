@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSnackbar } from '@/app/hooks/useSnackbar';
 import { Document } from '@/app/types/document';
@@ -37,6 +37,7 @@ export function useDocumentData() {
         kbId: undefined,
         status: undefined
     });
+    const abortControllerRef = useRef<AbortController | null>(null);
 
     // 获取分类列表
     const fetchCategories = useCallback(async () => {
@@ -82,16 +83,26 @@ export function useDocumentData() {
 
     // 获取文档列表
     const fetchDocuments = useCallback(async (searchParams: SearchParams) => {
+        // 如果存在之前的请求，先中止
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+        }
+        abortControllerRef.current = new AbortController();
+
         setLoading(true);
         try {
             const response = await documentService.getList(searchParams);
             setDocuments(response.data.data.records);
             setTotal(response.data.data.total);
         } catch (error) {
+            if (error instanceof Error && error.name === 'AbortError') {
+                return;
+            }
             console.error('获取文档列表失败:', error);
             showSnackbar(t('documents.fetchError'), 'error');
         } finally {
             setLoading(false);
+            abortControllerRef.current = null;
         }
     }, [t, showSnackbar]);
 
@@ -108,6 +119,10 @@ export function useDocumentData() {
         debouncedSearch(params);
         return () => {
             debouncedSearch.cancel();
+            // 清理所有未完成的请求
+            if (abortControllerRef.current) {
+                abortControllerRef.current.abort();
+            }
         };
     }, [params, debouncedSearch]);
 
