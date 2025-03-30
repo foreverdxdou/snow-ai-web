@@ -9,6 +9,8 @@ import {
     Stack,
     Typography,
     Chip,
+    Switch,
+    FormControlLabel,
 } from '@mui/material';
 import type { Document } from '@/app/types/document';
 import { Pagination } from '@/app/components/common/Pagination';
@@ -64,6 +66,7 @@ export default function DocumentsPage() {
         setUploadOpen,
         snackbar,
         setSnackbar,
+        handleStatusChange,
     } = useDocumentActions(refresh);
 
     // 使用 useMemo 优化表格配置
@@ -175,6 +178,27 @@ export default function DocumentsPage() {
             render: (_: any, record: Document) => record?.updateTime ? formatDate(record.updateTime) : '-'
         },
         {
+            key: 'status' as keyof Document,
+            title: t('common.status'),
+            render: (_: any, record: Document) => (
+                <FormControlLabel
+                    control={
+                        <Switch
+                            checked={record.status === 1}
+                            onChange={() => handleStatusChange(record)}
+                            color="primary"
+                        />
+                    }
+                    label={record.status === 1 ? t('common.enable') : t('common.disable')}
+                    sx={{
+                        '& .MuiFormControlLabel-label': {
+                            fontSize: '0.875rem'
+                        }
+                    }}
+                />
+            )
+        },
+        {
             key: 'id' as keyof Document,
             title: t('common.actions'),
             render: (_: any, record: Document) => record && (
@@ -203,7 +227,7 @@ export default function DocumentsPage() {
                 </Stack>
             )
         }
-    ], [t, handleOpen, handleDelete, router]);
+    ], [t, handleOpen, handleDelete, router, handleStatusChange]);
 
     // 处理分页变化
     const handlePageChange = useCallback((page: number, pageSize: number) => {

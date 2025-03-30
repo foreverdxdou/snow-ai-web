@@ -31,7 +31,7 @@ export const DocumentDialog: React.FC<DocumentDialogProps> = ({
   onSubmit,
 }) => {
   if (!open) return null;
-  const { categories, tags } = useDocumentData();
+  const { categories, tags, knowledgeBases } = useDocumentData();
   const { t } = useTranslation();
 
   const handleFormDataChange = (field: keyof DocumentCreateDTO, value: any) => {
@@ -62,12 +62,17 @@ export const DocumentDialog: React.FC<DocumentDialogProps> = ({
           />
 
           <CommonSelect
+            label={t("documents.selectKb")}
+            value={formData.kbId || ""}
+            onChange={(value) =>handleFormDataChange("kbId", value as number)}
+            options={knowledgeBases.map((kb) => ({ id: kb.id, name: kb.name }))}
+          />
+
+          <CommonSelect
             fullWidth
             label={t("documents.category")}
             value={formData.categoryId || ""}
-            onChange={(value) =>
-              handleFormDataChange("categoryId", value as number)
-            }
+            onChange={(value) =>handleFormDataChange("categoryId", value as number)}
             options={categories.map((cat) => ({ id: cat.id, name: cat.name }))}
           />
           <CommonSelect

@@ -9,7 +9,7 @@ export interface Document {
   kbName: string;
   creatorId: number;
   creatorName: string;
-  status: number;
+  status: number;  // 0: 禁用, 1: 启用
   parseStatus: number;
   version: number;
   createTime: string;
@@ -32,7 +32,9 @@ export interface DocumentUpdateDTO {
   title: string;
   content: string;
   categoryId: number;
+  kbId: number;
   tags?: string[];
+  status?: number;  // 0: 禁用, 1: 启用
 }
 
 export interface DocumentVersion {

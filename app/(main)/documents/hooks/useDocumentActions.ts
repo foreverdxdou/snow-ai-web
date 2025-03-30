@@ -106,6 +106,7 @@ export const useDocumentActions = (refresh: () => void) => {
                     categoryId: formData.categoryId,
                     content: formData.content,
                     tags: formData.tagIds?.map(String),
+                    kbId: formData.kbId,
                 });
                 setSnackbar({
                     open: true,
@@ -197,6 +198,29 @@ export const useDocumentActions = (refresh: () => void) => {
         }
     };
 
+    const handleStatusChange = async (document: Document) => {
+        try {
+            const response = await documentService.updateStatus(document.id, document.status === 1 ? 0 : 1);
+            if (response.data.code === 200) {
+                setSnackbar({
+                    open: true,
+                    message: t('documents.statusUpdateSuccess'),
+                    severity: 'success',
+                });
+                refresh();
+            } else {
+                throw new Error(response.data.message || t('documents.statusUpdateError'));
+            }
+        } catch (error) {
+            console.error('更新状态失败:', error);
+            setSnackbar({
+                open: true,
+                message: error instanceof Error ? error.message : t('documents.statusUpdateError'),
+                severity: 'error',
+            });
+        }
+    };
+
     return {
         handleDelete,
         handleOpen,
@@ -221,5 +245,6 @@ export const useDocumentActions = (refresh: () => void) => {
         setSelectedTagId,
         snackbar,
         setSnackbar,
+        handleStatusChange,
     };
 }; 
