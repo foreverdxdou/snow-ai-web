@@ -52,8 +52,8 @@ export default function CategoryPage() {
     const defaultParams = useMemo(() => ({
         current: 1,
         size: 10,
-        name: null as unknown as string,
-        status: null as unknown as number,
+        name: '',
+        status: undefined,
     }), []);
 
     // 使用 usePerformanceData 优化数据获取
@@ -278,7 +278,7 @@ export default function CategoryPage() {
                     <Box sx={{ display: 'flex', gap: 2 }}>
                         <CommonInput
                             label={t('category.searchByName')}
-                            value={params.name || null as unknown as string}
+                            value={params.name || ''}
                             onChange={(value) => setParams({ ...params, name: value as string })}
                             sx={{ width: { xs: "100%", sm: 150 } }}
                         />
@@ -295,8 +295,11 @@ export default function CategoryPage() {
                         <CommonButton
                             buttonVariant="reset"
                             onClick={() => {
-                                setParams(defaultParams);
-                                refresh();
+                                setParams({
+                                    ...defaultParams,
+                                    current: 1,
+                                    size: 10,
+                                });
                             }}
                         >
                             {t('category.resetButton')}
