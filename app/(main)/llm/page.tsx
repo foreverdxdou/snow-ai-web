@@ -19,9 +19,6 @@ import {
   Switch,
 } from '@mui/material';
 import {
-  Add as AddIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
   Refresh as RefreshIcon,
 } from '@mui/icons-material';
 import { LlmConfig } from '@/app/types/llm';

@@ -16,7 +16,7 @@
     "@microsoft/fetch-event-source": "^2.0.1",
     "@mui/icons-material": "^6.4.8",
     "@mui/lab": "^6.0.0-beta.31",
-    "@mui/material": "^6.4.8",
+    "@mui/material": "^7.0.1",
     "@mui/x-tree-view": "^7.28.1",
     "@reduxjs/toolkit": "^2.2.1",
     "@tanstack/react-virtual": "^3.13.5",

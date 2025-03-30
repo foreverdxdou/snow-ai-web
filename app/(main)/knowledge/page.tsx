@@ -19,10 +19,10 @@ import {
   Paper,
   Switch,
   Tooltip,
-  Grid,
   CircularProgress,
   FormControlLabel,
   Divider,
+  Grid,
 } from "@mui/material";
 import {
   Edit as EditIcon,
@@ -44,7 +44,6 @@ import { TreeViewBaseItem } from "@mui/x-tree-view/models";
 import { useTranslation } from "react-i18next";
 import { PerformanceLayout } from "@/app/components/common/PerformanceLayout";
 import { usePerformanceData } from "@/app/hooks/usePerformanceData";
-import { useThemeMode } from "@/app/hooks/useThemeMode";
 import { CommonButton } from "@/app/components/common/CommonButton";
 import { CommonInput } from "@/app/components/common/CommonInput";
 
@@ -62,75 +61,96 @@ const KnowledgeCard = React.memo(
     onDelete: (id: number) => void;
     onStatusChange: (id: number, status: number) => void;
     t: (key: string) => string;
-  }) => (
-    <Card
-      sx={{
-        height: "100%",
-        display: "flex",
-        flexDirection: "column",
-        transition: "transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out",
-        "&:hover": {
-          transform: "translateY(-4px)",
-          boxShadow: 4,
-        },
-      }}
-    >
-      <CardHeader
-        avatar={
-          <Avatar sx={{ bgcolor: "primary.main" }}>
-            <MenuBookIcon />
-          </Avatar>
-        }
-        title={knowledge.name}
-        subheader={knowledge.description || t("knowledge.noDescription")}
-        action={
-          <Box>
-            <Tooltip title={t("common.edit")}>
-              <CommonButton
-                buttonVariant="edit"
-                icon
-                onClick={() => onEdit(knowledge)}
-              ></CommonButton>
-            </Tooltip>
-            <Tooltip title={t("common.delete")}>
-              <CommonButton
-                buttonVariant="delete"
-                icon
-                onClick={() => onDelete(knowledge.id)}
-                color="error"
-              ></CommonButton>
-            </Tooltip>
-          </Box>
-        }
-      />
-      <CardContent sx={{ flexGrow: 1 }}>
-        <Typography variant="body2" color="text.secondary" gutterBottom>
-          {t("knowledge.documentCount")}: {knowledge.documentCount}
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          {t("knowledge.categoryCount")}: {knowledge.categoryCount}
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          {t("knowledge.tagCount")}: {knowledge.tagCount}
-        </Typography>
-      </CardContent>
-      <CardActions>
-        <FormControlLabel
-          control={
-            <Switch
-              checked={knowledge.status === 1}
-              onChange={(e) =>
-                onStatusChange(knowledge.id, e.target.checked ? 1 : 0)
-              }
-            />
+  }) => {
+    const router = useRouter();
+    
+    const handleCardClick = (e: React.MouseEvent) => {
+      // 如果点击的是操作按钮区域，则不进行跳转
+      if ((e.target as HTMLElement).closest('.MuiCardHeader-action')) {
+        return;
+      }
+      router.push(`/documents?kbId=${knowledge.id}`);
+    };
+
+    return (
+      <Card
+        onClick={handleCardClick}
+        sx={{
+          height: "100%",
+          display: "flex",
+          flexDirection: "column",
+          transition: "transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out",
+          cursor: "pointer",
+          "&:hover": {
+            transform: "translateY(-4px)",
+            boxShadow: 4,
+          },
+        }}
+      >
+        <CardHeader
+          avatar={
+            <Avatar sx={{ bgcolor: "primary.main" }}>
+              <MenuBookIcon />
+            </Avatar>
           }
-          label={
-            knowledge.status === 1 ? t("common.enable") : t("common.disable")
+          title={knowledge.name}
+          subheader={knowledge.description || t("knowledge.noDescription")}
+          action={
+            <Box>
+              <Tooltip title={t("common.edit")}>
+                <CommonButton
+                  buttonVariant="edit"
+                  icon
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEdit(knowledge);
+                  }}
+                />
+              </Tooltip>
+              <Tooltip title={t("common.delete")}>
+                <CommonButton
+                  buttonVariant="delete"
+                  icon
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete(knowledge.id);
+                  }}
+                  color="error"
+                />
+              </Tooltip>
+            </Box>
           }
         />
-      </CardActions>
-    </Card>
-  )
+        <CardContent sx={{ flexGrow: 1 }}>
+          <Typography variant="body2" color="text.secondary" gutterBottom>
+            {t("knowledge.documentCount")}: {knowledge.documentCount}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            {t("knowledge.categoryCount")}: {knowledge.categoryCount}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            {t("knowledge.tagCount")}: {knowledge.tagCount}
+          </Typography>
+        </CardContent>
+        <CardActions>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={knowledge.status === 1}
+                onChange={(e) => {
+                  e.stopPropagation();
+                  onStatusChange(knowledge.id, e.target.checked ? 1 : 0);
+                }}
+              />
+            }
+            label={
+              knowledge.status === 1 ? t("common.enable") : t("common.disable")
+            }
+          />
+        </CardActions>
+      </Card>
+    );
+  }
 );
 
 KnowledgeCard.displayName = "KnowledgeCard";
@@ -168,6 +188,8 @@ CategoryTree.displayName = "CategoryTree";
 export default function KnowledgePage() {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
   const [editingKnowledge, setEditingKnowledge] =
     useState<KnowledgeBaseVO | null>(null);
   const [formData, setFormData] = useState<KnowledgeBaseDTO>({
@@ -203,26 +225,34 @@ export default function KnowledgePage() {
   // 使用 useCallback 优化事件处理函数
   const handleDelete = useCallback(
     async (id: number) => {
-      if (!window.confirm(t("knowledge.deleteConfirm"))) return;
-      try {
-        await knowledgeService.delete(id);
-        setSnackbar({
-          open: true,
-          message: t("knowledge.deleteSuccess"),
-          severity: "success",
-        });
-        refresh();
-      } catch (error) {
-        console.error("删除知识库失败:", error);
-        setSnackbar({
-          open: true,
-          message: t("knowledge.deleteError"),
-          severity: "error",
-        });
-      }
+      setDeleteId(id);
+      setDeleteDialogOpen(true);
     },
-    [refresh, t]
+    []
   );
+
+  const handleConfirmDelete = useCallback(async () => {
+    if (!deleteId) return;
+    try {
+      await knowledgeService.delete(deleteId);
+      setSnackbar({
+        open: true,
+        message: t("knowledge.deleteSuccess"),
+        severity: "success",
+      });
+      refresh();
+    } catch (error) {
+      console.error("删除知识库失败:", error);
+      setSnackbar({
+        open: true,
+        message: t("knowledge.deleteError"),
+        severity: "error",
+      });
+    } finally {
+      setDeleteDialogOpen(false);
+      setDeleteId(null);
+    }
+  }, [deleteId, refresh, t]);
 
   const handleStatusChange = useCallback(
     async (id: number, status: number) => {
@@ -416,34 +446,29 @@ export default function KnowledgePage() {
               flexDirection: "column",
             }}
           >
-            <Grid container spacing={3}>
-              {loading ? (
-                <Grid item xs={12}>
-                  <Box sx={{ display: "flex", justifyContent: "center", p: 3 }}>
-                    <CircularProgress />
-                  </Box>
-                </Grid>
-              ) : knowledgeList.length === 0 ? (
-                <Grid item xs={12}>
-                  <Box sx={{ display: "flex", justifyContent: "center", p: 3 }}>
-                    {t("common.noData")}
-                  </Box>
-                </Grid>
-              ) : (
-                knowledgeList.map((knowledge) => (
-                  <Grid item xs={12} sm={6} md={4} key={knowledge.id}>
-                    <KnowledgeCard
-                      knowledge={knowledge}
-                      onEdit={handleOpen}
-                      onDelete={handleDelete}
-                      onStatusChange={handleStatusChange}
-                      t={t}
-                    />
-                  </Grid>
-                ))
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 3 }}>
+              {loading && (
+                <Box sx={{ width: "100%", display: "flex", justifyContent: "center", p: 3 }}>
+                  <CircularProgress />
+                </Box>
               )}
-            </Grid>
-
+              {!loading && knowledgeList.length === 0 && (
+                <Box sx={{ width: "100%", display: "flex", justifyContent: "center", p: 3 }}>
+                  {t("common.noData")}
+                </Box>
+              )}
+              {!loading && knowledgeList.length > 0 && knowledgeList.map((knowledge) => (
+                <Box key={knowledge.id} sx={{ width: { xs: "100%", sm: "calc(50% - 12px)", md: "calc(33.33% - 16px)" } }}>
+                  <KnowledgeCard
+                    knowledge={knowledge}
+                    onEdit={handleOpen}
+                    onDelete={handleDelete}
+                    onStatusChange={handleStatusChange}
+                    t={t}
+                  />
+                </Box>
+              ))}
+            </Box>
           </Box>
           <Box sx={{ mt: 3, display: "flex", justifyContent: "flex-end" }}>
               <Pagination
@@ -497,6 +522,37 @@ export default function KnowledgePage() {
               disabled={!formData.name}
             >
               {t("common.save")}
+            </CommonButton>
+          </DialogActions>
+        </Dialog>
+
+        <Dialog
+          open={deleteDialogOpen}
+          onClose={() => setDeleteDialogOpen(false)}
+          maxWidth="xs"
+          fullWidth
+        >
+          <DialogTitle>{t("knowledge.deleteKnowledge")}</DialogTitle>
+          <DialogContent>
+            <Typography>
+              {t("knowledge.deleteConfirm")}
+            </Typography>
+          </DialogContent>
+          <DialogActions>
+            <CommonButton
+              buttonVariant="cancel"
+              onClick={() => {
+                setDeleteDialogOpen(false);
+                setDeleteId(null);
+              }}
+            >
+              {t("common.cancel")}
+            </CommonButton>
+            <CommonButton
+              buttonVariant="confirm"
+              onClick={handleConfirmDelete}
+            >
+              {t("common.confirm")}
             </CommonButton>
           </DialogActions>
         </Dialog>
