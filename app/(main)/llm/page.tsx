@@ -6,20 +6,17 @@ import {
   Card,
   CardContent,
   Typography,
-  Button,
-  IconButton,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  TextField,
-  Switch,
-  FormControlLabel,
   Grid,
   Tooltip,
   Alert,
   Snackbar,
   CircularProgress,
+  FormControlLabel,
+  Switch,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -29,7 +26,13 @@ import {
 } from '@mui/icons-material';
 import { LlmConfig } from '@/app/types/llm';
 import { llmService } from '@/app/services/llm';
+import { useTranslation } from 'react-i18next';
+import { CommonButton } from '@/app/components/common/CommonButton';
+import { CommonInput } from '@/app/components/common/CommonInput';
+import { PerformanceLayout } from '@/app/components/common/PerformanceLayout';
+
 export default function LlmPage() {
+  const { t } = useTranslation();
   const [configs, setConfigs] = useState<LlmConfig[]>([]);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
@@ -57,13 +60,13 @@ export default function LlmPage() {
       if (response.data.code === 200) {
         setConfigs(response.data.data);
       } else {
-        throw new Error(response.data.message || '获取配置失败');
+        throw new Error(response.data.message || t('llm.fetchError'));
       }
     } catch (error) {
       console.error('获取大模型配置失败:', error);
       setSnackbar({
         open: true,
-        message: error instanceof Error ? error.message : '获取配置失败',
+        message: error instanceof Error ? error.message : t('llm.fetchError'),
         severity: 'error',
       });
     } finally {
@@ -104,6 +107,15 @@ export default function LlmPage() {
 
   const handleSubmit = async () => {
     try {
+      if (!formData.modelName || !formData.apiUrl || !formData.apiKey) {
+        setSnackbar({
+          open: true,
+          message: t('llm.nameRequired'),
+          severity: 'error',
+        });
+        return;
+      }
+
       if (editingConfig) {
         const response = await llmService.update({
           ...formData as LlmConfig,
@@ -112,57 +124,57 @@ export default function LlmPage() {
         if (response.data.code === 200) {
           setSnackbar({
             open: true,
-            message: '更新成功',
+            message: t('llm.updateSuccess'),
             severity: 'success',
           });
           handleClose();
           fetchConfigs();
         } else {
-          throw new Error(response.data.message || '更新失败');
+          throw new Error(response.data.message || t('llm.updateError'));
         }
       } else {
         const response = await llmService.save(formData as Omit<LlmConfig, 'id' | 'createTime' | 'updateTime'>);
         if (response.data.code === 200) {
           setSnackbar({
             open: true,
-            message: '添加成功',
+            message: t('llm.createSuccess'),
             severity: 'success',
           });
           handleClose();
           fetchConfigs();
         } else {
-          throw new Error(response.data.message || '添加失败');
+          throw new Error(response.data.message || t('llm.createError'));
         }
       }
     } catch (error) {
       console.error('保存大模型配置失败:', error);
       setSnackbar({
         open: true,
-        message: error instanceof Error ? error.message : '操作失败',
+        message: error instanceof Error ? error.message : (editingConfig ? t('llm.updateError') : t('llm.createError')),
         severity: 'error',
       });
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!window.confirm('确定要删除这个配置吗？')) return;
+    if (!window.confirm(t('llm.deleteConfirmMessage'))) return;
     try {
       const response = await llmService.delete(id);
       if (response.data.code === 200) {
         setSnackbar({
           open: true,
-          message: '删除成功',
+          message: t('llm.deleteSuccess'),
           severity: 'success',
         });
         fetchConfigs();
       } else {
-        throw new Error(response.data.message || '删除失败');
+        throw new Error(response.data.message || t('llm.deleteError'));
       }
     } catch (error) {
       console.error('删除大模型配置失败:', error);
       setSnackbar({
         open: true,
-        message: error instanceof Error ? error.message : '删除失败',
+        message: error instanceof Error ? error.message : t('llm.deleteError'),
         severity: 'error',
       });
     }
@@ -177,189 +189,198 @@ export default function LlmPage() {
       if (response.data.code === 200) {
         setSnackbar({
           open: true,
-          message: '状态更新成功',
+          message: t('llm.statusUpdateSuccess'),
           severity: 'success',
         });
         await fetchConfigs();
       } else {
-        throw new Error(response.data.message || '更新状态失败');
+        throw new Error(response.data.message || t('llm.statusUpdateError'));
       }
     } catch (error) {
       console.error('更新状态失败:', error);
       setSnackbar({
         open: true,
-        message: error instanceof Error ? error.message : '更新状态失败',
+        message: error instanceof Error ? error.message : t('llm.statusUpdateError'),
         severity: 'error',
       });
     }
   };
 
   return (
-    <Box>
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center',
-        mb: 3 
-      }}>
-        <Typography variant="h5" component="h2" sx={{ fontWeight: 600 }}>
-          大模型配置
-        </Typography>
-        <Box>
-          <Tooltip title="刷新">
-            <IconButton onClick={fetchConfigs} sx={{ mr: 1 }}>
-              <RefreshIcon />
-            </IconButton>
-          </Tooltip>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => handleOpen()}
-            sx={{
-              background: 'linear-gradient(45deg, #6C8EF2 30%, #76E3C4 90%)',
-              '&:hover': {
-                background: 'linear-gradient(45deg, #5A7DE0 30%, #65D2B3 90%)',
-              },
-            }}
-          >
-            新增配置
-          </Button>
-        </Box>
-      </Box>
+    <PerformanceLayout>
+      <Box sx={{ p: 3 }}>
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center',
+          mb: 3 
+        }}>
 
-      {loading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-          <CircularProgress />
-        </Box>
-      ) : (
-        <Grid container spacing={3}>
-          {configs.map((config) => (
-            <Grid item xs={12} sm={6} md={4} key={config.id}>
-              <Card
-                sx={{
-                  height: '100%',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  transition: 'all 0.3s ease-in-out',
-                  '&:hover': {
-                    transform: 'translateY(-4px)',
-                    boxShadow: 3,
-                  },
-                }}
+          <Box sx={{ marginLeft: 'auto' }}>
+            <Tooltip title={t('common.refresh')}>
+              <CommonButton
+                buttonVariant="add"
+                onClick={fetchConfigs}
+                sx={{ mr: 1 }}
               >
-                <CardContent sx={{ flexGrow: 1 }}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                    <Typography variant="h6" component="h3" sx={{ fontWeight: 600 }}>
-                      {config.modelName}
-                    </Typography>
-                    <FormControlLabel
-                      control={
-                        <Switch
-                          checked={config.enabled}
-                          onChange={() => handleStatusChange(config)}
-                          color="primary"
-                        />
-                      }
-                      label={config.enabled ? '启用' : '禁用'}
-                    />
-                  </Box>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                    API地址: {config.apiUrl}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                    API密钥: {config.apiKey.substring(0, 8)}...
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    更新时间: {new Date(config.updateTime).toLocaleString()}
-                  </Typography>
-                </CardContent>
-                <Box sx={{ p: 2, pt: 0, display: 'flex', justifyContent: 'flex-end' }}>
-                  <Tooltip title="编辑">
-                    <IconButton onClick={() => handleOpen(config)} size="small">
-                      <EditIcon />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="删除">
-                    <IconButton onClick={() => handleDelete(config.id)} size="small" color="error">
-                      <DeleteIcon />
-                    </IconButton>
-                  </Tooltip>
-                </Box>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
-      )}
-
-      <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-        <DialogTitle>
-          {editingConfig ? '编辑大模型配置' : '新增大模型配置'}
-        </DialogTitle>
-        <DialogContent>
-          <Box sx={{ pt: 2 }}>
-            <TextField
-              fullWidth
-              label="模型名称"
-              value={formData.modelName}
-              onChange={(e) => setFormData({ ...formData, modelName: e.target.value })}
-              sx={{ mb: 2 }}
-            />
-            <TextField
-              fullWidth
-              label="API地址"
-              value={formData.apiUrl}
-              onChange={(e) => setFormData({ ...formData, apiUrl: e.target.value })}
-              sx={{ mb: 2 }}
-            />
-            <TextField
-              fullWidth
-              label="API密钥"
-              value={formData.apiKey}
-              onChange={(e) => setFormData({ ...formData, apiKey: e.target.value })}
-              type="password"
-              sx={{ mb: 2 }}
-            />
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={formData.enabled}
-                  onChange={(e) => setFormData({ ...formData, enabled: e.target.checked })}
-                />
-              }
-              label="启用"
-            />
+                <RefreshIcon />
+              </CommonButton>
+            </Tooltip>
+            <CommonButton
+              buttonVariant="add"
+              onClick={() => handleOpen()}
+            >
+              {t('llm.createConfig')}
+            </CommonButton>
           </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose}>取消</Button>
-          <Button
-            onClick={handleSubmit}
-            variant="contained"
-            sx={{
-              background: 'linear-gradient(45deg, #6C8EF2 30%, #76E3C4 90%)',
-              '&:hover': {
-                background: 'linear-gradient(45deg, #5A7DE0 30%, #65D2B3 90%)',
-              },
-            }}
-          >
-            确定
-          </Button>
-        </DialogActions>
-      </Dialog>
+        </Box>
 
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={3000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-      >
-        <Alert
+        {loading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+            <CircularProgress />
+          </Box>
+        ) : (
+          <Grid container spacing={3}>
+            {configs.map((config) => (
+              <Grid item xs={12} sm={6} md={4} key={config.id}>
+                <Card
+                  sx={{
+                    height: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    transition: 'all 0.3s ease-in-out',
+                    '&:hover': {
+                      transform: 'translateY(-4px)',
+                      boxShadow: 3,
+                    },
+                  }}
+                >
+                  <CardContent sx={{ flexGrow: 1 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                      <Typography variant="h6" component="h3" sx={{ fontWeight: 600 }}>
+                        {config.modelName}
+                      </Typography>
+                      <FormControlLabel
+                        control={
+                          <Switch
+                            checked={config.enabled}
+                            onChange={() => handleStatusChange(config)}
+                            color="primary"
+                          />
+                        }
+                        label={config.enabled ? t('llm.enabled') : t('llm.disabled')}
+                      />
+                    </Box>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                      {t('llm.apiUrl')}: {config.apiUrl}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                      {t('llm.apiKey')}: {config.apiKey.substring(0, 8)}...
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {t('common.updateTime')}: {new Date(config.updateTime).toLocaleString()}
+                    </Typography>
+                  </CardContent>
+                  <Box sx={{ p: 2, pt: 0, display: 'flex', justifyContent: 'flex-end' }}>
+                    <Tooltip title={t('common.edit')}>
+                      <CommonButton
+                        buttonVariant="edit"
+                        icon
+                        onClick={() => handleOpen(config)}
+                        size="small"
+                      >
+                      </CommonButton>
+                    </Tooltip>
+                    <Tooltip title={t('common.delete')}>
+                      <CommonButton
+                        buttonVariant="delete"
+                        icon
+                        onClick={() => handleDelete(config.id)}
+                        size="small"
+                        color="error"
+                      >
+                      </CommonButton>
+                    </Tooltip>
+                  </Box>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+        )}
+
+        <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+          <DialogTitle>
+            {editingConfig ? t('llm.editConfig') : t('llm.createConfig')}
+          </DialogTitle>
+          <DialogContent>
+            <Box sx={{ pt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <CommonInput
+                label={t('llm.modelName')}
+                value={formData.modelName}
+                onChange={(value) => setFormData({ ...formData, modelName: value as string })}
+                error={!formData.modelName}
+                helperText={!formData.modelName ? t('llm.nameRequired') : ''}
+                required
+              />
+              <CommonInput
+                label={t('llm.apiUrl')}
+                value={formData.apiUrl}
+                onChange={(value) => setFormData({ ...formData, apiUrl: value as string })}
+                error={!formData.apiUrl}
+                helperText={!formData.apiUrl ? t('llm.apiUrlRequired') : ''}
+                required
+              />
+              <CommonInput
+                label={t('llm.apiKey')}
+                value={formData.apiKey}
+                onChange={(value) => setFormData({ ...formData, apiKey: value as string })}
+                error={!formData.apiKey}
+                helperText={!formData.apiKey ? t('llm.apiKeyRequired') : ''}
+                required
+                type="password"
+              />
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={formData.enabled}
+                    onChange={(e) => setFormData({ ...formData, enabled: e.target.checked })}
+                  />
+                }
+                label={formData.enabled ? t('llm.enabled') : t('llm.disabled')}
+              />
+            </Box>
+          </DialogContent>
+          <DialogActions>
+            <CommonButton
+              buttonVariant="cancel"
+              onClick={handleClose}
+            >
+              {t('common.cancel')}
+            </CommonButton>
+            <CommonButton
+              buttonVariant="submit"
+              onClick={handleSubmit}
+              disabled={!formData.modelName || !formData.apiUrl || !formData.apiKey}
+            >
+              {t('common.submit')}
+            </CommonButton>
+          </DialogActions>
+        </Dialog>
+
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={3000}
           onClose={() => setSnackbar({ ...snackbar, open: false })}
-          severity={snackbar.severity}
-          sx={{ width: '100%' }}
         >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
-    </Box>
+          <Alert
+            onClose={() => setSnackbar({ ...snackbar, open: false })}
+            severity={snackbar.severity}
+            sx={{ width: '100%' }}
+          >
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
+      </Box>
+    </PerformanceLayout>
   );
 } 

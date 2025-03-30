@@ -300,5 +300,30 @@
     "pleaseEnterDimensions": "请输入维度",
     "operateSuccess": "操作成功",
     "operateError": "操作失败"
+  },
+  "llm": {
+    "title": "大模型配置",
+    "modelName": "模型名称",
+    "apiUrl": "API地址",
+    "apiKey": "API密钥",
+    "enabled": "已启用",
+    "disabled": "已禁用",
+    "createConfig": "新增配置",
+    "editConfig": "编辑配置",
+    "deleteConfig": "删除配置",
+    "deleteConfirm": "删除确认",
+    "deleteConfirmMessage": "确定要删除该配置吗？此操作不可恢复。",
+    "nameRequired": "请输入模型名称",
+    "apiUrlRequired": "请输入API地址",
+    "apiKeyRequired": "请输入API密钥",
+    "createSuccess": "创建配置成功",
+    "updateSuccess": "更新配置成功",
+    "deleteSuccess": "删除配置成功",
+    "createError": "创建配置失败",
+    "updateError": "更新配置失败",
+    "deleteError": "删除配置失败",
+    "fetchError": "获取配置失败",
+    "statusUpdateSuccess": "状态更新成功",
+    "statusUpdateError": "状态更新失败"
   }
 } 

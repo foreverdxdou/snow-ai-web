@@ -211,15 +211,25 @@ export const ConfirmButton = styled(BaseButton)(({ theme }) => ({
     }
 }));
 
+// 默认按钮 - 主题色
+export const DefaultButton = styled(BaseButton)(({ theme }) => ({
+    backgroundColor: theme.palette.primary.main,
+    color: theme.palette.primary.contrastText,
+    border: 'none',
+    '&:hover': {
+        backgroundColor: theme.palette.primary.dark,
+    }
+}));
+
 // 按钮组件
 interface CommonButtonProps extends Omit<ButtonProps, 'variant'> {
-    buttonVariant?: 'detail' | 'add' | 'edit' | 'delete' | 'upload' | 'search' | 'reset' | 'login' | 'expand' | 'cancel' | 'submit' | 'close' | 'back' | 'rollback' | 'confirm';
+    buttonVariant?: 'default' | 'detail' | 'add' | 'edit' | 'delete' | 'upload' | 'search' | 'reset' | 'login' | 'expand' | 'cancel' | 'submit' | 'close' | 'back' | 'rollback' | 'confirm';
     icon?: boolean;
     expanded?: boolean;
 }
 
 export const CommonButton = React.forwardRef<HTMLButtonElement, CommonButtonProps>(({
-    buttonVariant = 'detail',
+    buttonVariant = 'default',
     icon = false,
     expanded = false,
     children,
@@ -227,6 +237,8 @@ export const CommonButton = React.forwardRef<HTMLButtonElement, CommonButtonProp
 }, ref) => {
     const getIcon = () => {
         switch (buttonVariant) {
+            case 'default':
+                return null;
             case 'detail':
                 return <VisibilityIcon sx={{ fontSize: 20 }} />;
             case 'add':
@@ -264,14 +276,16 @@ export const CommonButton = React.forwardRef<HTMLButtonElement, CommonButtonProp
 
     const getButtonComponent = () => {
         switch (buttonVariant) {
+            case 'default':
+                return DefaultButton;
             case 'detail':
-                return DetailButton;
+                return icon ? DetailButton : BaseButton;
             case 'add':
                 return AddButton;
             case 'edit':
-                return EditButton;
+                return icon ? EditButton : BaseButton;
             case 'delete':
-                return DeleteButton;
+                return icon ? DeleteButton : BaseButton;
             case 'upload':
                 return UploadButton;
             case 'search':
@@ -287,29 +301,33 @@ export const CommonButton = React.forwardRef<HTMLButtonElement, CommonButtonProp
             case 'submit':
                 return SubmitButton;
             case 'close':
-                return CloseButton;
+                return icon ? CloseButton : BaseButton;
             case 'back':
-                return BackButton;
+                return icon ? BackButton : BaseButton;
             case 'rollback':
                 return RollbackButton;
             case 'confirm':
                 return ConfirmButton;
             default:
-                return BaseButton;
+                return DefaultButton;
         }
     };
 
     const ButtonComponent = getButtonComponent();
+    const buttonIcon = getIcon();
 
-    // 如果是图标按钮，不显示文字
-    if (buttonVariant === 'detail' || buttonVariant === 'delete' || buttonVariant === 'edit' || buttonVariant === 'close' || buttonVariant === 'back') {
+    if (icon && buttonIcon) {
         return (
             <ButtonComponent
                 ref={ref}
-                size="small"
                 {...props}
+                sx={{
+                    p: 1,
+                    minWidth: 'auto',
+                    ...props.sx
+                }}
             >
-                {getIcon()}
+                {buttonIcon}
             </ButtonComponent>
         );
     }
@@ -317,8 +335,6 @@ export const CommonButton = React.forwardRef<HTMLButtonElement, CommonButtonProp
     return (
         <ButtonComponent
             ref={ref}
-            startIcon={icon ? getIcon() : undefined}
-
             {...props}
         >
             {children}
