@@ -129,22 +129,16 @@
   },
   "tags": {
     "title": "Tag Management",
-    "createTag": "Create Tag",
+    "createTag": "New Tag",
     "editTag": "Edit Tag",
-    "deleteTag": "Delete Tag",
-    "deleteConfirm": "Are you sure to delete this tag?",
-    "nameRequired": "Tag name is required",
+    "nameRequired": "Please enter tag name",
     "createSuccess": "Tag created successfully",
-    "updateSuccess": "Tag updated successfully",
-    "deleteSuccess": "Tag deleted successfully",
     "createError": "Failed to create tag",
+    "updateSuccess": "Tag updated successfully",
     "updateError": "Failed to update tag",
+    "deleteSuccess": "Tag deleted successfully",
     "deleteError": "Failed to delete tag",
-    "fetchError": "Failed to fetch tags",
-    "statusUpdateSuccess": "Status updated successfully",
-    "statusUpdateError": "Failed to update status",
-    "color": "Color",
-    "documentCount": "Document Count"
+    "deleteConfirm": "Are you sure you want to delete this tag?"
   },
   "documents": {
     "title": "Document Management",

@@ -1,11 +1,9 @@
 'use client';
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import {
     Box,
     Typography,
-    Button,
-    IconButton,
     Dialog,
     DialogTitle,
     DialogContent,
@@ -17,11 +15,6 @@ import {
     CircularProgress,
     Stack,
 } from '@mui/material';
-import {
-    Add as AddIcon,
-    Edit as EditIcon,
-    Delete as DeleteIcon,
-} from '@mui/icons-material';
 import { tagService } from '@/app/services/tag';
 import type { Tag, TagCreateDTO } from '@/app/types/tag';
 import { useTranslation } from 'react-i18next';
@@ -29,63 +22,25 @@ import { PerformanceLayout } from '@/app/components/common/PerformanceLayout';
 import { PerformanceTable } from '@/app/components/common/PerformanceTable';
 import { usePerformanceData } from '@/app/hooks/usePerformanceData';
 import { useDebouncedCallback } from '@/app/utils/performance';
-import { useThemeMode } from '@/app/hooks/useThemeMode';
 import { Pagination } from '@/app/components/common/Pagination';
 import { formatDate } from '@/app/utils/format';
-
-// 使用 React.memo 优化表格行组件
-const TagRow = React.memo(({ 
-    tag, 
-    onEdit, 
-    onDelete,
-    t
-}: { 
-    tag: Tag; 
-    onEdit: (tag: Tag) => void; 
-    onDelete: (id: number) => void;
-    t: (key: string) => string;
-}) => (
-    <tr>
-        <td>{tag.name}</td>
-        <td>{tag.creatorName}</td>
-        <td>{new Date(tag.createTime).toLocaleString()}</td>
-        <td>
-            <Tooltip title={t('common.edit')}>
-                <IconButton onClick={() => onEdit(tag)} size="small">
-                    <EditIcon />
-                </IconButton>
-            </Tooltip>
-            <Tooltip title={t('common.delete')}>
-                <IconButton
-                    onClick={() => onDelete(tag.id)}
-                    size="small"
-                    color="error"
-                >
-                    <DeleteIcon />
-                </IconButton>
-            </Tooltip>
-        </td>
-    </tr>
-));
-
-TagRow.displayName = 'TagRow';
+import { CommonButton } from '@/app/components/common/CommonButton';
 
 export default function TagsPage() {
     const { t } = useTranslation();
-    const { toggleThemeMode } = useThemeMode();
-    const [open, setOpen] = useState(false);
-    const [editingTag, setEditingTag] = useState<Tag | null>(null);
-    const [formData, setFormData] = useState<TagCreateDTO>({
+    const [open, setOpen] = React.useState(false);
+    const [editingTag, setEditingTag] = React.useState<Tag | null>(null);
+    const [formData, setFormData] = React.useState<TagCreateDTO>({
         name: ''
     });
 
-    const [snackbar, setSnackbar] = useState({
+    const [snackbar, setSnackbar] = React.useState({
         open: false,
         message: '',
         severity: 'success' as 'success' | 'error',
     });
 
-    // 使用 useMemo 优化 defaultParams，避免每次渲染都创建新对象
+    // 使用 useMemo 优化 defaultParams
     const defaultParams = useMemo(() => ({
         current: 1,
         size: 10,
@@ -181,7 +136,7 @@ export default function TagsPage() {
 
     // 使用 useDebouncedCallback 优化分页处理
     const handlePageChange = useDebouncedCallback((page: number, size: number) => {
-        setParams((prev: { current: number; size: number; categoryId?: number }) => ({
+        setParams((prev: { current: number; size: number }) => ({
             ...prev,
             current: page,
             size: size,
@@ -217,22 +172,16 @@ export default function TagsPage() {
             render: (_: any, record: Tag) => record && (
                 <Stack direction="row" spacing={1}>
                     <Tooltip title={t('common.edit')}>
-                        <IconButton 
-                            size="small" 
+                        <CommonButton
+                            buttonVariant="edit"
                             onClick={() => handleOpen(record)}
-                            color="primary"
-                        >
-                            <EditIcon fontSize="small" />
-                        </IconButton>
+                        />
                     </Tooltip>
                     <Tooltip title={t('common.delete')}>
-                        <IconButton 
-                            size="small" 
+                        <CommonButton
+                            buttonVariant="delete"
                             onClick={() => handleDelete(record.id)}
-                            color="error"
-                        >
-                            <DeleteIcon fontSize="small" />
-                        </IconButton>
+                        />
                     </Tooltip>
                 </Stack>
             )
@@ -244,7 +193,7 @@ export default function TagsPage() {
             <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                 <Box sx={{
                     p: 3,
-                    borderBottom: '1px solid',
+
                     borderColor: 'divider',
                     bgcolor: 'background.paper',
                 }}>
@@ -254,28 +203,17 @@ export default function TagsPage() {
                         alignItems: 'center',
                         mb: 2,
                     }}>
-                        <Typography variant="h5" sx={{ fontWeight: 600 }}>
-                            {t('tags.title')}
-                        </Typography>
-                        <Button
-                            variant="contained"
-                            startIcon={<AddIcon />}
+          
+                        <CommonButton
+                            buttonVariant="add"
                             onClick={() => handleOpen()}
                             sx={{
-                                background: 'linear-gradient(45deg, #6C8EF2 30%, #76E3C4 90%)',
-                                '&:hover': {
-                                    background: 'linear-gradient(45deg, #5A7DE0 30%, #65D2B3 90%)',
-                                },
-                                height: '44px',
-                                px: 3
+                                marginLeft: 'auto',
                             }}
                         >
                             {t('tags.createTag')}
-                        </Button>
+                        </CommonButton>
                     </Box>
-                </Box>
-
-                <Box sx={{ p: 3, flex: 1, overflow: 'auto' }}>
                     <PerformanceTable
                         loading={loading}
                         data={tags}
@@ -292,6 +230,8 @@ export default function TagsPage() {
                         />
                     </Box>
                 </Box>
+
+              
 
                 <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
                     <DialogTitle>
@@ -311,20 +251,19 @@ export default function TagsPage() {
                         </Box>
                     </DialogContent>
                     <DialogActions>
-                        <Button onClick={handleClose}>{t('common.cancel')}</Button>
-                        <Button
+                        <CommonButton
+                            buttonVariant="cancel"
+                            onClick={handleClose}
+                        >
+                            {t('common.cancel')}
+                        </CommonButton>
+                        <CommonButton
+                            buttonVariant="submit"
                             onClick={handleSubmit}
-                            variant="contained"
                             disabled={!formData.name}
-                            sx={{
-                                background: 'linear-gradient(45deg, #6C8EF2 30%, #76E3C4 90%)',
-                                '&:hover': {
-                                    background: 'linear-gradient(45deg, #5A7DE0 30%, #65D2B3 90%)',
-                                },
-                            }}
                         >
                             {t('common.save')}
-                        </Button>
+                        </CommonButton>
                     </DialogActions>
                 </Dialog>
 

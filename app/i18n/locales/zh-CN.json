@@ -129,22 +129,16 @@
   },
   "tags": {
     "title": "标签管理",
-    "createTag": "创建标签",
+    "createTag": "新建标签",
     "editTag": "编辑标签",
-    "deleteTag": "删除标签",
-    "deleteConfirm": "确定要删除此标签吗？",
-    "nameRequired": "标签名称不能为空",
+    "nameRequired": "请输入标签名称",
     "createSuccess": "创建标签成功",
-    "updateSuccess": "更新标签成功",
-    "deleteSuccess": "删除标签成功",
     "createError": "创建标签失败",
+    "updateSuccess": "更新标签成功",
     "updateError": "更新标签失败",
+    "deleteSuccess": "删除标签成功",
     "deleteError": "删除标签失败",
-    "fetchError": "获取标签失败",
-    "statusUpdateSuccess": "状态更新成功",
-    "statusUpdateError": "状态更新失败",
-    "color": "颜色",
-    "documentCount": "文档数量"
+    "deleteConfirm": "确定要删除该标签吗？"
   },
   "documents": {
     "title": "文档管理",
