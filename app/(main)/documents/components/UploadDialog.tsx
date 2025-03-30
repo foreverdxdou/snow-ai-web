@@ -119,16 +119,11 @@ export const UploadDialog: React.FC<UploadDialogProps> = ({
                 <Typography variant="h6" component="span">
                     {t('documents.uploadDocument')}
                 </Typography>
-                <IconButton 
-                    onClick={handleClose} 
+                <CommonButton
+                    buttonVariant="close"
+                    onClick={handleClose}
                     size="small"
-                    sx={{ 
-                        color: 'text.secondary',
-                        '&:hover': { color: 'error.main' }
-                    }}
-                >
-                    <CloseIcon />
-                </IconButton>
+                />
             </DialogTitle>
             <DialogContent>
                 <Box sx={{ pt: 2 }}>
