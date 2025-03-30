@@ -8,6 +8,7 @@ import {
     Snackbar,
     Stack,
     Typography,
+    Chip,
 } from '@mui/material';
 import type { Document } from '@/app/types/document';
 import { Pagination } from '@/app/components/common/Pagination';
@@ -125,15 +126,15 @@ export default function DocumentsPage() {
                 const getStatusColor = () => {
                     switch (record.parseStatus) {
                         case 0:
-                            return 'text.secondary'; // 未解析 - 灰色
+                            return 'default'; // 未解析 - 灰色
                         case 1:
-                            return 'warning.main';   // 解析中 - 橙色
+                            return 'info';    // 解析中 - 蓝色
                         case 2:
-                            return 'success.main';   // 解析成功 - 绿色
+                            return 'success'; // 解析成功 - 绿色
                         case 3:
-                            return 'error.main';     // 解析失败 - 红色
+                            return 'error';   // 解析失败 - 红色
                         default:
-                            return 'text.secondary';
+                            return 'default';
                     }
                 };
 
@@ -153,26 +154,18 @@ export default function DocumentsPage() {
                 };
 
                 return (
-                    <Typography 
-                        variant="body2" 
-                        sx={{ 
-                            color: getStatusColor(),
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 1
+                    <Chip
+                        label={getStatusText()}
+                        color={getStatusColor() as any}
+                        size="small"
+                        sx={{
+                            minWidth: 90,
+                            '& .MuiChip-label': {
+                                px: 1,
+                                fontSize: '0.875rem'
+                            }
                         }}
-                    >
-                        <Box
-                            sx={{
-                                width: 8,
-                                height: 8,
-                                borderRadius: '50%',
-                                bgcolor: getStatusColor(),
-                                opacity: 0.8
-                            }}
-                        />
-                        {getStatusText()}
-                    </Typography>
+                    />
                 );
             }
         },
