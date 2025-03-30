@@ -18,7 +18,9 @@ import {
     ExpandMore as ExpandMoreIcon,
     ExpandLess as ExpandLessIcon,
     Close as CloseIcon,
-    Check as CheckIcon
+    Check as CheckIcon,
+    ArrowBack as ArrowBackIcon,
+    Restore as RestoreIcon
 } from '@mui/icons-material';
 
 // 基础按钮样式
@@ -175,9 +177,33 @@ export const CloseButton = styled(IconButton)(({ theme }) => ({
     }
 }));
 
+// 返回按钮 - 图标按钮
+export const BackButton = styled(IconButton)(({ theme }) => ({
+    color: theme.palette.primary.main,
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    '&:hover': {
+        backgroundColor: alpha(theme.palette.primary.main, 0.08),
+        transform: 'translateY(-1px)',
+    }
+}));
+
+// 回滚按钮 - 警告色渐变
+export const RollbackButton = styled(BaseButton)(({ theme }) => ({
+    background: `linear-gradient(45deg, ${theme.palette.warning.main} 30%, ${theme.palette.warning.light} 90%)`,
+    color: theme.palette.warning.contrastText,
+    border: 'none',
+    '&:hover': {
+        background: `linear-gradient(45deg, ${theme.palette.warning.dark} 30%, ${theme.palette.warning.main} 90%)`,
+    },
+    '&.Mui-disabled': {
+        background: alpha(theme.palette.warning.main, 0.12),
+        color: alpha(theme.palette.warning.main, 0.38),
+    }
+}));
+
 // 按钮组件
 interface CommonButtonProps extends Omit<ButtonProps, 'variant'> {
-    buttonVariant?: 'detail' | 'add' | 'edit' | 'delete' | 'upload' | 'search' | 'reset' | 'login' | 'expand' | 'cancel' | 'submit' | 'close';
+    buttonVariant?: 'detail' | 'add' | 'edit' | 'delete' | 'upload' | 'search' | 'reset' | 'login' | 'expand' | 'cancel' | 'submit' | 'close' | 'back' | 'rollback';
     icon?: boolean;
     expanded?: boolean;
 }
@@ -215,6 +241,10 @@ export const CommonButton = React.forwardRef<HTMLButtonElement, CommonButtonProp
                 return <CheckIcon sx={{ fontSize: 20 }} />;
             case 'close':
                 return <CloseIcon sx={{ fontSize: 20 }} />;
+            case 'back':
+                return <ArrowBackIcon sx={{ fontSize: 20 }} />;
+            case 'rollback':
+                return <RestoreIcon sx={{ fontSize: 20 }} />;
             default:
                 return null;
         }
@@ -246,6 +276,10 @@ export const CommonButton = React.forwardRef<HTMLButtonElement, CommonButtonProp
                 return SubmitButton;
             case 'close':
                 return CloseButton;
+            case 'back':
+                return BackButton;
+            case 'rollback':
+                return RollbackButton;
             default:
                 return BaseButton;
         }
@@ -254,7 +288,7 @@ export const CommonButton = React.forwardRef<HTMLButtonElement, CommonButtonProp
     const ButtonComponent = getButtonComponent();
 
     // 如果是图标按钮，不显示文字
-    if (buttonVariant === 'detail' || buttonVariant === 'delete' || buttonVariant === 'edit' || buttonVariant === 'close') {
+    if (buttonVariant === 'detail' || buttonVariant === 'delete' || buttonVariant === 'edit' || buttonVariant === 'close' || buttonVariant === 'back') {
         return (
             <ButtonComponent
                 ref={ref}

@@ -205,7 +205,26 @@
     "maxFileSize": "Maximum file size: {{size}}",
     "fileTooLarge": "File too large",
     "uploading": "Uploading...",
-    "kbName": "Knowledge Base"
+    "kbName": "Knowledge Base",
+    "detail": {
+      "title": "Document Detail",
+      "kb": "Knowledge Base",
+      "category": "Category",
+      "creator": "Creator",
+      "version": "Current Version",
+      "content": "Document Content",
+      "versionHistory": "Version History",
+      "versionNumber": "Version",
+      "modifier": "Modified By",
+      "modifyTime": "Modify Time",
+      "action": "Action",
+      "rollback": "Rollback",
+      "close": "Close",
+      "notFound": "Document not found",
+      "fetchError": "Failed to fetch document details",
+      "rollbackSuccess": "Rollback successful",
+      "rollbackError": "Rollback failed"
+    }
   },
   "menu": {
     "home": "Home",
