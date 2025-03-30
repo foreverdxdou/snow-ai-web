@@ -18,7 +18,7 @@ import {
   CircularProgress,
 } from '@mui/material';
 import {
-  History as HistoryIcon,
+  History as HistoryIcon,Restore as RestoreIcon
 } from '@mui/icons-material';
 import { documentService } from '@/app/services/document';
 import type { Document, DocumentVersion, DocumentTag } from '@/app/types/document';
@@ -174,7 +174,7 @@ export default function DocumentDetailPage({ params }: { params: { id: string } 
             <Tooltip title={t('documents.detail.rollback')}>
                 <CommonButton
                   buttonVariant="rollback"
-                  icon
+                  startIcon={<RestoreIcon />}
                   onClick={() => handleRollback(record.version)}
                 >
                   {t('documents.detail.rollback')}
@@ -215,6 +215,7 @@ export default function DocumentDetailPage({ params }: { params: { id: string } 
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <CommonButton
               buttonVariant="back"
+              icon
               onClick={() => router.back()}
             />
             <Typography variant="h5" sx={{ fontWeight: 600 }}>

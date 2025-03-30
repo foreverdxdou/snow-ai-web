@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback, useEffect } from 'react';
 import {
     Box,
     Tooltip,
@@ -27,7 +27,7 @@ import { DocumentDialog } from '@/app/(main)/documents/components/DocumentDialog
 import { UploadDialog } from '@/app/(main)/documents/components/UploadDialog';
 import { useDocumentActions } from '@/app/(main)/documents/hooks/useDocumentActions';
 import { useDocumentData } from '@/app/(main)/documents/hooks/useDocumentData';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { DocumentSearchBar } from '@/app/(main)/documents/components/DocumentSearchBar';
 
 // 定义搜索参数类型
@@ -43,6 +43,10 @@ interface SearchParams {
 export default function DocumentsPage() {
     const { t } = useTranslation();
     const router = useRouter();
+    const searchParams = useSearchParams();
+    
+    // 从 URL 获取 kbId 参数
+    const kbId = searchParams.get('kbId');
     
     // 使用自定义 Hook 管理文档数据
     const {
@@ -55,6 +59,16 @@ export default function DocumentsPage() {
         categories,
         knowledgeBases,
     } = useDocumentData();
+
+    // 使用 useEffect 处理 URL 参数
+    useEffect(() => {
+        if (kbId) {
+            setParams(prev => ({
+                ...prev,
+                kbId: Number(kbId)
+            }));
+        }
+    }, [kbId, setParams]);
 
     // 使用自定义 Hook 管理文档操作
     const {
@@ -213,23 +227,23 @@ export default function DocumentsPage() {
                     <Tooltip title={t('common.detail')}>
                         <CommonButton
                             buttonVariant="detail"
+                            icon
                             onClick={() => router.push(`/documents/${record.id}`)}
-                        >
-                        </CommonButton>
+                        />
                     </Tooltip>
                     <Tooltip title={t('common.edit')}>
                         <CommonButton
                             buttonVariant="edit"
+                            icon
                             onClick={() => handleOpen(record)}
-                        >
-                        </CommonButton>
+                        />
                     </Tooltip>
                     <Tooltip title={t('common.delete')}>
                         <CommonButton
                             buttonVariant="delete"
-                            onClick={() => setDeleteDialogOpen(true)}
-                        >
-                        </CommonButton>
+                            icon
+                            onClick={() => handleDelete(record.id)}
+                        />
                     </Tooltip>
                 </Stack>
             )

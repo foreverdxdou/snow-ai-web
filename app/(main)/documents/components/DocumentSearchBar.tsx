@@ -9,6 +9,7 @@ import { Upload as UploadIcon } from "@mui/icons-material";
 import { CommonInput } from "@/app/components/common/CommonInput";
 import { CommonSelect } from "@/app/components/common/CommonSelect";
 import { CommonButton } from "@/app/components/common/CommonButton";
+import { useRouter } from "next/navigation";
 
 interface DocumentSearchBarProps {
   params: SearchParams;
@@ -27,6 +28,7 @@ export const DocumentSearchBar: React.FC<DocumentSearchBarProps> = ({
   knowledgeBases,
 }) => {
   const { t } = useTranslation();
+  const router = useRouter();
   const [searchName, setSearchName] = useState(params.title || "");
 
   // 处理搜索名称变化
@@ -77,7 +79,9 @@ export const DocumentSearchBar: React.FC<DocumentSearchBarProps> = ({
       kbId: undefined,
       status: undefined,
     });
-  }, [params.size, setParams]);
+    // 清除 URL 参数
+    router.push('/documents');
+  }, [params.size, setParams, router]);
 
   return (
     <Box sx={{ mb: 2 }}>
