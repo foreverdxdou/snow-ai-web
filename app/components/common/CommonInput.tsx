@@ -13,7 +13,6 @@ const BaseInput = styled(TextField)(({ theme }) => ({
         backgroundColor: alpha(theme.palette.background.paper, 0.6),
         backdropFilter: 'blur(8px)',
         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-        height: '40px',
         '&:hover': {
             backgroundColor: alpha(theme.palette.background.paper, 0.8),
             transform: 'translateY(-1px)',

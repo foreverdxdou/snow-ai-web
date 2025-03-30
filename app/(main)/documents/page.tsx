@@ -175,24 +175,8 @@ export default function DocumentsPage() {
 
     return (
         <PerformanceLayout>
-            <Box 
-                sx={{ 
-                    height: '100%', 
-                    display: 'flex', 
-                    flexDirection: 'column',
-                    bgcolor: 'background.default'
-                }}
-            >
-                {/* 搜索栏组件 */}
-                <DocumentSearchBar 
-                    params={params as SearchParams}
-                    setParams={setParams}
-                    refresh={refresh}
-                    onUploadClick={() => setUploadOpen(true)}
-                    categories={categories}
-                    knowledgeBases={knowledgeBases}
-                />
-
+          
+               
                 {/* 表格内容区域 */}
                 <Box 
                     sx={{ 
@@ -205,6 +189,16 @@ export default function DocumentsPage() {
                         }
                     }}
                 >
+                     {/* 搜索栏组件 */}
+                    <DocumentSearchBar 
+                        params={params as SearchParams}
+                        setParams={setParams}
+                        refresh={refresh}
+                        onUploadClick={() => setUploadOpen(true)}
+                        categories={categories}
+                        knowledgeBases={knowledgeBases}
+                    />
+
                     <PerformanceTable
                         loading={loading}
                         data={documents}
@@ -267,7 +261,6 @@ export default function DocumentsPage() {
                         {snackbar.message}
                     </Alert>
                 </Snackbar>
-            </Box>
         </PerformanceLayout>
     );
 } 

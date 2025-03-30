@@ -252,6 +252,7 @@ export const CommonButton = React.forwardRef<HTMLButtonElement, CommonButtonProp
         <ButtonComponent
             ref={ref}
             startIcon={icon ? getIcon() : undefined}
+
             {...props}
         >
             {children}
