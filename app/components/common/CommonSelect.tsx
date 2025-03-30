@@ -84,8 +84,8 @@ const StyledMenu = styled(MenuItem)(({ theme }) => ({
 }));
 
 interface CommonSelectProps extends Omit<SelectProps, 'value' | 'onChange'> {
-    value?: string | number | string[];
-    onChange?: (value: string | number | string[]) => void;
+    value?: string | number | string[] | number[];
+    onChange?: (value: string | number | string[] | number[]) => void;
     options: Array<{
         id: string | number;
         name: string;
@@ -104,7 +104,7 @@ export const CommonSelect: React.FC<CommonSelectProps> = ({
     options,
     label,
     showDescription = false,
-    showAll = true,
+    showAll = false,
     allValue = '',
     showAllLabel = '',
     ...props

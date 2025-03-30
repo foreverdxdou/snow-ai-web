@@ -52,8 +52,13 @@ const BaseInput = styled(TextField)(({ theme }) => ({
     '& .MuiInputLabel-root': {
         color: alpha(theme.palette.text.primary, 0.6),
         fontSize: '0.875rem',
+        transform: 'translate(14px, 50%)',
         '&.Mui-focused': {
             color: theme.palette.primary.main,
+            transform: 'translate(14px, -9px) scale(0.75)',
+        },
+        '&.MuiInputLabel-shrink': {
+            transform: 'translate(14px, -9px) scale(0.75)',
         }
     },
     '& .MuiInputAdornment-root': {

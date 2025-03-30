@@ -17,7 +17,7 @@ export const useDocumentActions = (refresh: () => void) => {
     const [file, setFile] = useState<File | null>(null);
     const [uploadLoading, setUploadLoading] = useState(false);
     const [selectedKbId, setSelectedKbId] = useState<number | null>(null);
-    const [selectedTagId, setSelectedTagId] = useState<number | null>(null);
+    const [selectedTagId, setSelectedTagId] = useState<number[]>([]);
     const [snackbar, setSnackbar] = useState<SnackbarState>({
         open: false,
         message: '',
@@ -171,8 +171,8 @@ export const useDocumentActions = (refresh: () => void) => {
         const formData = new FormData();
         formData.append('file', file);
         formData.append('kbId', selectedKbId.toString());
-        if (selectedTagId) {
-            formData.append('tagIds', selectedTagId.toString());
+        if (selectedTagId.length > 0) {
+            formData.append('tagIds', selectedTagId.join(','));
         }
 
         try {

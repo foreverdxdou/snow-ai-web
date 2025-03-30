@@ -108,12 +108,14 @@ export const SearchButton = styled(BaseButton)(({ theme }) => ({
 
 // 重置按钮 - 灰色
 export const ResetButton = styled(BaseButton)(({ theme }) => ({
-    backgroundColor: alpha(theme.palette.grey[500], 0.08),
-    color: theme.palette.grey[700],
-    border: `1px solid ${alpha(theme.palette.grey[500], 0.2)}`,
+    backgroundColor: alpha(theme.palette.grey[500], 0.15),
+    color: theme.palette.mode === 'dark' 
+        ? theme.palette.grey[300] 
+        : theme.palette.grey[700],
+    border: `1px solid ${alpha(theme.palette.grey[500], 0.3)}`,
     '&:hover': {
-        backgroundColor: alpha(theme.palette.grey[500], 0.12),
-        borderColor: alpha(theme.palette.grey[500], 0.3),
+        backgroundColor: alpha(theme.palette.grey[500], 0.25),
+        borderColor: alpha(theme.palette.grey[500], 0.4),
     }
 }));
 
@@ -142,12 +144,14 @@ export const ExpandButton = styled(BaseButton)(({ theme }) => ({
 
 // 取消按钮 - 灰色
 export const CancelButton = styled(BaseButton)(({ theme }) => ({
-    backgroundColor: alpha(theme.palette.grey[500], 0.08),
-    color: theme.palette.grey[700],
-    border: `1px solid ${alpha(theme.palette.grey[500], 0.2)}`,
+    backgroundColor: alpha(theme.palette.grey[500], 0.15),
+    color: theme.palette.mode === 'dark' 
+        ? theme.palette.grey[300] 
+        : theme.palette.grey[700],
+    border: `1px solid ${alpha(theme.palette.grey[500], 0.3)}`,
     '&:hover': {
-        backgroundColor: alpha(theme.palette.grey[500], 0.12),
-        borderColor: alpha(theme.palette.grey[500], 0.3),
+        backgroundColor: alpha(theme.palette.grey[500], 0.25),
+        borderColor: alpha(theme.palette.grey[500], 0.4),
     }
 }));
 

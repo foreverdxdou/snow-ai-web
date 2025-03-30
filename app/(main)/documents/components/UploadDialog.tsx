@@ -55,7 +55,7 @@ export const UploadDialog: React.FC<UploadDialogProps> = ({
         setFile(null);
         setIsFileTooLarge(false);
         setSelectedKbId(null);
-        setSelectedTagId(null);
+        setSelectedTagId([]);
         onClose();
     };
 
@@ -171,31 +171,37 @@ export const UploadDialog: React.FC<UploadDialogProps> = ({
                             value={selectedKbId || ''}
                             options={knowledgeBases.map((kb) => ({ id: kb.id, name: kb.name }))}
                             onChange={(value) => setSelectedKbId(value as number)}
-                            sx={{
-                                '& .MuiSelect-select': {
-                                    py: 1.5
-                                }
-                            }}
-                            showAll
-                            allValue = {null as unknown as string | number}
-                            showAllLabel = {t('documents.selectKbPlaceholder')}
-                            formControlSx = {{ }}
                         />
+                    </FormControl>
+
+                    <FormControl 
+                        fullWidth 
+                        sx={{ 
+                            mt: 3,
+                            '& .MuiOutlinedInput-root': {
+                                bgcolor: 'background.paper',
+                                '&:hover': {
+                                    '& .MuiOutlinedInput-notchedOutline': {
+                                        borderColor: 'primary.main'
+                                    }
+                                }
+                            },
+                            '& .MuiInputLabel-root': {
+                                color: 'text.secondary',
+                                '&.Mui-focused': {
+                                    color: 'primary.main'
+                                }
+                            }
+                        }}
+                    >
 
                         <CommonSelect
+                            fullWidth
+                            multiple
                             label={t('documents.selectTag')}
-                            value={selectedTagId || ''}
+                            value={selectedTagId || []}
                             options={tags.map((tag) => ({ id: tag.id, name: tag.name }))}
-                            onChange={(value) => setSelectedTagId(value as number)}
-                            sx={{
-                                '& .MuiSelect-select': {
-                                    py: 1.5
-                                }
-                            }}
-                            showAll
-                            allValue = {null as unknown as string | number}
-                            showAllLabel = {t('documents.selectKbPlaceholder')}
-                            formControlSx = {{ mt:3 }}
+                            onChange={(value) => setSelectedTagId(value as number[])}
                         />
   
                     </FormControl>

@@ -22,7 +22,6 @@ interface DocumentSearchBarProps {
 export const DocumentSearchBar: React.FC<DocumentSearchBarProps> = ({
   params,
   setParams,
-  refresh,
   onUploadClick,
   categories,
   knowledgeBases,
@@ -110,7 +109,7 @@ export const DocumentSearchBar: React.FC<DocumentSearchBarProps> = ({
             }}
           >
             <CommonInput
-              placeholder={t("documents.searchByName")}
+              label={t("documents.searchByName")}
               value={searchName}
               onChange={handleSearchNameChange}
               sx={{ width: { xs: "100%", sm: 150 } }}

@@ -45,7 +45,6 @@ export default function DocumentsPage() {
         setParams,
         refresh,
         categories,
-        tags,
         knowledgeBases,
     } = useDocumentData();
 
@@ -118,16 +117,7 @@ export default function DocumentsPage() {
             title: t('documents.fileSize'),
             render: (_: any, record: Document) => record?.fileSize ? formatFileSize(record.fileSize) : '-'
         },
-        {
-            key: 'fileType' as keyof Document,
-            title: t('documents.fileType'),
-            render: (_: any, record: Document) => record?.fileType || '-'
-        },
-        {
-            key: 'createTime' as keyof Document,
-            title: t('common.createTime'),
-            render: (_: any, record: Document) => record?.createTime ? formatDate(record.createTime) : '-'
-        },
+
         {
             key: 'updateTime' as keyof Document,
             title: t('common.updateTime'),
