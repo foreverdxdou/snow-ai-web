@@ -189,7 +189,7 @@
     "noContent": "No content",
     "accept": "txt, md, pdf, doc, docx, ppt, pptx, xls, xlsx",
     "supportedFormats": "Supported formats: {{accept}}",
-    "selectKb": "Select Tag",
+    "selectTag": "Select Tag",
     "selectKb": "Select Knowledge Base",
     "selectKbPlaceholder": "Please select a knowledge base",
     "noDescription": "No description",

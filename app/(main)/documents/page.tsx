@@ -7,6 +7,7 @@ import {
     Alert,
     Snackbar,
     Stack,
+    Typography,
 } from '@mui/material';
 import type { Document } from '@/app/types/document';
 import { Pagination } from '@/app/components/common/Pagination';
@@ -117,7 +118,64 @@ export default function DocumentsPage() {
             title: t('documents.fileSize'),
             render: (_: any, record: Document) => record?.fileSize ? formatFileSize(record.fileSize) : '-'
         },
+        {
+            key: 'parseStatus' as keyof Document,
+            title: t('documents.parseStatus.title'),
+            render: (_: any, record: Document) => {
+                const getStatusColor = () => {
+                    switch (record.parseStatus) {
+                        case 0:
+                            return 'text.secondary'; // 未解析 - 灰色
+                        case 1:
+                            return 'warning.main';   // 解析中 - 橙色
+                        case 2:
+                            return 'success.main';   // 解析成功 - 绿色
+                        case 3:
+                            return 'error.main';     // 解析失败 - 红色
+                        default:
+                            return 'text.secondary';
+                    }
+                };
 
+                const getStatusText = () => {
+                    switch (record.parseStatus) {
+                        case 0:
+                            return t('documents.parseStatus.unparsed');
+                        case 1:
+                            return t('documents.parseStatus.parsing');
+                        case 2:
+                            return t('documents.parseStatus.success');
+                        case 3:
+                            return t('documents.parseStatus.failed');
+                        default:
+                            return '-';
+                    }
+                };
+
+                return (
+                    <Typography 
+                        variant="body2" 
+                        sx={{ 
+                            color: getStatusColor(),
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 1
+                        }}
+                    >
+                        <Box
+                            sx={{
+                                width: 8,
+                                height: 8,
+                                borderRadius: '50%',
+                                bgcolor: getStatusColor(),
+                                opacity: 0.8
+                            }}
+                        />
+                        {getStatusText()}
+                    </Typography>
+                );
+            }
+        },
         {
             key: 'updateTime' as keyof Document,
             title: t('common.updateTime'),
