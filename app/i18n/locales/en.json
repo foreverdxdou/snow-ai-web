@@ -269,7 +269,8 @@
     "pleaseEnterConfigType": "Please enter config type",
     "pleaseEnterConfigValue": "Please enter config value",
     "pleaseEnterRemark": "Please enter remark",
-    "deleteConfirm": "Are you sure to delete this config?",
+    "deleteConfirm": "Delete Confirmation",
+    "deleteConfirmMessage": "Are you sure you want to delete this config? This action cannot be undone.",
     "operateSuccess": "Operation successful",
     "operateError": "Operation failed"
   },

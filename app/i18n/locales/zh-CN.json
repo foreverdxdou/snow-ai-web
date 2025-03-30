@@ -268,7 +268,8 @@
     "pleaseEnterConfigType": "请输入配置类型",
     "pleaseEnterConfigValue": "请输入配置值",
     "pleaseEnterRemark": "请输入备注",
-    "deleteConfirm": "确定要删除该配置吗？",
+    "deleteConfirm": "删除确认",
+    "deleteConfirmMessage": "确定要删除该配置吗？此操作不可恢复。",
     "operateSuccess": "操作成功",
     "operateError": "操作失败"
   },
