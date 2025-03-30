@@ -11,20 +11,14 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Alert,
   Snackbar,
+  Tooltip,
+  Stack,
   CircularProgress,
 } from '@mui/material';
 import {
   History as HistoryIcon,
-  Restore as RestoreIcon,
-  ArrowBack as ArrowBackIcon,
 } from '@mui/icons-material';
 import { documentService } from '@/app/services/document';
 import type { Document, DocumentVersion, DocumentTag } from '@/app/types/document';
@@ -33,6 +27,7 @@ import { useTranslation } from 'react-i18next';
 import { CommonButton } from '@/app/components/common/CommonButton';
 import { formatDate } from '@/app/utils/format';
 import { PerformanceLayout } from '@/app/components/common/PerformanceLayout';
+import { PerformanceTable } from '@/app/components/common/PerformanceTable';
 
 export default function DocumentDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter();
@@ -70,6 +65,11 @@ export default function DocumentDetailPage({ params }: { params: { id: string } 
       setVersions(response.data.data);
     } catch (error) {
       console.error('获取版本历史失败:', error);
+      setSnackbar({
+        open: true,
+        message: t('documents.detail.fetchError'),
+        severity: 'error',
+      });
     }
   };
 
@@ -98,7 +98,7 @@ export default function DocumentDetailPage({ params }: { params: { id: string } 
 
   // 回滚版本
   const handleRollback = async (version: number) => {
-    if (!window.confirm(t('documents.detail.rollback'))) return;
+    console.log(version);
     try {
       await documentService.rollback(parseInt(params.id), version);
       setSnackbar({
@@ -118,6 +118,73 @@ export default function DocumentDetailPage({ params }: { params: { id: string } 
       });
     }
   };
+
+  // 版本历史表格列配置
+  const versionColumns = [
+    {
+      key: 'title' as keyof DocumentVersion,
+      title: t('common.name'),
+      render: (_: any, record: DocumentVersion) => (
+          <Box 
+              sx={{ 
+                  cursor: 'pointer',
+                  color: 'primary.main',
+                  '&:hover': { textDecoration: 'underline' }
+              }}
+              onClick={async () => {
+                  try {
+                      const response = await fetch(record.fileUrl || '');
+                      const blob = await response.blob();
+                      const url = window.URL.createObjectURL(blob);
+                      const link = window.document.createElement('a');
+                      link.href = url;
+                      link.download = record.title;
+                      window.document.body.appendChild(link);
+                      link.click();
+                      window.document.body.removeChild(link);
+                      window.URL.revokeObjectURL(url);
+                  } catch (error) {
+                      console.error('Download failed:', error);
+                  }
+              }}
+          >
+              {record?.title || '-'}
+          </Box>
+      )
+  },
+    {
+      key: 'version' as keyof DocumentVersion,
+      title: t('documents.detail.versionNumber'),
+      render: (value: number) => `v${value}`,
+    },
+    {
+      key: 'creatorName' as keyof DocumentVersion,
+      title: t('documents.detail.modifier'),
+    },
+    {
+      key: 'createTime' as keyof DocumentVersion,
+      title: t('documents.detail.modifyTime'),
+      render: (value: string) => formatDate(value),
+    },
+    {
+      key: 'action' as keyof DocumentVersion,
+      title: t('documents.detail.action'),
+      render: (_: any, record: DocumentVersion) => record && (
+        <Stack direction="row" spacing={1}>
+            <Tooltip title={t('documents.detail.rollback')}>
+                <CommonButton
+                  buttonVariant="rollback"
+                  icon
+                  onClick={() => handleRollback(record.version)}
+                >
+                  {t('documents.detail.rollback')}
+                </CommonButton>
+            </Tooltip>
+        </Stack>
+    )
+
+    },
+  ];
 
   if (loading) {
     return (
@@ -157,7 +224,10 @@ export default function DocumentDetailPage({ params }: { params: { id: string } 
           <CommonButton
             buttonVariant="add"
             startIcon={<HistoryIcon />}
-            onClick={() => setHistoryOpen(true)}
+            onClick={() => {
+              setHistoryOpen(true);
+              fetchVersions();
+            }}
           >
             {t('documents.detail.versionHistory')}
           </CommonButton>
@@ -210,39 +280,12 @@ export default function DocumentDetailPage({ params }: { params: { id: string } 
         <Dialog open={historyOpen} onClose={() => setHistoryOpen(false)} maxWidth="md" fullWidth>
           <DialogTitle>{t('documents.detail.versionHistory')}</DialogTitle>
           <DialogContent>
-            <TableContainer>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>{t('documents.detail.versionNumber')}</TableCell>
-                    <TableCell>{t('documents.detail.modifier')}</TableCell>
-                    <TableCell>{t('documents.detail.modifyTime')}</TableCell>
-                    <TableCell>{t('documents.detail.action')}</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {versions.map((version) => (
-                    <TableRow key={version.id}>
-                      <TableCell>v{version.version}</TableCell>
-                      <TableCell>{version.creatorName}</TableCell>
-                      <TableCell>
-                        {formatDate(version.createTime)}
-                      </TableCell>
-                      <TableCell>
-                        <CommonButton
-                          buttonVariant="rollback"
-                          startIcon={<RestoreIcon />}
-                          onClick={() => handleRollback(version.version)}
-                          disabled={version.version === document.version}
-                        >
-                          {t('documents.detail.rollback')}
-                        </CommonButton>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
+            <PerformanceTable
+              data={versions}
+              columns={versionColumns}
+              loading={loading}
+              emptyMessage={t('documents.detail.notFound')}
+            />
           </DialogContent>
           <DialogActions>
             <CommonButton

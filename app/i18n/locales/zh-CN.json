@@ -209,20 +209,21 @@
       "title": "文档详情",
       "kb": "知识库",
       "category": "分类",
-      "creator": "创建人",
-      "version": "当前版本",
-      "content": "文档内容",
+      "creator": "创建者",
+      "version": "版本",
+      "content": "内容",
       "versionHistory": "版本历史",
       "versionNumber": "版本号",
-      "modifier": "修改人",
+      "modifier": "修改者",
       "modifyTime": "修改时间",
       "action": "操作",
       "rollback": "回滚",
       "close": "关闭",
-      "notFound": "文档不存在",
-      "fetchError": "获取文档详情失败",
+      "rollbackConfirm": "确定要回滚到该版本吗？",
       "rollbackSuccess": "回滚成功",
-      "rollbackError": "回滚失败"
+      "rollbackError": "回滚失败",
+      "fetchError": "获取文档详情失败",
+      "notFound": "文档不存在"
     }
   },
   "menu": {

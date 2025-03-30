@@ -211,19 +211,20 @@
       "kb": "Knowledge Base",
       "category": "Category",
       "creator": "Creator",
-      "version": "Current Version",
-      "content": "Document Content",
+      "version": "Version",
+      "content": "Content",
       "versionHistory": "Version History",
-      "versionNumber": "Version",
-      "modifier": "Modified By",
+      "versionNumber": "Version Number",
+      "modifier": "Modifier",
       "modifyTime": "Modify Time",
       "action": "Action",
       "rollback": "Rollback",
       "close": "Close",
-      "notFound": "Document not found",
-      "fetchError": "Failed to fetch document details",
+      "rollbackConfirm": "Are you sure you want to rollback to this version?",
       "rollbackSuccess": "Rollback successful",
-      "rollbackError": "Rollback failed"
+      "rollbackError": "Rollback failed",
+      "fetchError": "Failed to fetch document details",
+      "notFound": "Document not found"
     }
   },
   "menu": {

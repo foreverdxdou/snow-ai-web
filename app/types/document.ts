@@ -39,7 +39,9 @@ export interface DocumentUpdateDTO {
 
 export interface DocumentVersion {
   id: number;
+  title: string;
   documentId: number;
+  fileUrl: string;
   version: number;
   content: string;
   creatorId: number;
