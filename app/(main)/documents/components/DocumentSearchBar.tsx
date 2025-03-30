@@ -66,18 +66,6 @@ export const DocumentSearchBar: React.FC<DocumentSearchBarProps> = ({
     [params, setParams]
   );
 
-  // 处理状态变化
-  const handleStatusChange = useCallback(
-    (value: string | number) => {
-      setParams({
-        ...params,
-        current: 1,
-        status: (value as number) || undefined,
-      });
-    },
-    [params, setParams]
-  );
-
   // 处理重置
   const handleReset = useCallback(() => {
     setSearchName("");
@@ -140,7 +128,7 @@ export const DocumentSearchBar: React.FC<DocumentSearchBarProps> = ({
             <CommonSelect
               label={t("documents.searchByStatus")}
               value={params.status}
-              onChange={(value) => handleStatusChange(value as number)}
+              onChange={(value) => setParams({ ...params, status: value as number })}
               options={[
                 { id: 1, name: t("documents.enabled") },
                 { id: 0, name: t("documents.disabled") },

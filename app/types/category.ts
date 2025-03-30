@@ -17,7 +17,8 @@ export interface KbCategoryCreateDTO {
   name: string;
   description: string;
   parentId: number | null;
-  sort: number;
+  sort: number | null;
+  status: number;
 }
 
 export interface KbCategoryUpdateDTO {
@@ -33,4 +34,30 @@ export interface PageKbCategoryVO {
   size: number;
   current: number;
   pages: number;
+}
+
+export interface Category {
+    id: number;
+    name: string;
+    description?: string;
+    parentId: number;
+    status: number;
+    createTime?: string;
+    updateTime?: string;
+    sort: number;
+}
+
+export interface CategoryQuery {
+    current: number;
+    size: number;
+    name?: string;
+    status?: number;
+}
+
+export interface CategorySaveRequest {
+    id?: number;
+    name: string;
+    description?: string;
+    parentId: number;
+    status: number;
 } 

@@ -96,6 +96,7 @@ interface CommonSelectProps extends Omit<SelectProps, 'value' | 'onChange'> {
     showAll?: boolean;
     allValue?: string | number;
     showAllLabel?: string | number;
+    multiple?: boolean;
 }
 
 export const CommonSelect: React.FC<CommonSelectProps> = ({
@@ -107,11 +108,13 @@ export const CommonSelect: React.FC<CommonSelectProps> = ({
     showAll = false,
     allValue = '',
     showAllLabel = '',
+    multiple = false,
     ...props
 }) => {
     const { t } = useTranslation();
     const handleChange = (event: any) => {
-        onChange?.(event.target.value as string | number);
+        const newValue = event.target.value;
+        onChange?.(newValue);
     };
 
     return (
@@ -120,9 +123,20 @@ export const CommonSelect: React.FC<CommonSelectProps> = ({
         >
             <InputLabel>{label}</InputLabel>
             <BaseSelect
-                value={value || ''}
+                value={value === null || value === undefined ? (multiple ? [] : '') : value}
                 label={label}
                 onChange={handleChange}
+                multiple={multiple}
+                renderValue={(selected: unknown) => {
+                    if (multiple) {
+                        const selectedOptions = options.filter(option => 
+                            (selected as (string | number)[]).includes(option.id)
+                        );
+                        return selectedOptions.map(option => option.name).join(', ');
+                    }
+                    const selectedOption = options.find(option => option.id === selected);
+                    return selectedOption?.name || '';
+                }}
                 {...props}
             >
                 {showAll && (

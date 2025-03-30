@@ -21,7 +21,7 @@ export const categoryService = {
   },
 
   // 更新分类
-  update: (id: number, data: KbCategoryUpdateDTO) => {
+  update: (id: number, data: KbCategoryCreateDTO) => {
     return request.put<Result<KbCategory>>(`${BASE_URL}/${id}`, data);
   },
 
