@@ -10,6 +10,11 @@ import {
     Chip,
     Switch,
     FormControlLabel,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    Typography,
 } from '@mui/material';
 import type { Document } from '@/app/types/document';
 import { Pagination } from '@/app/components/common/Pagination';
@@ -66,6 +71,9 @@ export default function DocumentsPage() {
         snackbar,
         setSnackbar,
         handleStatusChange,
+        deleteDialogOpen,
+        setDeleteDialogOpen,
+        handleDeleteConfirm,
     } = useDocumentActions(refresh);
 
     // 使用 useMemo 优化表格配置
@@ -219,7 +227,7 @@ export default function DocumentsPage() {
                     <Tooltip title={t('common.delete')}>
                         <CommonButton
                             buttonVariant="delete"
-                            onClick={() => handleDelete(record.id)}
+                            onClick={() => setDeleteDialogOpen(true)}
                         >
                         </CommonButton>
                     </Tooltip>
@@ -310,6 +318,35 @@ export default function DocumentsPage() {
                     open={uploadOpen}
                     onClose={() => setUploadOpen(false)}
                 />
+
+                {/* 删除确认对话框 */}
+                <Dialog 
+                    open={deleteDialogOpen} 
+                    onClose={() => setDeleteDialogOpen(false)}
+                    maxWidth="xs"
+                    fullWidth
+                >
+                    <DialogTitle>{t('documents.deleteConfirm')}</DialogTitle>
+                    <DialogContent>
+                        <Typography>
+                            {t('documents.deleteConfirmMessage')}
+                        </Typography>
+                    </DialogContent>
+                    <DialogActions>
+                        <CommonButton
+                            buttonVariant="cancel"
+                            onClick={() => setDeleteDialogOpen(false)}
+                        >
+                            {t('common.cancel')}
+                        </CommonButton>
+                        <CommonButton
+                            buttonVariant="confirm"
+                            onClick={handleDeleteConfirm}
+                        >
+                            {t('common.confirm')}
+                        </CommonButton>
+                    </DialogActions>
+                </Dialog>
 
                 {/* 提示消息 */}
                 <Snackbar

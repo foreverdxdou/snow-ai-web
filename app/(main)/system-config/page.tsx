@@ -1,179 +1,132 @@
 'use client';
 
-import { useTranslation } from 'react-i18next';
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import {
     Box,
     Typography,
-    Paper,
-    Button,
-    TextField,
-    IconButton,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
     Dialog,
     DialogTitle,
     DialogContent,
     DialogActions,
+    TextField,
+    Tooltip,
     Alert,
     Snackbar,
-    Tooltip,
-    CircularProgress,
+    Stack,
 } from '@mui/material';
-import {
-    Add as AddIcon,
-    Search as SearchIcon,
-    Refresh as RefreshIcon,
-    Edit as EditIcon,
-    Delete as DeleteIcon,
-} from '@mui/icons-material';
 import { SystemConfig, SystemConfigQuery, SystemConfigSaveRequest } from '@/app/types/system-config';
 import { systemConfigService } from '@/app/services/system-config';
-import { Pagination } from '@/app/components/common/Pagination';
+import { useTranslation } from 'react-i18next';
 import { PerformanceLayout } from '@/app/components/common/PerformanceLayout';
+import { PerformanceTable } from '@/app/components/common/PerformanceTable';
+import { usePerformanceData } from '@/app/hooks/usePerformanceData';
 import { useDebouncedCallback } from '@/app/utils/performance';
-import { useVirtualizer } from '@tanstack/react-virtual';
-
-// 使用 React.memo 优化表格行组件
-const ConfigRow = React.memo(({ 
-    row, 
-    onEdit, 
-    onDelete 
-}: { 
-    row: SystemConfig; 
-    onEdit: (record: SystemConfig) => void; 
-    onDelete: (id: number) => void;
-}) => (
-    <TableRow>
-        <TableCell>{row.configKey}</TableCell>
-        <TableCell>{row.configType}</TableCell>
-        <TableCell>{row.configValue}</TableCell>
-        <TableCell>{row.description}</TableCell>
-        <TableCell>{new Date(row.createTime).toLocaleString()}</TableCell>
-        <TableCell>{new Date(row.updateTime).toLocaleString()}</TableCell>
-        <TableCell align="right">
-            <Tooltip title="编辑">
-                <IconButton
-                    size="small"
-                    onClick={() => onEdit(row)}
-                >
-                    <EditIcon />
-                </IconButton>
-            </Tooltip>
-            <Tooltip title="删除">
-                <IconButton
-                    size="small"
-                    color="error"
-                    onClick={() => onDelete(row.id)}
-                >
-                    <DeleteIcon />
-                </IconButton>
-            </Tooltip>
-        </TableCell>
-    </TableRow>
-));
-
-ConfigRow.displayName = 'ConfigRow';
+import { Pagination } from '@/app/components/common/Pagination';
+import { formatDate } from '@/app/utils/format';
+import { CommonButton } from '@/app/components/common/CommonButton';
 
 export default function SystemConfigPage() {
     const { t } = useTranslation();
-    const [loading, setLoading] = useState(false);
-    const [data, setData] = useState<SystemConfig[]>([]);
-    const [total, setTotal] = useState(0);
-    const [current, setCurrent] = useState(1);
-    const [pageSize, setPageSize] = useState(10);
-    const [dialogOpen, setDialogOpen] = useState(false);
-    const [dialogTitle, setDialogTitle] = useState('');
-    const [editingRecord, setEditingRecord] = useState<SystemConfig | null>(null);
-    const [searchForm, setSearchForm] = useState<SystemConfigQuery>({
-        pageNum: 1,
-        pageSize: 10,
-        configKey: '',
-        configType: '',
-    });
-    const [formData, setFormData] = useState<SystemConfigSaveRequest>({
+    const [open, setOpen] = React.useState(false);
+    const [editingConfig, setEditingConfig] = React.useState<SystemConfig | null>(null);
+    const [formData, setFormData] = React.useState<SystemConfigSaveRequest>({
         configKey: '',
         configValue: '',
         description: '',
         configType: '',
     });
-    const [snackbar, setSnackbar] = useState({
+
+    const [snackbar, setSnackbar] = React.useState({
         open: false,
         message: '',
         severity: 'success' as 'success' | 'error',
     });
 
-    // 使用 useCallback 优化函数
-    const fetchData = useCallback(async (params: SystemConfigQuery) => {
-        try {
-            setLoading(true);
-            const res = await systemConfigService.getList(params);
-            setData(res.data?.data.records || []);
-            setTotal(res.data?.data.total || 0);
-        } finally {
-            setLoading(false);
+    // 使用 useMemo 优化 defaultParams
+    const defaultParams = useMemo(() => ({
+        current: 1,
+        size: 10,
+        configKey: '',
+        configType: '',
+    }), []);
+
+    // 使用 usePerformanceData 优化数据获取
+    const {
+        data: configs,
+        loading,
+        error,
+        total,
+        params,
+        setParams,
+        refresh,
+    } = usePerformanceData<SystemConfig>({
+        fetchData: systemConfigService.getList,
+        defaultParams,
+        autoFetch: true
+    });
+
+    // 使用 useCallback 优化事件处理函数
+    const handleOpen = useCallback((config?: SystemConfig) => {
+        if (config) {
+            setEditingConfig(config);
+            setFormData({
+                id: config.id,
+                configKey: config.configKey,
+                configValue: config.configValue,
+                description: config.description,
+                configType: config.configType,
+            });
+        } else {
+            setEditingConfig(null);
+            setFormData({
+                configKey: '',
+                configValue: '',
+                description: '',
+                configType: '',
+            });
         }
+        setOpen(true);
     }, []);
 
-    useEffect(() => {
-        fetchData({
-            ...searchForm,
-            pageNum: current,
-            pageSize: pageSize,
-        });
-    }, [current, pageSize, fetchData, searchForm]);
-
-    // 使用防抖优化搜索
-    const handleSearch = useDebouncedCallback(() => {
-        setCurrent(1);
-        fetchData({
-            ...searchForm,
-            pageNum: 1,
-        });
-    }, [searchForm, fetchData], 300);
-
-    const handleReset = useCallback(() => {
-        setSearchForm({
-            pageNum: 1,
-            pageSize: pageSize,
-            configKey: '',
-            configType: '',
-        });
-        setCurrent(1);
-        fetchData({
-            pageNum: 1,
-            pageSize: pageSize,
-        });
-    }, [pageSize, fetchData]);
-
-    const handleAdd = useCallback(() => {
-        setDialogTitle(t('systemConfig.add'));
-        setEditingRecord(null);
+    const handleClose = useCallback(() => {
+        setOpen(false);
+        setEditingConfig(null);
         setFormData({
             configKey: '',
             configValue: '',
             description: '',
             configType: '',
         });
-        setDialogOpen(true);
-    }, [t]);
+    }, []);
 
-    const handleEdit = useCallback((record: SystemConfig) => {
-        setDialogTitle(t('systemConfig.edit'));
-        setEditingRecord(record);
-        setFormData({
-            id: record.id,
-            configKey: record.configKey,
-            configValue: record.configValue,
-            description: record.description,
-            configType: record.configType,
-        });
-        setDialogOpen(true);
-    }, [t]);
+    const handleSubmit = useCallback(async () => {
+        try {
+            if (editingConfig) {
+                await systemConfigService.update(editingConfig.id, formData);
+                setSnackbar({
+                    open: true,
+                    message: t('systemConfig.operateSuccess'),
+                    severity: 'success',
+                });
+            } else {
+                await systemConfigService.add(formData);
+                setSnackbar({
+                    open: true,
+                    message: t('systemConfig.operateSuccess'),
+                    severity: 'success',
+                });
+            }
+            handleClose();
+            refresh();
+        } catch (error) {
+            console.error(`${editingConfig ? '更新' : '创建'}配置失败:`, error);
+            setSnackbar({
+                open: true,
+                message: t('systemConfig.operateError'),
+                severity: 'error',
+            });
+        }
+    }, [editingConfig, formData, handleClose, refresh, t]);
 
     const handleDelete = useCallback(async (id: number) => {
         if (!window.confirm(t('systemConfig.deleteConfirm'))) return;
@@ -184,71 +137,80 @@ export default function SystemConfigPage() {
                 message: t('systemConfig.operateSuccess'),
                 severity: 'success',
             });
-            fetchData({
-                ...searchForm,
-                pageNum: current,
-                pageSize: pageSize,
-            });
+            refresh();
         } catch (error) {
-            console.error('Delete failed:', error);
+            console.error('删除配置失败:', error);
             setSnackbar({
                 open: true,
                 message: t('systemConfig.operateError'),
                 severity: 'error',
             });
         }
-    }, [t, searchForm, current, pageSize, fetchData]);
+    }, [refresh, t]);
 
-    const handleDialogClose = useCallback(() => {
-        setDialogOpen(false);
-        setEditingRecord(null);
-    }, []);
+    // 使用 useDebouncedCallback 优化分页处理
+    const handlePageChange = useDebouncedCallback((page: number, size: number) => {
+        setParams((prev: { current: number; size: number; configKey?: string; configType?: string }) => ({
+            ...prev,
+            current: page,
+            size: size,
+        }));
+    }, [], 300);
 
-    const handleDialogSubmit = useCallback(async () => {
-        try {
-            if (editingRecord) {
-                await systemConfigService.update(editingRecord.id, formData);
-            } else {
-                await systemConfigService.add(formData);
-            }
-            setSnackbar({
-                open: true,
-                message: t('systemConfig.operateSuccess'),
-                severity: 'success',
-            });
-            setDialogOpen(false);
-            fetchData({
-                ...searchForm,
-                pageNum: current,
-                pageSize: pageSize,
-            });
-        } catch (error) {
-            console.error('Save failed:', error);
-            setSnackbar({
-                open: true,
-                message: t('systemConfig.operateError'),
-                severity: 'error',
-            });
+    // 使用 useMemo 优化表格配置
+    const columns = useMemo(() => [
+        {
+            key: 'configKey' as keyof SystemConfig,
+            title: t('systemConfig.configKey'),
+            render: (_: any, record: SystemConfig) => record?.configKey || '-'
+        },
+        {
+            key: 'configType' as keyof SystemConfig,
+            title: t('systemConfig.configType'),
+            render: (_: any, record: SystemConfig) => record?.configType || '-'
+        },
+        {
+            key: 'configValue' as keyof SystemConfig,
+            title: t('systemConfig.configValue'),
+            render: (_: any, record: SystemConfig) => record?.configValue || '-'
+        },
+        {
+            key: 'description' as keyof SystemConfig,
+            title: t('systemConfig.description'),
+            render: (_: any, record: SystemConfig) => record?.description || '-'
+        },
+        {
+            key: 'createTime' as keyof SystemConfig,
+            title: t('common.createTime'),
+            render: (_: any, record: SystemConfig) => record?.createTime ? formatDate(record.createTime) : '-'
+        },
+        {
+            key: 'updateTime' as keyof SystemConfig,
+            title: t('common.updateTime'),
+            render: (_: any, record: SystemConfig) => record?.updateTime ? formatDate(record.updateTime) : '-'
+        },
+        {
+            key: 'id' as keyof SystemConfig,
+            title: t('common.actions'),
+            width: 120,
+            render: (_: any, record: SystemConfig) => record && (
+                <Stack direction="row" spacing={1}>
+                    <Tooltip title={t('common.edit')}>
+                        <CommonButton
+                            buttonVariant="edit"
+                            onClick={() => handleOpen(record)}
+                        />
+                    </Tooltip>
+                    <Tooltip title={t('common.delete')}>
+                        <CommonButton
+                            buttonVariant="delete"
+                            onClick={() => handleDelete(record.id)}
+                        />
+                    </Tooltip>
+                </Stack>
+            )
         }
-    }, [editingRecord, formData, t, searchForm, current, pageSize, fetchData]);
-
-    const handlePageChange = useCallback((page: number, size: number) => {
-        setCurrent(page);
-        setPageSize(size);
-    }, []);
-
-    // 使用 useMemo 优化计算属性
-    const tableHeight = useMemo(() => {
-        return Math.min(600, window.innerHeight - 300);
-    }, []);
-
-    // 使用虚拟滚动优化长列表
-    const rowVirtualizer = useVirtualizer({
-        count: data.length,
-        getScrollElement: () => document.querySelector('.MuiTableBody-root'),
-        estimateSize: () => 53, // 估计每行高度
-        overscan: 5,
-    });
+    ], [t, handleOpen, handleDelete]);
 
     return (
         <PerformanceLayout>
@@ -268,116 +230,69 @@ export default function SystemConfigPage() {
                         <Typography variant="h5" sx={{ fontWeight: 600 }}>
                             {t('systemConfig.title')}
                         </Typography>
-                        <Button
-                            variant="contained"
-                            startIcon={<AddIcon />}
-                            onClick={handleAdd}
-                            sx={{
-                                background: 'linear-gradient(45deg, #6C8EF2 30%, #76E3C4 90%)',
-                                '&:hover': {
-                                    background: 'linear-gradient(45deg, #5A7DE0 30%, #65D2B3 90%)',
-                                },
-                                height: '44px',
-                                px: 3
-                            }}
+                        <CommonButton
+                            buttonVariant="add"
+                            onClick={() => handleOpen()}
                         >
                             {t('systemConfig.add')}
-                        </Button>
+                        </CommonButton>
                     </Box>
 
                     <Box sx={{ display: 'flex', gap: 2 }}>
                         <TextField
                             size="small"
                             label={t('systemConfig.configKey')}
-                            value={searchForm.configKey || ''}
-                            onChange={(e) => setSearchForm({ ...searchForm, configKey: e.target.value })}
+                            value={params.configKey || ''}
+                            onChange={(e) => setParams((prev) => ({ ...prev, configKey: e.target.value }))}
                             sx={{ width: 200 }}
                         />
                         <TextField
                             size="small"
                             label={t('systemConfig.configType')}
-                            value={searchForm.configType || ''}
-                            onChange={(e) => setSearchForm({ ...searchForm, configType: e.target.value })}
+                            value={params.configType || ''}
+                            onChange={(e) => setParams((prev) => ({ ...prev, configType: e.target.value }))}
                             sx={{ width: 200 }}
                         />
-                        <Button
-                            variant="contained"
-                            startIcon={<SearchIcon />}
-                            onClick={handleSearch}
-                            sx={{
-                                background: 'linear-gradient(45deg, #6C8EF2 30%, #76E3C4 90%)',
-                                '&:hover': {
-                                    background: 'linear-gradient(45deg, #5A7DE0 30%, #65D2B3 90%)',
-                                },
-                            }}
+                        <CommonButton
+                            buttonVariant="search"
+                            onClick={() => refresh()}
                         >
                             {t('systemConfig.search')}
-                        </Button>
-                        <Button
-                            variant="outlined"
-                            startIcon={<RefreshIcon />}
-                            onClick={handleReset}
+                        </CommonButton>
+                        <CommonButton
+                            buttonVariant="reset"
+                            onClick={() => {
+                                setParams(defaultParams);
+                                refresh();
+                            }}
                         >
                             {t('systemConfig.reset')}
-                        </Button>
+                        </CommonButton>
                     </Box>
                 </Box>
 
                 <Box sx={{ p: 3, flex: 1, overflow: 'auto' }}>
-                    <TableContainer component={Paper}>
-                        <Table stickyHeader>
-                            <TableHead>
-                                <TableRow>
-                                    <TableCell width="15%">{t('systemConfig.configKey')}</TableCell>
-                                    <TableCell width="15%">{t('systemConfig.configType')}</TableCell>
-                                    <TableCell width="20%">{t('systemConfig.configValue')}</TableCell>
-                                    <TableCell width="15%">{t('systemConfig.description')}</TableCell>
-                                    <TableCell width="15%">{t('systemConfig.createTime')}</TableCell>
-                                    <TableCell width="15%">{t('systemConfig.updateTime')}</TableCell>
-                                    <TableCell width="5%" align="right">{t('common.actions')}</TableCell>
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {loading ? (
-                                    <TableRow>
-                                        <TableCell colSpan={7} align="center">
-                                            <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-                                                <CircularProgress />
-                                            </Box>
-                                        </TableCell>
-                                    </TableRow>
-                                ) : data.length === 0 ? (
-                                    <TableRow>
-                                        <TableCell colSpan={7} align="center">
-                                            {t('common.noData')}
-                                        </TableCell>
-                                    </TableRow>
-                                ) : (
-                                    rowVirtualizer.getVirtualItems().map((virtualItem) => (
-                                        <ConfigRow
-                                            key={data[virtualItem.index].id}
-                                            row={data[virtualItem.index]}
-                                            onEdit={handleEdit}
-                                            onDelete={handleDelete}
-                                        />
-                                    ))
-                                )}
-                            </TableBody>
-                        </Table>
-                    </TableContainer>
+                    <PerformanceTable
+                        loading={loading}
+                        data={configs}
+                        columns={columns}
+                        emptyMessage={t('common.noData')}
+                    />
 
                     <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
                         <Pagination
                             total={total}
-                            current={current}
-                            pageSize={pageSize}
+                            current={params.current}
+                            pageSize={params.size}
                             onChange={handlePageChange}
                         />
                     </Box>
                 </Box>
 
-                <Dialog open={dialogOpen} onClose={handleDialogClose} maxWidth="sm" fullWidth>
-                    <DialogTitle>{dialogTitle}</DialogTitle>
+                <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+                    <DialogTitle>
+                        {editingConfig ? t('systemConfig.edit') : t('systemConfig.add')}
+                    </DialogTitle>
                     <DialogContent>
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
                             <TextField
@@ -418,20 +333,19 @@ export default function SystemConfigPage() {
                         </Box>
                     </DialogContent>
                     <DialogActions>
-                        <Button onClick={handleDialogClose}>{t('common.cancel')}</Button>
-                        <Button
-                            onClick={handleDialogSubmit}
-                            variant="contained"
+                        <CommonButton
+                            buttonVariant="cancel"
+                            onClick={handleClose}
+                        >
+                            {t('common.cancel')}
+                        </CommonButton>
+                        <CommonButton
+                            buttonVariant="submit"
+                            onClick={handleSubmit}
                             disabled={!formData.configKey || !formData.configType || !formData.configValue}
-                            sx={{
-                                background: 'linear-gradient(45deg, #6C8EF2 30%, #76E3C4 90%)',
-                                '&:hover': {
-                                    background: 'linear-gradient(45deg, #5A7DE0 30%, #65D2B3 90%)',
-                                },
-                            }}
                         >
                             {t('common.save')}
-                        </Button>
+                        </CommonButton>
                     </DialogActions>
                 </Dialog>
 

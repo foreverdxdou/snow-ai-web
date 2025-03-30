@@ -2,6 +2,13 @@ import { useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { documentService } from '@/app/services/document';
 import type { Document, DocumentCreateDTO } from '@/app/types/document';
+import {
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+} from '@mui/material';
+import { CommonButton } from '@/app/components/common/CommonButton';
 
 interface SnackbarState {
     open: boolean;
@@ -12,6 +19,8 @@ interface SnackbarState {
 export const useDocumentActions = (refresh: () => void) => {
     const { t } = useTranslation();
     const [open, setOpen] = useState(false);
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [deletingId, setDeletingId] = useState<number | null>(null);
     const [editingDocument, setEditingDocument] = useState<Document | null>(null);
     const [uploadOpen, setUploadOpen] = useState(false);
     const [file, setFile] = useState<File | null>(null);
@@ -34,25 +43,32 @@ export const useDocumentActions = (refresh: () => void) => {
 
     // 使用 useCallback 优化事件处理函数
     const handleDelete = useCallback(async (id: number) => {
-        if (window.confirm(t('documents.deleteConfirm'))) {
-            try {
-                await documentService.delete(id);
-                setSnackbar({
-                    open: true,
-                    message: t('documents.deleteSuccess'),
-                    severity: 'success',
-                });
-                refresh();
-            } catch (error) {
-                console.error(t('documents.deleteError'), error);
-                setSnackbar({
-                    open: true,
-                    message: t('documents.deleteError'),
-                    severity: 'error',
-                });
-            }
+        setDeletingId(id);
+        setDeleteDialogOpen(true);
+    }, []);
+
+    const handleDeleteConfirm = useCallback(async () => {
+        if (!deletingId) return;
+        try {
+            await documentService.delete(deletingId);
+            setSnackbar({
+                open: true,
+                message: t('documents.deleteSuccess'),
+                severity: 'success',
+            });
+            refresh();
+        } catch (error) {
+            console.error(t('documents.deleteError'), error);
+            setSnackbar({
+                open: true,
+                message: t('documents.deleteError'),
+                severity: 'error',
+            });
+        } finally {
+            setDeleteDialogOpen(false);
+            setDeletingId(null);
         }
-    }, [t, refresh]);
+    }, [deletingId, t, refresh]);
 
     const handleOpen = useCallback((document?: Document) => {
         if (document) {
@@ -246,5 +262,8 @@ export const useDocumentActions = (refresh: () => void) => {
         snackbar,
         setSnackbar,
         handleStatusChange,
+        deleteDialogOpen,
+        setDeleteDialogOpen,
+        handleDeleteConfirm,
     };
 }; 

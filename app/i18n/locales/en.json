@@ -156,7 +156,8 @@
     "downloadDocument": "Download Document",
     "previewDocument": "Preview Document",
     "shareDocument": "Share Document",
-    "deleteConfirm": "Are you sure you want to delete this document?",
+    "deleteConfirm": "Delete Confirmation",
+    "deleteConfirmMessage": "Are you sure you want to delete this document? This action cannot be undone.",
     "nameRequired": "Please enter document name",
     "createSuccess": "Document created successfully",
     "updateSuccess": "Document updated successfully",
@@ -255,7 +256,7 @@
     "title": "System Configuration",
     "configKey": "Config Key",
     "configValue": "Config Value",
-    "configName": "Config Name",
+    "configType": "Config Type",
     "description": "Description",
     "createTime": "Create Time",
     "updateTime": "Update Time",
@@ -269,7 +270,8 @@
     "pleaseEnterConfigValue": "Please enter config value",
     "pleaseEnterRemark": "Please enter remark",
     "deleteConfirm": "Are you sure to delete this config?",
-    "operateSuccess": "Operation successful"
+    "operateSuccess": "Operation successful",
+    "operateError": "Operation failed"
   },
   "embeddingConfig": {
     "title": "Embedding Model Configuration",

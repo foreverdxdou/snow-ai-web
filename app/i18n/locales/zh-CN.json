@@ -164,7 +164,8 @@
     "downloadDocument": "下载文档",
     "previewDocument": "预览文档",
     "shareDocument": "分享文档",
-    "deleteConfirm": "确定要删除此文档吗？",
+    "deleteConfirm": "删除确认",
+    "deleteConfirmMessage": "确定要删除该文档吗？此操作不可恢复。",
     "nameRequired": "请输入文档名称",
     "createSuccess": "创建文档成功",
     "updateSuccess": "更新文档成功",
@@ -268,7 +269,8 @@
     "pleaseEnterConfigValue": "请输入配置值",
     "pleaseEnterRemark": "请输入备注",
     "deleteConfirm": "确定要删除该配置吗？",
-    "operateSuccess": "操作成功"
+    "operateSuccess": "操作成功",
+    "operateError": "操作失败"
   },
   "embeddingConfig": {
     "title": "Embedding模型配置",

@@ -201,9 +201,19 @@ export const RollbackButton = styled(BaseButton)(({ theme }) => ({
     }
 }));
 
+// 确认按钮 - 主题色渐变
+export const ConfirmButton = styled(BaseButton)(({ theme }) => ({
+    background: `linear-gradient(45deg, ${theme.palette.success.main} 30%, ${theme.palette.success.light} 90%)`,
+    color: theme.palette.success.contrastText,
+    border: 'none',
+    '&:hover': {
+        background: `linear-gradient(45deg, ${theme.palette.success.dark} 30%, ${theme.palette.success.main} 90%)`,
+    }
+}));
+
 // 按钮组件
 interface CommonButtonProps extends Omit<ButtonProps, 'variant'> {
-    buttonVariant?: 'detail' | 'add' | 'edit' | 'delete' | 'upload' | 'search' | 'reset' | 'login' | 'expand' | 'cancel' | 'submit' | 'close' | 'back' | 'rollback';
+    buttonVariant?: 'detail' | 'add' | 'edit' | 'delete' | 'upload' | 'search' | 'reset' | 'login' | 'expand' | 'cancel' | 'submit' | 'close' | 'back' | 'rollback' | 'confirm';
     icon?: boolean;
     expanded?: boolean;
 }
@@ -245,6 +255,8 @@ export const CommonButton = React.forwardRef<HTMLButtonElement, CommonButtonProp
                 return <ArrowBackIcon sx={{ fontSize: 20 }} />;
             case 'rollback':
                 return <RestoreIcon sx={{ fontSize: 20 }} />;
+            case 'confirm':
+                return <CheckIcon sx={{ fontSize: 20 }} />;
             default:
                 return null;
         }
@@ -280,6 +292,8 @@ export const CommonButton = React.forwardRef<HTMLButtonElement, CommonButtonProp
                 return BackButton;
             case 'rollback':
                 return RollbackButton;
+            case 'confirm':
+                return ConfirmButton;
             default:
                 return BaseButton;
         }
