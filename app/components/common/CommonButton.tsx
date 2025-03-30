@@ -176,13 +176,13 @@ interface CommonButtonProps extends Omit<ButtonProps, 'variant'> {
     expanded?: boolean;
 }
 
-export const CommonButton: React.FC<CommonButtonProps> = ({
+export const CommonButton = React.forwardRef<HTMLButtonElement, CommonButtonProps>(({
     buttonVariant = 'detail',
     icon = false,
     expanded = false,
     children,
     ...props
-}) => {
+}, ref) => {
     const getIcon = () => {
         switch (buttonVariant) {
             case 'detail':
@@ -247,6 +247,7 @@ export const CommonButton: React.FC<CommonButtonProps> = ({
     if (buttonVariant === 'detail' || buttonVariant === 'delete' || buttonVariant === 'edit') {
         return (
             <ButtonComponent
+                ref={ref}
                 size="small"
                 {...props}
             >
@@ -257,10 +258,13 @@ export const CommonButton: React.FC<CommonButtonProps> = ({
 
     return (
         <ButtonComponent
+            ref={ref}
             startIcon={icon ? getIcon() : undefined}
             {...props}
         >
             {children}
         </ButtonComponent>
     );
-}; 
+});
+
+CommonButton.displayName = 'CommonButton'; 

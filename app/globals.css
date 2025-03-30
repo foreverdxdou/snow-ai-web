@@ -4,40 +4,102 @@
 
 :root {
   --foreground-rgb: 0, 0, 0;
-  --background-rgb: 255, 255, 255;
+  --background-start-rgb: 255, 255, 255;
+  --background-end-rgb: 255, 255, 255;
+  --text-primary: #1A2027;
+  --text-secondary: #3E5060;
+  --divider-color: rgba(194, 224, 255, 0.08);
+  --paper-background: #fff;
+  --transition-duration: 0.3s;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-rgb: 0, 0, 0;
-  }
+[data-theme='dark'] {
+  --foreground-rgb: 255, 255, 255;
+  --background-start-rgb: 10, 25, 41;
+  --background-end-rgb: 10, 25, 41;
+  --text-primary: #fff;
+  --text-secondary: #B2BAC2;
+  --divider-color: rgba(194, 224, 255, 0.12);
+  --paper-background: #0A1929;
 }
 
 body {
-  color: rgb(var(--foreground-rgb));
-  background: rgb(var(--background-rgb));
+  color: var(--text-primary);
+  background: var(--background-start-rgb);
   min-height: 100vh;
+  transition: background-color var(--transition-duration) ease,
+              color var(--transition-duration) ease;
 }
 
-/* 自定义滚动条样式 */
+/* Material-UI 组件主题同步 */
+.MuiPaper-root,
+.MuiAppBar-root,
+.MuiDrawer-paper,
+.MuiCard-root,
+.MuiDialog-paper,
+.MuiMenu-paper,
+.MuiPopover-paper,
+.MuiSnackbar-root {
+  background-color: var(--paper-background) !important;
+  transition: background-color var(--transition-duration) ease !important;
+}
+
+/* 只设置文本组件的颜色 */
+.MuiTypography-root,
+.MuiListItemText-root {
+  color: var(--text-primary) !important;
+  transition: color var(--transition-duration) ease !important;
+}
+
+/* 设置分割线颜色 */
+.MuiDivider-root {
+  border-color: var(--divider-color) !important;
+  transition: border-color var(--transition-duration) ease !important;
+}
+
+/* 滚动条样式 */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: var(--background-start-rgb);
   border-radius: 3px;
+  transition: background-color var(--transition-duration) ease;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #888;
+  background: var(--text-secondary);
   border-radius: 3px;
+  transition: background-color var(--transition-duration) ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #555;
+  background: var(--text-primary);
+}
+
+/* 确保所有 Material-UI 组件在暗色主题下都有正确的背景色 */
+[data-theme='dark'] .MuiPaper-root,
+[data-theme='dark'] .MuiAppBar-root,
+[data-theme='dark'] .MuiDrawer-paper,
+[data-theme='dark'] .MuiCard-root,
+[data-theme='dark'] .MuiDialog-paper,
+[data-theme='dark'] .MuiMenu-paper,
+[data-theme='dark'] .MuiPopover-paper,
+[data-theme='dark'] .MuiSnackbar-root {
+  background-color: #0A1929 !important;
+}
+
+/* 确保所有 Material-UI 组件在暗色主题下都有正确的文本颜色 */
+[data-theme='dark'] .MuiTypography-root,
+[data-theme='dark'] .MuiListItemText-root {
+  color: #fff !important;
+}
+
+/* 确保所有 Material-UI 组件在暗色主题下都有正确的分割线颜色 */
+[data-theme='dark'] .MuiDivider-root {
+  border-color: rgba(194, 224, 255, 0.12) !important;
 }
 
 /* 自定义输入框样式 */

@@ -10,5 +10,5 @@ export const useThemeMode = () => {
         toggleTheme();
     }, [toggleTheme]);
 
-    return { toggleThemeMode };
+    return { theme, toggleThemeMode };
 }; 

@@ -16,7 +16,6 @@ import {
     ListItemText,
     Menu,
     MenuItem,
-    useTheme,
     useMediaQuery,
     Stack,
     alpha,
@@ -317,7 +316,7 @@ export default function MainLayout({
     const { t } = useTranslation();
     const router = useRouter();
     const pathname = usePathname();
-    const theme = useTheme();
+    const { theme } = useThemeMode();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const { user, logout } = useAuth();
     const [open, setOpen] = useState(!isMobile);

@@ -40,7 +40,7 @@ const LoginForm = React.memo(({
         <form onSubmit={handleSubmit}>
             <TextField
                 fullWidth
-                label={t('login.username')}
+                label={t('common.username')}
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 margin="normal"
@@ -49,7 +49,7 @@ const LoginForm = React.memo(({
             />
             <TextField
                 fullWidth
-                label={t('login.password')}
+                label={t('common.password')}
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -69,7 +69,7 @@ const LoginForm = React.memo(({
                 disabled={loading}
                 sx={{ mt: 3 }}
             >
-                {loading ? <CircularProgress size={24} /> : t('login.submit')}
+                {loading ? <CircularProgress size={24} /> : t('common.login')}
             </Button>
         </form>
     );
@@ -113,7 +113,7 @@ export default function LoginPage() {
                 <Card>
                     <CardContent>
                         <Typography variant="h5" component="h1" gutterBottom align="center">
-                            {t('login.title')}
+                            {t('common.login')}
                         </Typography>
                         <LoginForm
                             onSubmit={handleLogin}

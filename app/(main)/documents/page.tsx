@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import {
     Box,
     Tooltip,
@@ -165,13 +165,13 @@ export default function DocumentsPage() {
     ], [t, handleOpen, handleDelete, router]);
 
     // 处理分页变化
-    const handlePageChange = (page: number, pageSize: number) => {
+    const handlePageChange = useCallback((page: number, pageSize: number) => {
         setParams({
             ...params,
             current: Number(page),
             size: Number(pageSize),
         });
-    };
+    }, [params, setParams]);
 
     return (
         <PerformanceLayout>
@@ -229,8 +229,8 @@ export default function DocumentsPage() {
                         }}
                     >
                         <Pagination
-                            current={params.current}
-                            pageSize={params.size}
+                            current={Number(params.current)}
+                            pageSize={Number(params.size)}
                             total={total}
                             onChange={handlePageChange}
                         />
