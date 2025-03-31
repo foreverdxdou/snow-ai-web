@@ -23,6 +23,8 @@ import {
   FormControlLabel,
   Divider,
   Grid,
+  IconButton,
+  TextField,
 } from "@mui/material";
 import {
   Edit as EditIcon,
@@ -39,13 +41,21 @@ import type { KnowledgeBaseVO, KnowledgeBaseDTO } from "@/app/types/knowledge";
 import { Pagination } from "@/app/components/common/Pagination";
 import { categoryService } from "@/app/services/category";
 import type { KbCategory } from "@/app/types/category";
-import { TreeViewBaseItem } from "@mui/x-tree-view/models";
+import { TreeItem } from '@mui/x-tree-view/TreeItem';
+import type { TreeItemProps } from '@mui/x-tree-view/TreeItem';
 import { useTranslation } from "react-i18next";
 import { PerformanceLayout } from "@/app/components/common/PerformanceLayout";
 import { usePerformanceData } from "@/app/hooks/usePerformanceData";
 import { CommonButton } from "@/app/components/common/CommonButton";
 import { CommonInput } from "@/app/components/common/CommonInput";
-import { RichTreeView } from '@mui/x-tree-view/RichTreeView';
+import { TreeView } from '@mui/x-tree-view/TreeView';
+import type { TreeViewProps } from '@mui/x-tree-view/TreeView';
+
+interface TreeItemData {
+  id: string;
+  label: string;
+  children?: TreeItemData[];
+}
 
 // 使用 React.memo 优化知识库卡片组件
 const KnowledgeCard = React.memo(
@@ -162,43 +172,202 @@ const KnowledgeCard = React.memo(
 
 KnowledgeCard.displayName = "KnowledgeCard";
 
-// 使用 React.memo 优化分类树组件
+// 修改 CustomTreeItem 组件
+const CustomTreeItem = React.memo(({ 
+  item, 
+  onEdit, 
+  onAddChild 
+}: { 
+  item: TreeItemData; 
+  onEdit: (id: number, name: string) => void;
+  onAddChild: (parentId: number, name: string) => void;
+}) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [isAddingChild, setIsAddingChild] = useState(false);
+  const [name, setName] = useState(item?.label || '');
+
+  const handleEdit = useCallback(() => {
+    setIsEditing(true);
+  }, []);
+
+  const handleAddChild = useCallback(() => {
+    setIsAddingChild(true);
+  }, []);
+
+  const handleSave = useCallback(() => {
+    if (!item?.id) return;
+    if (isEditing) {
+      onEdit(Number(item.id), name);
+    } else if (isAddingChild) {
+      onAddChild(Number(item.id), name);
+    }
+    setIsEditing(false);
+    setIsAddingChild(false);
+    setName(item?.label || '');
+  }, [item?.id, item?.label, isEditing, isAddingChild, name, onEdit, onAddChild]);
+
+  const handleCancel = useCallback(() => {
+    setIsEditing(false);
+    setIsAddingChild(false);
+    setName(item?.label || '');
+  }, [item?.label]);
+
+  if (!item) return null;
+
+  return (
+    <Box sx={{ 
+      display: 'flex', 
+      alignItems: 'center', 
+      gap: 1,
+      width: '100%',
+      minHeight: '32px',
+      '& .MuiIconButton-root': {
+        padding: '4px',
+        '&:hover': {
+          backgroundColor: 'rgba(0, 0, 0, 0.04)',
+        }
+      }
+    }}>
+      {isEditing || isAddingChild ? (
+        <TextField
+          size="small"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          autoFocus
+          onKeyPress={(e) => {
+            if (e.key === 'Enter') {
+              handleSave();
+            }
+          }}
+          sx={{ flex: 1 }}
+        />
+      ) : (
+        <>
+          <Typography sx={{ flex: 1, fontSize: '14px' }}>{item.label}</Typography>
+          <Box sx={{ display: 'flex', gap: 0.5 }}>
+            <IconButton size="small" onClick={handleEdit}>
+              <EditIcon fontSize="small" />
+            </IconButton>
+            <IconButton size="small" onClick={handleAddChild}>
+              <AddIcon fontSize="small" />
+            </IconButton>
+          </Box>
+        </>
+      )}
+      {(isEditing || isAddingChild) && (
+        <Dialog open={true} onClose={handleCancel}>
+          <DialogTitle>
+            {isEditing ? '编辑分类' : '新增子分类'}
+          </DialogTitle>
+          <DialogContent>
+            <TextField
+              fullWidth
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              label="分类名称"
+            />
+          </DialogContent>
+          <DialogActions>
+            <CommonButton buttonVariant="cancel" onClick={handleCancel}>
+              取消
+            </CommonButton>
+            <CommonButton buttonVariant="submit" onClick={handleSave}>
+              确定
+            </CommonButton>
+          </DialogActions>
+        </Dialog>
+      )}
+    </Box>
+  );
+});
+
+CustomTreeItem.displayName = 'CustomTreeItem';
+
+// 修改数据转换函数
+const convertToTreeItem = (item: any): TreeItemData => {
+  console.log('转换前的数据:', item);
+  const result = {
+    id: String(item.id || ''),
+    label: item.name || '',
+    children: item.children?.length ? item.children.map(convertToTreeItem) : []
+  };
+  console.log('转换后的数据:', result);
+  return result;
+};
+
+// 修改 CategoryTree 组件
 const CategoryTree = React.memo(
   ({
     items,
     onSelect,
     selectedId,
     onSelectedItemsChange,
+    onEdit,
+    onAddChild,
   }: {
-    items: TreeViewBaseItem[];
+    items: TreeItemData[];
     onSelect: (id: number) => void;
     onSelectedItemsChange: (id: number) => void;
     selectedId: number | null;
+    onEdit: (id: number, name: string) => void;
+    onAddChild: (parentId: number, name: string) => void;
   }) => {
+    console.log('CategoryTree 接收到的 items:', items);
+    
+    const renderTree = (node: TreeItemData) => (
+      <TreeItem
+        key={node.id}
+        itemId={node.id}
+        data-node-id={node.id}
+        label={
+          <CustomTreeItem
+            item={node}
+            onEdit={onEdit}
+            onAddChild={onAddChild}
+          />
+        }
+      >
+        {Array.isArray(node.children)
+          ? node.children.map((node) => renderTree(node))
+          : null}
+      </TreeItem>
+    );
+
     return (
-      <RichTreeView
-        items={items}
-        onItemClick={(event, itemId) => {
-          console.log('Node clicked:', event.target);
-          onSelect(Number(itemId));
-        }}
-        onSelectedItemsChange={(event, selectedItems) => {
-          onSelectedItemsChange(Number(selectedItems));
+      <TreeView
+        slots={{
+          collapseIcon: ExpandMoreIcon,
+          expandIcon: ChevronRightIcon,
         }}
         selectedItems={selectedId ? selectedId.toString() : ''}
-        defaultExpandedItems={['4']}
-        aria-label="category tree"
-        slots={{
-          expandIcon: ChevronRightIcon,
-          collapseIcon: ExpandMoreIcon,
-          endIcon: DragIndicatorIcon,
+        onSelect={(event: React.SyntheticEvent<HTMLUListElement>) => {
+          const target = event.target as HTMLElement;
+          const nodeId = target.getAttribute('data-node-id');
+          if (nodeId) {
+            console.log('选中的节点:', nodeId);
+            onSelectedItemsChange(Number(nodeId));
+          }
         }}
-      />
+        sx={{ 
+          height: '100%',
+          flexGrow: 1,
+          maxWidth: '100%',
+          overflowY: 'auto',
+          minHeight: '400px',
+          maxHeight: '800px',
+          '& .MuiTreeItem-content': {
+            padding: '4px 8px',
+          },
+          '& .MuiTreeItem-group': {
+            marginLeft: '16px',
+          }
+        }}
+      >
+        {items.map((node) => renderTree(node))}
+      </TreeView>
     );
   }
 );
-
-CategoryTree.displayName = "CategoryTree";
 
 export default function KnowledgePage() {
   const { t } = useTranslation();
@@ -217,7 +386,7 @@ export default function KnowledgePage() {
     severity: "success" as "success" | "error",
   });
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
-  const [categoryTree, setCategoryTree] = useState<TreeViewBaseItem[]>([]);
+  const [categoryTree, setCategoryTree] = useState<TreeItemData[]>([]);
 
   // 使用 usePerformanceData 优化数据获取
   const {
@@ -357,16 +526,11 @@ export default function KnowledgePage() {
     try {
       const response = await categoryService.getCategoryTree();
       const categories = response.data.data;
-      setCategoryTree(
-        categories.map((item) => ({
-          id: item.id.toString(),
-          label: item.name,
-          children: item.children?.map((child) => ({
-            id: child.id.toString(),
-            label: child.name,
-          })),
-        }))
-      );
+      console.log('API 返回的原始分类数据:', categories);
+      
+      const treeData = categories.map(convertToTreeItem);
+      console.log('最终转换后的树数据:', treeData);
+      setCategoryTree(treeData);
     } catch (error) {
       console.error("获取分类树失败:", error);
       setSnackbar({
@@ -427,6 +591,58 @@ export default function KnowledgePage() {
     [setParams]
   );
 
+  // 处理编辑分类
+  const handleEditCategory = useCallback(async (id: number, name: string) => {
+    try {
+      await categoryService.update(id, { 
+        name,
+        description: '',
+        parentId: null,
+        sort: 0,
+        status: 1
+      });
+      setSnackbar({
+        open: true,
+        message: t("category.updateSuccess"),
+        severity: "success",
+      });
+      fetchCategories(); // 刷新分类树
+    } catch (error) {
+      console.error("更新分类失败:", error);
+      setSnackbar({
+        open: true,
+        message: t("category.updateError"),
+        severity: "error",
+      });
+    }
+  }, [fetchCategories, t]);
+
+  // 处理新增子分类
+  const handleAddChildCategory = useCallback(async (parentId: number, name: string) => {
+    try {
+      await categoryService.create({ 
+        name,
+        description: '',
+        parentId,
+        sort: 0,
+        status: 1
+      });
+      setSnackbar({
+        open: true,
+        message: t("category.createSuccess"),
+        severity: "success",
+      });
+      fetchCategories(); // 刷新分类树
+    } catch (error) {
+      console.error("创建子分类失败:", error);
+      setSnackbar({
+        open: true,
+        message: t("category.createError"),
+        severity: "error",
+      });
+    }
+  }, [fetchCategories, t]);
+
   return (
     <PerformanceLayout>
       <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
@@ -457,12 +673,22 @@ export default function KnowledgePage() {
         <Box
           sx={{ display: "flex", gap: 3, p: 3, flex: 1, overflow: "hidden" }}
         >
-          <Paper sx={{ width: 'auto', p: 2, overflow: "auto" }}>
+          <Paper sx={{ 
+            width: 300, 
+            p: 2, 
+            overflow: "auto", 
+            minWidth: 300,
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column'
+          }}>
             <CategoryTree
               items={categoryTree}
               onSelect={handleCategorySelect}
               selectedId={selectedCategory}
               onSelectedItemsChange={handleSelectedItemsChange}
+              onEdit={handleEditCategory}
+              onAddChild={handleAddChildCategory}
             />
           </Paper>
 
@@ -526,7 +752,7 @@ export default function KnowledgePage() {
           <Box sx={{ mt: 3, display: "flex", justifyContent: "flex-end" }}>
             <Pagination
               total={total}
-              current={params.current}
+              current={Number(params.current)}
               pageSize={params.size}
               onChange={handlePageChange}
               pageSizeOptions={["12", "20", "50", "100"]}
