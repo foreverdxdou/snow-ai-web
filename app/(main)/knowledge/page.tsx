@@ -184,33 +184,59 @@ const CustomTreeItem = React.memo(({
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isAddingChild, setIsAddingChild] = useState(false);
-  const [name, setName] = useState(item?.label || '');
+  const [editName, setEditName] = useState(item?.label || '');
+  const [newChildName, setNewChildName] = useState('');
 
-  const handleEdit = useCallback(() => {
+  const handleEdit = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditName(item?.label || '');
     setIsEditing(true);
-  }, []);
+  }, [item?.label]);
 
-  const handleAddChild = useCallback(() => {
+  const handleAddChild = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    setNewChildName('');
     setIsAddingChild(true);
   }, []);
 
-  const handleSave = useCallback(() => {
+  const handleSave = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
     if (!item?.id) return;
     if (isEditing) {
-      onEdit(Number(item.id), name);
+      onEdit(Number(item.id), editName);
     } else if (isAddingChild) {
-      onAddChild(Number(item.id), name);
+      onAddChild(Number(item.id), newChildName);
     }
     setIsEditing(false);
     setIsAddingChild(false);
-    setName(item?.label || '');
-  }, [item?.id, item?.label, isEditing, isAddingChild, name, onEdit, onAddChild]);
+    setEditName(item?.label || '');
+    setNewChildName('');
+  }, [item?.id, item?.label, isEditing, isAddingChild, editName, newChildName, onEdit, onAddChild]);
 
-  const handleCancel = useCallback(() => {
+  const handleCancel = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
     setIsEditing(false);
     setIsAddingChild(false);
-    setName(item?.label || '');
+    setEditName(item?.label || '');
+    setNewChildName('');
   }, [item?.label]);
+
+  const handleEditNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    e.stopPropagation();
+    setEditName(e.target.value);
+  }, []);
+
+  const handleNewChildNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    e.stopPropagation();
+    setNewChildName(e.target.value);
+  }, []);
+
+  const handleKeyPress = useCallback((e: React.KeyboardEvent) => {
+    e.stopPropagation();
+    if (e.key === 'Enter') {
+      handleSave(e as any);
+    }
+  }, [handleSave]);
 
   if (!item) return null;
 
@@ -228,17 +254,14 @@ const CustomTreeItem = React.memo(({
         }
       }
     }}>
-      {isEditing || isAddingChild ? (
+      {isEditing ? (
         <TextField
           size="small"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
+          value={editName}
+          onChange={handleEditNameChange}
           autoFocus
-          onKeyPress={(e) => {
-            if (e.key === 'Enter') {
-              handleSave();
-            }
-          }}
+          onKeyPress={handleKeyPress}
+          onClick={(e) => e.stopPropagation()}
           sx={{ flex: 1 }}
         />
       ) : (
@@ -262,9 +285,10 @@ const CustomTreeItem = React.memo(({
           <DialogContent>
             <TextField
               fullWidth
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              value={isEditing ? editName : newChildName}
+              onChange={isEditing ? handleEditNameChange : handleNewChildNameChange}
               label="分类名称"
+              onClick={(e) => e.stopPropagation()}
             />
           </DialogContent>
           <DialogActions>
