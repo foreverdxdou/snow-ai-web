@@ -29,10 +29,12 @@ import {
     Category as CategoryIcon,
     Description as DescriptionIcon,
     Memory as MemoryIcon,
+    ConfirmationNumber as ConfirmationNumberIcon,
     People as PeopleIcon,
     LocalOffer as LocalOfferIcon,
     Settings as SettingsIcon,
     Logout as LogoutIcon,
+    Tune as TuneIcon,
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/app/hooks/useAuth';
@@ -328,9 +330,10 @@ export default function MainLayout({
         { icon: HomeIcon, text: t('menu.home'), path: '/' },
         { icon: QuestionAnswerIcon, text: t('menu.qa'), path: '/qa' },
         { icon: LibraryBooksIcon, text: t('menu.knowledge'), path: '/knowledge' },
-        { icon: CategoryIcon, text: t('menu.category'), path: '/category' },
         { icon: DescriptionIcon, text: t('menu.documents'), path: '/documents' },
+        { icon: CategoryIcon, text: t('menu.category'), path: '/category' },
         { icon: MemoryIcon, text: t('menu.llm'), path: '/llm' },
+        { icon: TuneIcon, text: t('menu.embeddingConfig'), path: '/embedding-config' },
         { icon: PeopleIcon, text: t('menu.users'), path: '/users' },
         { icon: LocalOfferIcon, text: t('menu.tags'), path: '/tags' },
         { icon: SettingsIcon, text: t('menu.systemConfig'), path: '/system-config' },

@@ -275,7 +275,7 @@ export default function SystemConfigPage() {
                 refresh();
               }}
             >
-              {t("systemConfig.reset")}
+              {t("common.reset")}
             </CommonButton>
 
             {/* 添加按钮 */}

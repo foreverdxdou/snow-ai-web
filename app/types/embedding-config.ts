@@ -4,24 +4,24 @@ import { Result } from './result';
 export interface EmbeddingConfig {
   id: number;
   name: string;
-  modelType: string;
-  apiKey: string;
   baseUrl: string;
-  dimensions: number;
-  enabled: number;
+  apiKey: string;
+  remark: string;
+  modelType: string;
+  dimension: number;
+  status: number;
   createTime: string;
   updateTime: string;
-  creatorName: string;
-  updaterName: string;
-  remark: string;
+  creator: string;
+  updater: string;
 }
 
 // 分页查询参数
 export interface EmbeddingConfigQuery {
-  pageNum: number;
-  pageSize: number;
+  current: number;
+  size: number;
   name?: string;
-  modelType?: string;
+  status?: number;
 }
 
 // 分页查询响应
@@ -34,12 +34,12 @@ export interface EmbeddingConfigPageResponse {
 export interface EmbeddingConfigSaveRequest {
   id?: number;
   name: string;
-  modelType: string;
-  apiKey: string;
   baseUrl: string;
-  dimensions: number;
-  enabled: number;
-  remark?: string;
+  apiKey: string;
+  remark: string;
+  modelType: string;
+  dimension: number;
+  status: number;
 }
 
 // 单个查询响应

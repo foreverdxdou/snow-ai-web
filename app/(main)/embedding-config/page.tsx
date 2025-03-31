@@ -1,526 +1,536 @@
-'use client';
+"use client";
 
-import { useTranslation } from 'react-i18next';
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useMemo, useCallback } from "react";
 import {
-    Box,
-    Typography,
-    Paper,
-    Button,
-    TextField,
-    IconButton,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    Alert,
-    Snackbar,
-    Tooltip,
-    CircularProgress,
-    Switch,
-    FormControlLabel,
-} from '@mui/material';
-import {
-    Add as AddIcon,
-    Search as SearchIcon,
-    Refresh as RefreshIcon,
-    Edit as EditIcon,
-    Delete as DeleteIcon,
-} from '@mui/icons-material';
-import { EmbeddingConfig, EmbeddingConfigQuery, EmbeddingConfigSaveRequest } from '@/app/types/embedding-config';
-import { embeddingConfigService } from '@/app/services/embedding-config';
-import { Pagination } from '@/app/components/common/Pagination';
-import { PerformanceLayout } from '@/app/components/common/PerformanceLayout';
-import { useDebouncedCallback } from '@/app/utils/performance';
-import { useVirtualizer } from '@tanstack/react-virtual';
-
-// 使用 React.memo 优化表格行组件
-const ConfigRow = React.memo(({ 
-    row, 
-    onEdit, 
-    onDelete, 
-    onToggleEnabled 
-}: { 
-    row: EmbeddingConfig; 
-    onEdit: (record: EmbeddingConfig) => void; 
-    onDelete: (id: number) => void;
-    onToggleEnabled: (id: number, currentEnabled: number) => void;
-}) => (
-    <TableRow>
-        <TableCell>{row.name}</TableCell>
-        <TableCell>{row.modelType}</TableCell>
-        <TableCell>{row.baseUrl}</TableCell>
-        <TableCell>{row.dimensions}</TableCell>
-        <TableCell>
-            <Switch
-                checked={row.enabled === 1}
-                onChange={() => onToggleEnabled(row.id, row.enabled)}
-            />
-        </TableCell>
-        <TableCell>{new Date(row.createTime).toLocaleString()}</TableCell>
-        <TableCell>{new Date(row.updateTime).toLocaleString()}</TableCell>
-        <TableCell align="right">
-            <Tooltip title="编辑">
-                <IconButton
-                    size="small"
-                    onClick={() => onEdit(row)}
-                >
-                    <EditIcon />
-                </IconButton>
-            </Tooltip>
-            <Tooltip title="删除">
-                <IconButton
-                    size="small"
-                    color="error"
-                    onClick={() => onDelete(row.id)}
-                >
-                    <DeleteIcon />
-                </IconButton>
-            </Tooltip>
-        </TableCell>
-    </TableRow>
-));
-
-ConfigRow.displayName = 'ConfigRow';
+  Box,
+  Typography,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Tooltip,
+  Alert,
+  Snackbar,
+  Stack,
+  FormControlLabel,
+  Switch,
+} from "@mui/material";
+import type {
+  EmbeddingConfig,
+  EmbeddingConfigQuery,
+  EmbeddingConfigSaveRequest,
+} from "@/app/types/embedding-config";
+import { embeddingConfigService } from "@/app/services/embedding-config";
+import { useTranslation } from "react-i18next";
+import { PerformanceLayout } from "@/app/components/common/PerformanceLayout";
+import { PerformanceTable } from "@/app/components/common/PerformanceTable";
+import { usePerformanceData } from "@/app/hooks/usePerformanceData";
+import { useDebouncedCallback } from "@/app/utils/performance";
+import { Pagination } from "@/app/components/common/Pagination";
+import { formatDate } from "@/app/utils/format";
+import { CommonButton } from "@/app/components/common/CommonButton";
+import { CommonInput } from "@/app/components/common/CommonInput";
+import { CommonSelect } from "@/app/components/common/CommonSelect";
 
 export default function EmbeddingConfigPage() {
-    const { t } = useTranslation();
-    const [loading, setLoading] = useState(false);
-    const [data, setData] = useState<EmbeddingConfig[]>([]);
-    const [total, setTotal] = useState(0);
-    const [current, setCurrent] = useState(1);
-    const [pageSize, setPageSize] = useState(10);
-    const [dialogOpen, setDialogOpen] = useState(false);
-    const [dialogTitle, setDialogTitle] = useState('');
-    const [editingRecord, setEditingRecord] = useState<EmbeddingConfig | null>(null);
-    const [searchForm, setSearchForm] = useState<EmbeddingConfigQuery>({
-        pageNum: 1,
-        pageSize: 10,
-        name: '',
-        modelType: '',
+  const { t } = useTranslation();
+  const [open, setOpen] = React.useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
+  const [deletingId, setDeletingId] = React.useState<number | null>(null);
+  const [editingConfig, setEditingConfig] =
+    React.useState<EmbeddingConfig | null>(null);
+  const [formData, setFormData] = React.useState<EmbeddingConfigSaveRequest>({
+    name: "",
+    remark: "",
+    modelType: "",
+    dimension: 1536,
+    status: 1,
+    baseUrl: "",
+    apiKey: "",
+  });
+
+  const [snackbar, setSnackbar] = React.useState({
+    open: false,
+    message: "",
+    severity: "success" as "success" | "error",
+  });
+
+  // 使用 useMemo 优化 defaultParams
+  const defaultParams = useMemo(
+    () => ({
+      current: 1,
+      size: 10,
+      name: "",
+      status: undefined,
+    }),
+    []
+  );
+
+  // 使用 usePerformanceData 优化数据获取
+  const {
+    data: configs,
+    loading,
+    total,
+    params,
+    setParams,
+    refresh,
+  } = usePerformanceData<EmbeddingConfig>({
+    fetchData: embeddingConfigService.getList,
+    defaultParams,
+    autoFetch: true,
+  });
+
+  // 使用 useCallback 优化事件处理函数
+  const handleOpen = useCallback((config?: EmbeddingConfig) => {
+    if (config) {
+      setEditingConfig(config);
+      setFormData({
+        id: config.id,
+        name: config.name,
+        remark: config.remark,
+        modelType: config.modelType,
+        dimension: config.dimension,
+        status: config.status,
+        baseUrl: config.baseUrl,
+        apiKey: config.apiKey,
+      });
+    } else {
+      setEditingConfig(null);
+      setFormData({
+        name: "",
+        remark: "",
+        modelType: "",
+        dimension: 1536,
+        status: 1,
+        baseUrl: "",
+        apiKey: "",
+      });
+    }
+    setOpen(true);
+  }, []);
+
+  const handleClose = useCallback(() => {
+    setOpen(false);
+    setEditingConfig(null);
+    setFormData({
+      name: "",
+      remark: "",
+      modelType: "",
+      dimension: 1536,
+      status: 1,
+      baseUrl: "",
+      apiKey: "",
     });
-    const [formData, setFormData] = useState<EmbeddingConfigSaveRequest>({
-        name: '',
-        modelType: '',
-        apiKey: '',
-        baseUrl: '',
-        dimensions: 1536,
-        enabled: 1,
-        remark: '',
-    });
-    const [snackbar, setSnackbar] = useState({
-        open: false,
-        message: '',
-        severity: 'success' as 'success' | 'error',
-    });
+  }, []);
 
-    // 使用 useCallback 优化函数
-    const fetchData = useCallback(async (params: EmbeddingConfigQuery) => {
-        try {
-            setLoading(true);
-            const res = await embeddingConfigService.getList(params);
-            setData(res.data?.data.records || []);
-            setTotal(res.data?.data.total || 0);
-        } finally {
-            setLoading(false);
-        }
-    }, []);
-
-    useEffect(() => {
-        fetchData({
-            ...searchForm,
-            pageNum: current,
-            pageSize: pageSize,
+  const handleSubmit = useCallback(async () => {
+    try {
+      if (editingConfig) {
+        await embeddingConfigService.update(editingConfig.id, formData);
+        setSnackbar({
+          open: true,
+          message: t("embeddingConfig.updateSuccess"),
+          severity: "success",
         });
-    }, [current, pageSize, fetchData, searchForm]);
-
-    // 使用防抖优化搜索
-    const handleSearch = useDebouncedCallback(() => {
-        setCurrent(1);
-        fetchData({
-            ...searchForm,
-            pageNum: 1,
+      } else {
+        await embeddingConfigService.add(formData);
+        setSnackbar({
+          open: true,
+          message: t("embeddingConfig.createSuccess"),
+          severity: "success",
         });
-    }, [searchForm, fetchData], 300);
+      }
+      handleClose();
+      refresh();
+    } catch (error) {
+      console.error(`${editingConfig ? "更新" : "创建"}配置失败:`, error);
+      setSnackbar({
+        open: true,
+        message: t("embeddingConfig.saveError"),
+        severity: "error",
+      });
+    }
+  }, [editingConfig, formData, handleClose, refresh, t]);
 
-    const handleReset = useCallback(() => {
-        setSearchForm({
-            pageNum: 1,
-            pageSize: pageSize,
-            name: '',
-            modelType: '',
+  const handleDelete = useCallback((id: number) => {
+    setDeletingId(id);
+    setDeleteDialogOpen(true);
+  }, []);
+
+  const handleDeleteConfirm = useCallback(async () => {
+    if (!deletingId) return;
+    try {
+      await embeddingConfigService.delete(deletingId);
+      setSnackbar({
+        open: true,
+        message: t("embeddingConfig.deleteSuccess"),
+        severity: "success",
+      });
+      refresh();
+    } catch (error) {
+      console.error("删除配置失败:", error);
+      setSnackbar({
+        open: true,
+        message: t("embeddingConfig.deleteError"),
+        severity: "error",
+      });
+    } finally {
+      setDeleteDialogOpen(false);
+      setDeletingId(null);
+    }
+  }, [deletingId, refresh, t]);
+
+  const handleStatusChange = useCallback(
+    async (config: EmbeddingConfig) => {
+      try {
+        await embeddingConfigService.toggleEnabled(
+          config.id,
+          config.status === 1 ? 0 : 1
+        );
+        setSnackbar({
+          open: true,
+          message: t("embeddingConfig.statusUpdateSuccess"),
+          severity: "success",
         });
-        setCurrent(1);
-        fetchData({
-            pageNum: 1,
-            pageSize: pageSize,
+        refresh();
+      } catch (error) {
+        console.error("更新状态失败:", error);
+        setSnackbar({
+          open: true,
+          message: t("embeddingConfig.statusUpdateError"),
+          severity: "error",
         });
-    }, [pageSize, fetchData]);
+      }
+    },
+    [t, refresh]
+  );
 
-    const handleAdd = useCallback(() => {
-        setDialogTitle(t('embeddingConfig.add'));
-        setEditingRecord(null);
-        setFormData({
-            name: '',
-            modelType: '',
-            apiKey: '',
-            baseUrl: '',
-            dimensions: 1536,
-            enabled: 1,
-            remark: '',
-        });
-        setDialogOpen(true);
-    }, [t]);
+  // 使用 useDebouncedCallback 优化分页处理
+  const handlePageChange = useDebouncedCallback(
+    (page: number, size: number) => {
+      setParams((prev: EmbeddingConfigQuery) => ({
+        ...prev,
+        current: page,
+        size: size,
+      }));
+    },
+    [],
+    300
+  );
 
-    const handleEdit = useCallback((record: EmbeddingConfig) => {
-        setDialogTitle(t('embeddingConfig.edit'));
-        setEditingRecord(record);
-        setFormData({
-            id: record.id,
-            name: record.name,
-            modelType: record.modelType,
-            apiKey: record.apiKey,
-            baseUrl: record.baseUrl,
-            dimensions: record.dimensions,
-            enabled: record.enabled,
-            remark: record.remark,
-        });
-        setDialogOpen(true);
-    }, [t]);
-
-    const handleDelete = useCallback(async (id: number) => {
-        if (!window.confirm(t('embeddingConfig.deleteConfirm'))) return;
-        try {
-            await embeddingConfigService.delete(id);
-            setSnackbar({
-                open: true,
-                message: t('embeddingConfig.operateSuccess'),
-                severity: 'success',
-            });
-            fetchData({
-                ...searchForm,
-                pageNum: current,
-                pageSize: pageSize,
-            });
-        } catch (error) {
-            console.error('Delete failed:', error);
-            setSnackbar({
-                open: true,
-                message: t('embeddingConfig.operateError'),
-                severity: 'error',
-            });
-        }
-    }, [t, searchForm, current, pageSize, fetchData]);
-
-    const handleToggleEnabled = useCallback(async (id: number, currentEnabled: number) => {
-        try {
-            await embeddingConfigService.toggleEnabled(id, currentEnabled === 1 ? 0 : 1);
-            setSnackbar({
-                open: true,
-                message: t('embeddingConfig.operateSuccess'),
-                severity: 'success',
-            });
-            fetchData({
-                ...searchForm,
-                pageNum: current,
-                pageSize: pageSize,
-            });
-        } catch (error) {
-            console.error('Toggle enabled failed:', error);
-            setSnackbar({
-                open: true,
-                message: t('embeddingConfig.operateError'),
-                severity: 'error',
-            });
-        }
-    }, [t, searchForm, current, pageSize, fetchData]);
-
-    const handleDialogClose = useCallback(() => {
-        setDialogOpen(false);
-        setEditingRecord(null);
-    }, []);
-
-    const handleDialogSubmit = useCallback(async () => {
-        try {
-            if (editingRecord) {
-                await embeddingConfigService.update(editingRecord.id, formData);
-            } else {
-                await embeddingConfigService.add(formData);
+  // 使用 useMemo 优化表格配置
+  const columns = useMemo(
+    () => [
+      {
+        key: "name" as keyof EmbeddingConfig,
+        title: t("common.name"),
+        render: (_: any, record: EmbeddingConfig) => record?.name || "-",
+      },
+      {
+        key: "baseUrl" as keyof EmbeddingConfig,
+        title: t("embeddingConfig.baseUrl"),
+        render: (_: any, record: EmbeddingConfig) => record?.baseUrl || "-",
+      },
+      {
+        key: "apiKey" as keyof EmbeddingConfig,
+        title: t("embeddingConfig.apiKey"),
+        render: (_: any, record: EmbeddingConfig) => record?.apiKey || "-",
+      },
+      {
+        key: "remark" as keyof EmbeddingConfig,
+        title: t("common.remark"),
+        render: (_: any, record: EmbeddingConfig) => record?.remark || "-",
+      },
+      {
+        key: "modelType" as keyof EmbeddingConfig,
+        title: t("embeddingConfig.modelType"),
+        render: (_: any, record: EmbeddingConfig) => record?.modelType || "-",
+      },
+      {
+        key: "dimension" as keyof EmbeddingConfig,
+        title: t("embeddingConfig.dimension"),
+        render: (_: any, record: EmbeddingConfig) => record?.dimension || "-",
+      },
+      {
+        key: "status" as keyof EmbeddingConfig,
+        title: t("common.status"),
+        render: (_: any, record: EmbeddingConfig) => (
+          <FormControlLabel
+            control={
+              <Switch
+                checked={record.status === 1}
+                onChange={() => handleStatusChange(record)}
+                color="primary"
+              />
             }
-            setSnackbar({
-                open: true,
-                message: t('embeddingConfig.operateSuccess'),
-                severity: 'success',
-            });
-            setDialogOpen(false);
-            fetchData({
-                ...searchForm,
-                pageNum: current,
-                pageSize: pageSize,
-            });
-        } catch (error) {
-            console.error('Save failed:', error);
-            setSnackbar({
-                open: true,
-                message: t('embeddingConfig.operateError'),
-                severity: 'error',
-            });
-        }
-    }, [editingRecord, formData, t, searchForm, current, pageSize, fetchData]);
+            label={
+              record.status === 1 ? t("common.enable") : t("common.disable")
+            }
+            sx={{
+              "& .MuiFormControlLabel-label": {
+                fontSize: "0.875rem",
+              },
+            }}
+          />
+        ),
+      },
+      {
+        key: "updateTime" as keyof EmbeddingConfig,
+        title: t("common.updateTime"),
+        render: (_: any, record: EmbeddingConfig) =>
+          record?.updateTime ? formatDate(record.updateTime) : "-",
+      },
+      {
+        key: "id" as keyof EmbeddingConfig,
+        title: t("common.actions"),
+        width: 120,
+        render: (_: any, record: EmbeddingConfig) =>
+          record && (
+            <Stack direction="row" spacing={1}>
+              <Tooltip title={t("common.edit")}>
+                <CommonButton
+                  buttonVariant="edit"
+                  onClick={() => handleOpen(record)}
+                />
+              </Tooltip>
+              <Tooltip title={t("common.delete")}>
+                <CommonButton
+                  buttonVariant="delete"
+                  onClick={() => handleDelete(record.id)}
+                />
+              </Tooltip>
+            </Stack>
+          ),
+      },
+    ],
+    [t, handleOpen, handleDelete, handleStatusChange]
+  );
 
-    const handlePageChange = useCallback((page: number, size: number) => {
-        setCurrent(page);
-        setPageSize(size);
-    }, []);
+  return (
+    <PerformanceLayout>
+      <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
+        <Box
+          sx={{
+            p: 3,
+            borderBottom: "1px solid",
+            borderColor: "divider",
+            bgcolor: "background.paper",
+          }}
+        >
+          <Box sx={{ display: "flex", gap: 2 }}>
+            <CommonInput
+              label={t("common.name")}
+              value={params.name || ""}
+              onChange={(value) =>
+                setParams({ ...params, name: value as string })
+              }
+              sx={{ width: 200 }}
+            />
+            <CommonSelect
+              label={t("common.status")}
+              value={params.status}
+              onChange={(value) =>
+                setParams({ ...params, status: value as number })
+              }
+              options={[
+                { id: 1, name: t("common.enable") },
+                { id: 0, name: t("common.disable") },
+              ]}
+              sx={{ width: 200 }}
+            />
+            <CommonButton
+              buttonVariant="search"
+              onClick={() => setParams({ ...params, current: 1 })}
+            >
+              {t("common.search")}
+            </CommonButton>
+            <CommonButton
+              buttonVariant="reset"
+              onClick={() => setParams(defaultParams)}
+            >
+              {t("common.reset")}
+            </CommonButton>
 
-    // 使用 useMemo 优化计算属性
-    const tableHeight = useMemo(() => {
-        return Math.min(600, window.innerHeight - 300);
-    }, []);
+            <CommonButton
+              buttonVariant="add"
+              onClick={() => handleOpen()}
+              sx={{ marginLeft: "auto" }}
+            >
+              {t("embeddingConfig.add")}
+            </CommonButton>
+          </Box>
+        </Box>
 
-    // 使用虚拟滚动优化长列表
-    const rowVirtualizer = useVirtualizer({
-        count: data.length,
-        getScrollElement: () => document.querySelector('.MuiTableBody-root'),
-        estimateSize: () => 53, // 估计每行高度
-        overscan: 5,
-    });
+        <Box sx={{ p: 3, flex: 1, overflow: "auto" }}>
+          <PerformanceTable
+            loading={loading}
+            data={configs}
+            columns={columns}
+            emptyMessage={t("common.noData")}
+          />
 
-    return (
-        <PerformanceLayout>
-            <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                <Box sx={{
-                    p: 3,
-                    borderBottom: '1px solid',
-                    borderColor: 'divider',
-                    bgcolor: 'background.paper',
-                }}>
-                    <Box sx={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        mb: 2,
-                    }}>
-                        <Typography variant="h5" sx={{ fontWeight: 600 }}>
-                            {t('embeddingConfig.title')}
-                        </Typography>
-                        <Button
-                            variant="contained"
-                            startIcon={<AddIcon />}
-                            onClick={handleAdd}
-                            sx={{
-                                background: 'linear-gradient(45deg, #6C8EF2 30%, #76E3C4 90%)',
-                                '&:hover': {
-                                    background: 'linear-gradient(45deg, #5A7DE0 30%, #65D2B3 90%)',
-                                },
-                                height: '44px',
-                                px: 3
-                            }}
-                        >
-                            {t('embeddingConfig.add')}
-                        </Button>
-                    </Box>
+          <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
+            <Pagination
+              total={total}
+              current={params.current}
+              pageSize={params.size}
+              onChange={handlePageChange}
+            />
+          </Box>
+        </Box>
 
-                    <Box sx={{ display: 'flex', gap: 2 }}>
-                        <TextField
-                            size="small"
-                            label={t('embeddingConfig.name')}
-                            value={searchForm.name || ''}
-                            onChange={(e) => setSearchForm({ ...searchForm, name: e.target.value })}
-                            sx={{ width: 200 }}
-                        />
-                        <TextField
-                            size="small"
-                            label={t('embeddingConfig.modelType')}
-                            value={searchForm.modelType || ''}
-                            onChange={(e) => setSearchForm({ ...searchForm, modelType: e.target.value })}
-                            sx={{ width: 200 }}
-                        />
-                        <Button
-                            variant="contained"
-                            startIcon={<SearchIcon />}
-                            onClick={handleSearch}
-                            sx={{
-                                background: 'linear-gradient(45deg, #6C8EF2 30%, #76E3C4 90%)',
-                                '&:hover': {
-                                    background: 'linear-gradient(45deg, #5A7DE0 30%, #65D2B3 90%)',
-                                },
-                            }}
-                        >
-                            {t('embeddingConfig.search')}
-                        </Button>
-                        <Button
-                            variant="outlined"
-                            startIcon={<RefreshIcon />}
-                            onClick={handleReset}
-                        >
-                            {t('embeddingConfig.reset')}
-                        </Button>
-                    </Box>
-                </Box>
-
-                <Box sx={{ p: 3, flex: 1, overflow: 'auto' }}>
-                    <TableContainer component={Paper}>
-                        <Table stickyHeader>
-                            <TableHead>
-                                <TableRow>
-                                    <TableCell width="15%">{t('embeddingConfig.name')}</TableCell>
-                                    <TableCell width="15%">{t('embeddingConfig.modelType')}</TableCell>
-                                    <TableCell width="15%">{t('embeddingConfig.baseUrl')}</TableCell>
-                                    <TableCell width="10%">{t('embeddingConfig.dimensions')}</TableCell>
-                                    <TableCell width="10%">{t('embeddingConfig.enabled')}</TableCell>
-                                    <TableCell width="15%">{t('embeddingConfig.createTime')}</TableCell>
-                                    <TableCell width="15%">{t('embeddingConfig.updateTime')}</TableCell>
-                                    <TableCell width="5%" align="right">{t('common.actions')}</TableCell>
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {loading ? (
-                                    <TableRow>
-                                        <TableCell colSpan={8} align="center">
-                                            <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-                                                <CircularProgress />
-                                            </Box>
-                                        </TableCell>
-                                    </TableRow>
-                                ) : data.length === 0 ? (
-                                    <TableRow>
-                                        <TableCell colSpan={8} align="center">
-                                            {t('common.noData')}
-                                        </TableCell>
-                                    </TableRow>
-                                ) : (
-                                    rowVirtualizer.getVirtualItems().map((virtualItem) => (
-                                        <ConfigRow
-                                            key={data[virtualItem.index].id}
-                                            row={data[virtualItem.index]}
-                                            onEdit={handleEdit}
-                                            onDelete={handleDelete}
-                                            onToggleEnabled={handleToggleEnabled}
-                                        />
-                                    ))
-                                )}
-                            </TableBody>
-                        </Table>
-                    </TableContainer>
-
-                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
-                        <Pagination
-                            total={total}
-                            current={current}
-                            pageSize={pageSize}
-                            onChange={handlePageChange}
-                        />
-                    </Box>
-                </Box>
-
-                <Dialog open={dialogOpen} onClose={handleDialogClose} maxWidth="md" fullWidth>
-                    <DialogTitle>{dialogTitle}</DialogTitle>
-                    <DialogContent>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
-                            <TextField
-                                label={t('embeddingConfig.name')}
-                                value={formData.name}
-                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                fullWidth
-                                required
-                                error={!formData.name}
-                                helperText={!formData.name ? t('embeddingConfig.pleaseEnterName') : ''}
-                            />
-                            <TextField
-                                label={t('embeddingConfig.modelType')}
-                                value={formData.modelType}
-                                onChange={(e) => setFormData({ ...formData, modelType: e.target.value })}
-                                fullWidth
-                                required
-                                error={!formData.modelType}
-                                helperText={!formData.modelType ? t('embeddingConfig.pleaseEnterModelType') : ''}
-                            />
-                            <TextField
-                                label={t('embeddingConfig.apiKey')}
-                                value={formData.apiKey}
-                                onChange={(e) => setFormData({ ...formData, apiKey: e.target.value })}
-                                fullWidth
-                                required
-                                error={!formData.apiKey}
-                                helperText={!formData.apiKey ? t('embeddingConfig.pleaseEnterApiKey') : ''}
-                            />
-                            <TextField
-                                label={t('embeddingConfig.baseUrl')}
-                                value={formData.baseUrl}
-                                onChange={(e) => setFormData({ ...formData, baseUrl: e.target.value })}
-                                fullWidth
-                                required
-                                error={!formData.baseUrl}
-                                helperText={!formData.baseUrl ? t('embeddingConfig.pleaseEnterBaseUrl') : ''}
-                            />
-                            <TextField
-                                label={t('embeddingConfig.dimensions')}
-                                value={formData.dimensions}
-                                onChange={(e) => setFormData({ ...formData, dimensions: Number(e.target.value) })}
-                                fullWidth
-                                required
-                                type="number"
-                                error={!formData.dimensions}
-                                helperText={!formData.dimensions ? t('embeddingConfig.pleaseEnterDimensions') : ''}
-                            />
-                            <FormControlLabel
-                                control={
-                                    <Switch
-                                        checked={formData.enabled === 1}
-                                        onChange={(e) => setFormData({ ...formData, enabled: e.target.checked ? 1 : 0 })}
-                                    />
-                                }
-                                label={t('embeddingConfig.enabled')}
-                            />
-                            <TextField
-                                label={t('embeddingConfig.remark')}
-                                value={formData.remark}
-                                onChange={(e) => setFormData({ ...formData, remark: e.target.value })}
-                                fullWidth
-                                multiline
-                                rows={3}
-                            />
-                        </Box>
-                    </DialogContent>
-                    <DialogActions>
-                        <Button onClick={handleDialogClose}>{t('common.cancel')}</Button>
-                        <Button
-                            onClick={handleDialogSubmit}
-                            variant="contained"
-                            disabled={!formData.name || !formData.modelType || !formData.apiKey || !formData.baseUrl || !formData.dimensions}
-                            sx={{
-                                background: 'linear-gradient(45deg, #6C8EF2 30%, #76E3C4 90%)',
-                                '&:hover': {
-                                    background: 'linear-gradient(45deg, #5A7DE0 30%, #65D2B3 90%)',
-                                },
-                            }}
-                        >
-                            {t('common.save')}
-                        </Button>
-                    </DialogActions>
-                </Dialog>
-
-                <Snackbar
-                    open={snackbar.open}
-                    autoHideDuration={3000}
-                    onClose={() => setSnackbar({ ...snackbar, open: false })}
-                >
-                    <Alert
-                        onClose={() => setSnackbar({ ...snackbar, open: false })}
-                        severity={snackbar.severity}
-                        sx={{ width: '100%' }}
-                    >
-                        {snackbar.message}
-                    </Alert>
-                </Snackbar>
+        <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
+          <DialogTitle>
+            {editingConfig
+              ? t("embeddingConfig.edit")
+              : t("embeddingConfig.add")}
+          </DialogTitle>
+          <DialogContent>
+            <Box sx={{ pt: 2 }}>
+              <Stack spacing={2}>
+                <CommonInput
+                  label={t("common.name")}
+                  value={formData.name}
+                  onChange={(value) =>
+                    setFormData({ ...formData, name: value as string })
+                  }
+                  required
+                  error={!formData.name}
+                  helperText={
+                    !formData.name ? t("embeddingConfig.nameRequired") : ""
+                  }
+                />
+                <CommonInput
+                  label={t("embeddingConfig.baseUrl")}
+                  value={formData.baseUrl}
+                  onChange={(value) =>
+                    setFormData({ ...formData, baseUrl: value as string })
+                  }
+                  required
+                  error={!formData.baseUrl}
+                  helperText={
+                    !formData.baseUrl ? t("embeddingConfig.baseUrlRequired") : ""
+                  }
+                />
+                <CommonInput
+                  label={t("embeddingConfig.apiKey")}
+                  value={formData.apiKey}
+                  onChange={(value) =>
+                    setFormData({ ...formData, apiKey: value as string })
+                  }
+                  required
+                  error={!formData.apiKey}
+                  helperText={
+                    !formData.apiKey ? t("embeddingConfig.apiKeyRequired") : ""
+                  }
+                />
+                <CommonInput
+                  label={t("embeddingConfig.modelType")}
+                  value={formData.modelType}
+                  onChange={(value) =>
+                    setFormData({ ...formData, modelType: value as string })
+                  }
+                  required
+                  error={!formData.modelType}
+                  helperText={
+                    !formData.modelType
+                      ? t("embeddingConfig.modelRequired")
+                      : ""
+                  }
+                />
+                <CommonInput
+                  label={t("embeddingConfig.dimension")}
+                  value={formData.dimension.toString()}
+                  onChange={(value) =>
+                    setFormData({ ...formData, dimension: Number(value) })
+                  }
+                  type="number"
+                  required
+                  error={!formData.dimension || formData.dimension <= 0}
+                  helperText={
+                    !formData.dimension || formData.dimension <= 0
+                      ? t("embeddingConfig.dimensionRequired")
+                      : ""
+                  }
+                />
+                <CommonInput
+                  label={t("common.remark")}
+                  value={formData.remark}
+                  onChange={(value) =>
+                    setFormData({ ...formData, remark: value as string })
+                  }
+                  multiline
+                  rows={3}
+                />
+                <CommonSelect
+                  label={t("common.status")}
+                  value={formData.status.toString()}
+                  onChange={(value) =>
+                    setFormData({ ...formData, status: Number(value) })
+                  }
+                  options={[
+                    { id: 1, name: t("common.enable") },
+                    { id: 0, name: t("common.disable") },
+                  ]}
+                />
+              </Stack>
             </Box>
-        </PerformanceLayout>
-    );
-} 
+          </DialogContent>
+          <DialogActions>
+            <CommonButton buttonVariant="cancel" onClick={handleClose}>
+              {t("common.cancel")}
+            </CommonButton>
+            <CommonButton
+              buttonVariant="submit"
+              onClick={handleSubmit}
+              disabled={
+                !formData.name ||
+                !formData.modelType ||
+                !formData.baseUrl ||
+                !formData.apiKey ||
+                formData.dimension <= 0
+              }
+            >
+              {t("common.submit")}
+            </CommonButton>
+          </DialogActions>
+        </Dialog>
+
+        <Dialog
+          open={deleteDialogOpen}
+          onClose={() => setDeleteDialogOpen(false)}
+        >
+          <DialogTitle>{t("embeddingConfig.deleteConfirm")}</DialogTitle>
+          <DialogContent>
+            <Typography>{t("embeddingConfig.deleteConfirmMessage")}</Typography>
+          </DialogContent>
+          <DialogActions>
+            <CommonButton
+              buttonVariant="cancel"
+              onClick={() => setDeleteDialogOpen(false)}
+            >
+              {t("common.cancel")}
+            </CommonButton>
+            <CommonButton buttonVariant="delete" onClick={handleDeleteConfirm}>
+              {t("common.delete")}
+            </CommonButton>
+          </DialogActions>
+        </Dialog>
+
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={6000}
+          onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
+        >
+          <Alert
+            onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
+            severity={snackbar.severity}
+            sx={{ width: "100%" }}
+          >
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
+      </Box>
+    </PerformanceLayout>
+  );
+}
