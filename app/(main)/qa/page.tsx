@@ -146,6 +146,7 @@ export default function QaPage() {
     const [question, setQuestion] = useState('');
     const [chatHistory, setChatHistory] = useState<KbChatHistory[]>([]);
     const [loading, setLoading] = useState(false);
+    const [initialLoading, setInitialLoading] = useState(true);
     const [sessionId] = useState(uuidv4());
     const chatBoxRef = useRef<HTMLDivElement>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
@@ -207,24 +208,32 @@ export default function QaPage() {
 
     useEffect(() => {
         isMountedRef.current = true;
-        fetchKnowledgeBases();
+        setInitialLoading(true);
+        // 并行加载知识库列表和历史记录
+        Promise.all([
+            fetchKnowledgeBases(),
+            fetchChatHistory()
+        ]).catch(error => {
+            if (isMountedRef.current) {
+                setSnackbar({
+                    open: true,
+                    message: t('qa.loadError'),
+                    severity: 'error',
+                });
+            }
+        }).finally(() => {
+            if (isMountedRef.current) {
+                setInitialLoading(false);
+            }
+        });
         return () => {
             isMountedRef.current = false;
             setKnowledgeBases([]);
             setSelectedKbs([]);
+            setChatHistory([]);
+            setInitialLoading(false);
         };
-    }, [fetchKnowledgeBases]);
-
-    useEffect(() => {
-        if (sessionId) {
-            isMountedRef.current = true;
-            fetchChatHistory();
-            return () => {
-                isMountedRef.current = false;
-                setChatHistory([]);
-            };
-        }
-    }, [sessionId, fetchChatHistory]);
+    }, [fetchKnowledgeBases, fetchChatHistory, t]);
 
     // 使用 useCallback 优化中断会话处理
     const handleAbort = useCallback(() => {
@@ -305,52 +314,114 @@ export default function QaPage() {
             const url = `${baseUrl}/${endpoint}${queryParams}`;
 
             let answer = '';
+            let retryCount = 0;
+            const maxRetries = 3;
+            let isRetrying = false;
 
-            await fetchEventSource(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${Cookies.get('token')}`,
-                    'Accept-Encoding': 'identity',
-                    'X-Accept-Encoding-Override': 'identity'
-                },
-                body: JSON.stringify(requestData),
-                signal: abortControllerRef.current.signal,
-                onmessage(ev) {
-                    if (!isMountedRef.current) return;
-                    
-                    if (ev.event === 'done' || ev.event === 'complete') {
-                        setLoading(false);
-                        abortControllerRef.current = null;
-                        return;
-                    }
-                    const data = ev.data;
-                    answer += data;
-                    updateChatHistory(answer);
-                    scrollToBottom();
-                },
-                onclose() {
-                    if (isMountedRef.current) {
-                        setLoading(false);
-                        abortControllerRef.current = null;
-                    }
-                },
-                onerror(err) {
-                    if (!isMountedRef.current) return;
-                    
-                    if (err.name === 'AbortError') {
-                        return;
-                    }
-                    setSnackbar({
-                        open: true,
-                        message: t('qa.systemError'),
-                        severity: 'error',
+            const connect = async () => {
+                if (isRetrying) return;
+                isRetrying = true;
+
+                try {
+                    await fetchEventSource(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${Cookies.get('token')}`,
+                            'Accept-Encoding': 'identity',
+                            'X-Accept-Encoding-Override': 'identity'
+                        },
+                        body: JSON.stringify(requestData),
+                        signal: abortControllerRef.current?.signal,
+                        onmessage(ev) {
+                            if (!isMountedRef.current) return;
+                            
+                            if (ev.event === 'done' || ev.event === 'complete') {
+                                setLoading(false);
+                                abortControllerRef.current = null;
+                                isRetrying = false;
+                                return;
+                            }
+                            const data = ev.data;
+                            answer += data;
+                            updateChatHistory(answer);
+                            scrollToBottom();
+                        },
+                        onclose() {
+                            if (!isMountedRef.current) return;
+                            
+                            // 只有在非正常完成且未中断的情况下才重试
+                            if (!answer && retryCount < maxRetries) {
+                                retryCount++;
+                                console.log(`Connection closed, retrying (${retryCount}/${maxRetries})...`);
+                                setTimeout(() => {
+                                    isRetrying = false;
+                                    connect();
+                                }, 1000);
+                            } else {
+                                setLoading(false);
+                                abortControllerRef.current = null;
+                                isRetrying = false;
+                            }
+                        },
+                        onerror(err) {
+                            if (!isMountedRef.current) return;
+                            
+                            if (err.name === 'AbortError') {
+                                isRetrying = false;
+                                return;
+                            }
+                            
+                            // 只有在非正常完成且未中断的情况下才重试
+                            if (!answer && retryCount < maxRetries) {
+                                retryCount++;
+                                console.log(`Error occurred, retrying (${retryCount}/${maxRetries})...`);
+                                setTimeout(() => {
+                                    isRetrying = false;
+                                    connect();
+                                }, 1000);
+                            } else {
+                                setSnackbar({
+                                    open: true,
+                                    message: t('qa.systemError'),
+                                    severity: 'error',
+                                });
+                                setLoading(false);
+                                abortControllerRef.current = null;
+                                isRetrying = false;
+                            }
+                        },
                     });
-                    setLoading(false);
-                    abortControllerRef.current = null;
-                    throw err;
-                },
-            });
+                } catch (error) {
+                    if (!isMountedRef.current) return;
+                    
+                    if (error instanceof Error && error.name === 'AbortError') {
+                        isRetrying = false;
+                        return;
+                    }
+                    
+                    // 只有在非正常完成且未中断的情况下才重试
+                    if (!answer && retryCount < maxRetries) {
+                        retryCount++;
+                        console.log(`Connection error, retrying (${retryCount}/${maxRetries})...`);
+                        setTimeout(() => {
+                            isRetrying = false;
+                            connect();
+                        }, 1000);
+                    } else {
+                        setSnackbar({
+                            open: true,
+                            message: t('qa.connectionError'),
+                            severity: 'error',
+                        });
+                        setLoading(false);
+                        abortControllerRef.current = null;
+                        isRetrying = false;
+                    }
+                }
+            };
+
+            await connect();
         } catch (error) {
             if (!isMountedRef.current) return;
             
@@ -468,12 +539,18 @@ export default function QaPage() {
                     </Button>
                 </Box>
 
-                <KnowledgeBaseSelector
-                    knowledgeBases={knowledgeBases}
-                    selectedKbs={selectedKbs}
-                    onSelectAll={handleSelectAll}
-                    onSelectKb={handleKbSelect}
-                />
+                {initialLoading ? (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+                        <CircularProgress size={24} />
+                    </Box>
+                ) : (
+                    <KnowledgeBaseSelector
+                        knowledgeBases={knowledgeBases}
+                        selectedKbs={selectedKbs}
+                        onSelectAll={handleSelectAll}
+                        onSelectKb={handleKbSelect}
+                    />
+                )}
             </Box>
 
             <Box
@@ -487,9 +564,15 @@ export default function QaPage() {
                     gap: 2,
                 }}
             >
-                {chatHistory.map((chat, index) => (
-                    <ChatMessage key={index} chat={chat} />
-                ))}
+                {initialLoading ? (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+                        <CircularProgress />
+                    </Box>
+                ) : (
+                    chatHistory.map((chat, index) => (
+                        <ChatMessage key={index} chat={chat} />
+                    ))
+                )}
             </Box>
 
             <Box sx={{
