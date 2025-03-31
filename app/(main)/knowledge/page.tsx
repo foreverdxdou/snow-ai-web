@@ -744,8 +744,7 @@ export default function KnowledgePage() {
                   </Box>
                 ))}
             </Box>
-          </Box>
-          <Box sx={{ mt: 3, display: "flex", justifyContent: "flex-end" }}>
+            <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
             <Pagination
               total={total}
               current={Number(params.current)}
@@ -754,7 +753,10 @@ export default function KnowledgePage() {
               pageSizeOptions={["12", "20", "50", "100"]}
             />
           </Box>
+          </Box>
+      
         </Box>
+    
 
         <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
           <DialogTitle>
