@@ -39,13 +39,13 @@ import type { KnowledgeBaseVO, KnowledgeBaseDTO } from "@/app/types/knowledge";
 import { Pagination } from "@/app/components/common/Pagination";
 import { categoryService } from "@/app/services/category";
 import type { KbCategory } from "@/app/types/category";
-import { RichTreeView } from "@mui/x-tree-view/RichTreeView";
 import { TreeViewBaseItem } from "@mui/x-tree-view/models";
 import { useTranslation } from "react-i18next";
 import { PerformanceLayout } from "@/app/components/common/PerformanceLayout";
 import { usePerformanceData } from "@/app/hooks/usePerformanceData";
 import { CommonButton } from "@/app/components/common/CommonButton";
 import { CommonInput } from "@/app/components/common/CommonInput";
+import { RichTreeView } from '@mui/x-tree-view/RichTreeView';
 
 // 使用 React.memo 优化知识库卡片组件
 const KnowledgeCard = React.memo(
@@ -168,27 +168,34 @@ const CategoryTree = React.memo(
     items,
     onSelect,
     selectedId,
+    onSelectedItemsChange,
   }: {
     items: TreeViewBaseItem[];
     onSelect: (id: number) => void;
+    onSelectedItemsChange: (id: number) => void;
     selectedId: number | null;
-  }) => (
-    <RichTreeView
-      items={items}
-      slots={{
-        expandIcon: ExpandMoreIcon,
-        collapseIcon: ChevronRightIcon,
-        endIcon: DragIndicatorIcon,
-      }}
-      onSelect={(event: React.SyntheticEvent<HTMLUListElement>) => {
-        const nodeId = (event.target as HTMLElement).getAttribute("data-id");
-        console.log(nodeId);
-        if (nodeId) {
-          onSelect(Number(nodeId));
-        }
-      }}
-    />
-  )
+  }) => {
+    return (
+      <RichTreeView
+        items={items}
+        onItemClick={(event, itemId) => {
+          console.log('Node clicked:', event.target);
+          onSelect(Number(itemId));
+        }}
+        onSelectedItemsChange={(event, selectedItems) => {
+          onSelectedItemsChange(Number(selectedItems));
+        }}
+        selectedItems={selectedId ? selectedId.toString() : ''}
+        defaultExpandedItems={['4']}
+        aria-label="category tree"
+        slots={{
+          expandIcon: ChevronRightIcon,
+          collapseIcon: ExpandMoreIcon,
+          endIcon: DragIndicatorIcon,
+        }}
+      />
+    );
+  }
 );
 
 CategoryTree.displayName = "CategoryTree";
@@ -379,14 +386,23 @@ export default function KnowledgePage() {
   const handleCategorySelect = useCallback(
     (id: number) => {
       setSelectedCategory(id);
-      setParams(
-        (prev: { current: number; size: number; categoryId?: number }) => ({
-          ...prev,
-          categoryId: id,
-        })
-      );
+      setParams({
+        ...params,
+        categoryId: id,
+      });
     },
-    [setParams]
+    [params, setParams]
+  );
+
+  const handleSelectedItemsChange = useCallback(
+    (id: number) => {
+      setSelectedCategory(id);
+      setParams({
+        ...params,
+        categoryId: id, 
+      });
+    },
+    [params, setParams]
   );
 
   // 使用 useCallback 优化分页处理
@@ -437,6 +453,7 @@ export default function KnowledgePage() {
               items={categoryTree}
               onSelect={handleCategorySelect}
               selectedId={selectedCategory}
+              onSelectedItemsChange={handleSelectedItemsChange}
             />
           </Paper>
 
