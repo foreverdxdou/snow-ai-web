@@ -25,6 +25,7 @@ import {
   Grid,
   IconButton,
   TextField,
+  Chip,
 } from "@mui/material";
 import {
   Edit as EditIcon,
@@ -75,11 +76,19 @@ const KnowledgeCard = React.memo(
     const router = useRouter();
 
     const handleCardClick = (e: React.MouseEvent) => {
-      // 如果点击的是操作按钮区域，则不进行跳转
       if ((e.target as HTMLElement).closest(".MuiCardHeader-action")) {
         return;
       }
       router.push(`/documents?kbId=${knowledge.id}`);
+    };
+
+    // 生成模拟数据
+    const stats = {
+      totalDocuments: Math.floor(Math.random() * 1000) + 100,
+      totalSize: (Math.random() * 1000).toFixed(2) + ' MB',
+      lastUpdate: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toLocaleDateString(),
+      documentTypes: ['PDF', 'Word', 'Excel', 'Markdown'].slice(0, Math.floor(Math.random() * 4) + 1),
+      tags: ['AI', '机器学习', '深度学习', '自然语言处理', '计算机视觉'].slice(0, Math.floor(Math.random() * 3) + 1)
     };
 
     return (
@@ -131,19 +140,65 @@ const KnowledgeCard = React.memo(
           }
         />
         <CardContent sx={{ flexGrow: 1 }}>
-          <Typography variant="body2" color="text.secondary" gutterBottom>
-            {t("knowledge.documentCount")}: {knowledge.documentCount}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {t("knowledge.categoryCount")}: {knowledge.categoryCount}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {t("knowledge.tagCount")}: {knowledge.tagCount}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {t("knowledge.description")}:{" "}
-            {knowledge.description || t("knowledge.noDescription")}
-          </Typography>
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="body2" color="text.secondary" gutterBottom>
+              {t("knowledge.documentCount")}: {stats.totalDocuments}
+            </Typography>
+            <Typography variant="body2" color="text.secondary" gutterBottom>
+              {t("knowledge.totalSize")}: {stats.totalSize}
+            </Typography>
+            <Typography variant="body2" color="text.secondary" gutterBottom>
+              {t("knowledge.lastUpdate")}: {stats.lastUpdate}
+            </Typography>
+          </Box>
+
+          <Divider sx={{ my: 1 }} />
+
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="body2" color="text.secondary" gutterBottom>
+              {t("knowledge.documentTypes")}:
+            </Typography>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+              {stats.documentTypes.map((type, index) => (
+                <Chip
+                  key={index}
+                  label={type}
+                  size="small"
+                  sx={{ 
+                    bgcolor: 'primary.light',
+                    color: 'primary.contrastText',
+                    '&:hover': {
+                      bgcolor: 'primary.main',
+                    }
+                  }}
+                />
+              ))}
+            </Box>
+          </Box>
+
+          <Divider sx={{ my: 1 }} />
+
+          <Box>
+            <Typography variant="body2" color="text.secondary" gutterBottom>
+              {t("knowledge.tags")}:
+            </Typography>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+              {stats.tags.map((tag, index) => (
+                <Chip
+                  key={index}
+                  label={tag}
+                  size="small"
+                  sx={{ 
+                    bgcolor: 'secondary.light',
+                    color: 'secondary.contrastText',
+                    '&:hover': {
+                      bgcolor: 'secondary.main',
+                    }
+                  }}
+                />
+              ))}
+            </Box>
+          </Box>
         </CardContent>
         <CardActions>
           <Box sx={{ marginLeft: "auto" }}>
@@ -730,7 +785,7 @@ export default function KnowledgePage() {
                       width: {
                         xs: "100%",
                         sm: "calc(50% - 12px)",
-                        md: "calc(33.33% - 16px)",
+                        md: "calc(25% - 18px)",
                       },
                     }}
                   >

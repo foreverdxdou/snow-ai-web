@@ -101,10 +101,11 @@
     "fetchError": "获取知识库列表失败",
     "statusUpdateSuccess": "状态更新成功",
     "statusUpdateError": "状态更新失败",
-    "documentCount": "文档数",
-    "categoryCount": "分类数",
-    "tagCount": "标签数",
-    "description": "描述",
+    "documentCount": "文档数量",
+    "totalSize": "总大小",
+    "lastUpdate": "最后更新",
+    "documentTypes": "文档类型",
+    "tags": "标签",
     "noDescription": "暂无描述"
   },
   "category": {
