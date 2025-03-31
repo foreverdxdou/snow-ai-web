@@ -63,10 +63,10 @@ const KnowledgeCard = React.memo(
     t: (key: string) => string;
   }) => {
     const router = useRouter();
-    
+
     const handleCardClick = (e: React.MouseEvent) => {
       // 如果点击的是操作按钮区域，则不进行跳转
-      if ((e.target as HTMLElement).closest('.MuiCardHeader-action')) {
+      if ((e.target as HTMLElement).closest(".MuiCardHeader-action")) {
         return;
       }
       router.push(`/documents?kbId=${knowledge.id}`);
@@ -94,7 +94,6 @@ const KnowledgeCard = React.memo(
             </Avatar>
           }
           title={knowledge.name}
-          subheader={knowledge.description || t("knowledge.noDescription")}
           action={
             <Box>
               <Tooltip title={t("common.edit")}>
@@ -131,22 +130,30 @@ const KnowledgeCard = React.memo(
           <Typography variant="body2" color="text.secondary">
             {t("knowledge.tagCount")}: {knowledge.tagCount}
           </Typography>
+          <Typography variant="body2" color="text.secondary">
+            {t("knowledge.description")}:{" "}
+            {knowledge.description || t("knowledge.noDescription")}
+          </Typography>
         </CardContent>
         <CardActions>
-          <FormControlLabel
-            control={
-              <Switch
-                checked={knowledge.status === 1}
-                onChange={(e) => {
-                  e.stopPropagation();
-                  onStatusChange(knowledge.id, e.target.checked ? 1 : 0);
-                }}
-              />
-            }
-            label={
-              knowledge.status === 1 ? t("common.enable") : t("common.disable")
-            }
-          />
+          <Box sx={{ marginLeft: "auto" }}>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={knowledge.status === 1}
+                  onChange={(e) => {
+                    e.stopPropagation();
+                    onStatusChange(knowledge.id, e.target.checked ? 1 : 0);
+                  }}
+                />
+              }
+              label={
+                knowledge.status === 1
+                  ? t("common.enable")
+                  : t("common.disable")
+              }
+            />
+          </Box>
         </CardActions>
       </Card>
     );
@@ -164,7 +171,7 @@ const CategoryTree = React.memo(
   }: {
     items: TreeViewBaseItem[];
     onSelect: (id: number) => void;
-    selectedId: string | null;
+    selectedId: number | null;
   }) => (
     <RichTreeView
       items={items}
@@ -175,6 +182,7 @@ const CategoryTree = React.memo(
       }}
       onSelect={(event: React.SyntheticEvent<HTMLUListElement>) => {
         const nodeId = (event.target as HTMLElement).getAttribute("data-id");
+        console.log(nodeId);
         if (nodeId) {
           onSelect(Number(nodeId));
         }
@@ -201,7 +209,7 @@ export default function KnowledgePage() {
     message: "",
     severity: "success" as "success" | "error",
   });
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [categoryTree, setCategoryTree] = useState<TreeViewBaseItem[]>([]);
 
   // 使用 usePerformanceData 优化数据获取
@@ -223,13 +231,10 @@ export default function KnowledgePage() {
   });
 
   // 使用 useCallback 优化事件处理函数
-  const handleDelete = useCallback(
-    async (id: number) => {
-      setDeleteId(id);
-      setDeleteDialogOpen(true);
-    },
-    []
-  );
+  const handleDelete = useCallback(async (id: number) => {
+    setDeleteId(id);
+    setDeleteDialogOpen(true);
+  }, []);
 
   const handleConfirmDelete = useCallback(async () => {
     if (!deleteId) return;
@@ -373,7 +378,7 @@ export default function KnowledgePage() {
   // 使用 useCallback 优化分类选择处理
   const handleCategorySelect = useCallback(
     (id: number) => {
-      setSelectedCategory(id.toString());
+      setSelectedCategory(id);
       setParams(
         (prev: { current: number; size: number; categoryId?: number }) => ({
           ...prev,
@@ -427,10 +432,7 @@ export default function KnowledgePage() {
         <Box
           sx={{ display: "flex", gap: 3, p: 3, flex: 1, overflow: "hidden" }}
         >
-          <Paper sx={{ width: 200, p: 2, overflow: "auto" }}>
-            <Typography variant="h6" gutterBottom>
-              {t("knowledge.categoryTree")}
-            </Typography>
+          <Paper sx={{ width: 'auto', p: 2, overflow: "auto" }}>
             <CategoryTree
               items={categoryTree}
               onSelect={handleCategorySelect}
@@ -448,37 +450,62 @@ export default function KnowledgePage() {
           >
             <Box sx={{ display: "flex", flexWrap: "wrap", gap: 3 }}>
               {loading && (
-                <Box sx={{ width: "100%", display: "flex", justifyContent: "center", p: 3 }}>
+                <Box
+                  sx={{
+                    width: "100%",
+                    display: "flex",
+                    justifyContent: "center",
+                    p: 3,
+                  }}
+                >
                   <CircularProgress />
                 </Box>
               )}
               {!loading && knowledgeList.length === 0 && (
-                <Box sx={{ width: "100%", display: "flex", justifyContent: "center", p: 3 }}>
+                <Box
+                  sx={{
+                    width: "100%",
+                    display: "flex",
+                    justifyContent: "center",
+                    p: 3,
+                  }}
+                >
                   {t("common.noData")}
                 </Box>
               )}
-              {!loading && knowledgeList.length > 0 && knowledgeList.map((knowledge) => (
-                <Box key={knowledge.id} sx={{ width: { xs: "100%", sm: "calc(50% - 12px)", md: "calc(33.33% - 16px)" } }}>
-                  <KnowledgeCard
-                    knowledge={knowledge}
-                    onEdit={handleOpen}
-                    onDelete={handleDelete}
-                    onStatusChange={handleStatusChange}
-                    t={t}
-                  />
-                </Box>
-              ))}
+              {!loading &&
+                knowledgeList.length > 0 &&
+                knowledgeList.map((knowledge) => (
+                  <Box
+                    key={knowledge.id}
+                    sx={{
+                      width: {
+                        xs: "100%",
+                        sm: "calc(50% - 12px)",
+                        md: "calc(33.33% - 16px)",
+                      },
+                    }}
+                  >
+                    <KnowledgeCard
+                      knowledge={knowledge}
+                      onEdit={handleOpen}
+                      onDelete={handleDelete}
+                      onStatusChange={handleStatusChange}
+                      t={t}
+                    />
+                  </Box>
+                ))}
             </Box>
           </Box>
           <Box sx={{ mt: 3, display: "flex", justifyContent: "flex-end" }}>
-              <Pagination
-                total={total}
-                current={params.current}
-                pageSize={params.size}
-                onChange={handlePageChange}
-                pageSizeOptions={['12', '20', '50', '100']}
-              />
-            </Box>
+            <Pagination
+              total={total}
+              current={params.current}
+              pageSize={params.size}
+              onChange={handlePageChange}
+              pageSizeOptions={["12", "20", "50", "100"]}
+            />
+          </Box>
         </Box>
 
         <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
@@ -534,9 +561,7 @@ export default function KnowledgePage() {
         >
           <DialogTitle>{t("knowledge.deleteKnowledge")}</DialogTitle>
           <DialogContent>
-            <Typography>
-              {t("knowledge.deleteConfirm")}
-            </Typography>
+            <Typography>{t("knowledge.deleteConfirm")}</Typography>
           </DialogContent>
           <DialogActions>
             <CommonButton
@@ -548,10 +573,7 @@ export default function KnowledgePage() {
             >
               {t("common.cancel")}
             </CommonButton>
-            <CommonButton
-              buttonVariant="confirm"
-              onClick={handleConfirmDelete}
-            >
+            <CommonButton buttonVariant="confirm" onClick={handleConfirmDelete}>
               {t("common.confirm")}
             </CommonButton>
           </DialogActions>
