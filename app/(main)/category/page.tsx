@@ -163,14 +163,14 @@ export default function CategoryPage() {
         }
     }, [deletingId, refresh, t]);
 
-    // 使用 useDebouncedCallback 优化分页处理
-    const handlePageChange = useDebouncedCallback((page: number, size: number) => {
-        setParams((prev: CategoryQuery) => ({
-            ...prev,
+    // 使用 useCallback 优化分页处理
+    const handlePageChange = useCallback((page: number, size: number) => {
+        setParams({
+            ...params,
             current: page,
             size: size,
-        }));
-    }, [], 300);
+        });
+    }, [params, setParams]);
 
     const handleStatusChange = useCallback(async (category: Category) => {
         try {
@@ -327,8 +327,8 @@ export default function CategoryPage() {
                     <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
                         <Pagination
                             total={total}
-                            current={params.current}
-                            pageSize={params.size}
+                            current={Number(params.current)}
+                            pageSize={Number(params.size)}
                             onChange={handlePageChange}
                         />
                     </Box>

@@ -50,7 +50,6 @@ export default function TagsPage() {
     const {
         data: tags,
         loading,
-        error,
         total,
         params,
         setParams,
@@ -135,13 +134,13 @@ export default function TagsPage() {
     }, [refresh, t]);
 
     // 使用 useDebouncedCallback 优化分页处理
-    const handlePageChange = useDebouncedCallback((page: number, size: number) => {
-        setParams((prev: { current: number; size: number }) => ({
-            ...prev,
+    const handlePageChange = useCallback((page: number, size: number) => {
+        setParams({
+            ...params,
             current: page,
             size: size,
-        }));
-    }, [], 300);
+        });
+    }, [params, setParams]);
 
     // 使用 useMemo 优化表格配置
     const columns = useMemo(() => [
@@ -224,8 +223,8 @@ export default function TagsPage() {
                     <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
                         <Pagination
                             total={total}
-                            current={params.current}
-                            pageSize={params.size}
+                            current={Number(params.current)}
+                            pageSize={Number(params.size)}
                             onChange={handlePageChange}
                         />
                     </Box>

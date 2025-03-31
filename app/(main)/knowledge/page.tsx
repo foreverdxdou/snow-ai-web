@@ -582,17 +582,13 @@ export default function KnowledgePage() {
   );
 
   // 使用 useCallback 优化分页处理
-  const handlePageChange = useCallback(
-    (page: number) => {
-      setParams(
-        (prev: { current: number; size: number; categoryId?: number }) => ({
-          ...prev,
-          current: page,
-        })
-      );
-    },
-    [setParams]
-  );
+  const handlePageChange = useCallback((page: number, size: number) => {
+    setParams({
+        ...params,
+        current: page,
+        size: size,
+    });
+}, [params, setParams]);
 
   // 处理编辑分类
   const handleEditCategory = useCallback(async (id: number, name: string) => {
@@ -753,7 +749,7 @@ export default function KnowledgePage() {
             <Pagination
               total={total}
               current={Number(params.current)}
-              pageSize={params.size}
+              pageSize={Number(params.size)}
               onChange={handlePageChange}
               pageSizeOptions={["12", "20", "50", "100"]}
             />
