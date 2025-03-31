@@ -48,7 +48,7 @@ import { PerformanceLayout } from "@/app/components/common/PerformanceLayout";
 import { usePerformanceData } from "@/app/hooks/usePerformanceData";
 import { CommonButton } from "@/app/components/common/CommonButton";
 import { CommonInput } from "@/app/components/common/CommonInput";
-import { TreeView } from '@mui/x-tree-view';
+import { SimpleTreeView } from '@mui/x-tree-view';
 import type { TreeViewProps } from '@mui/x-tree-view/TreeView';
 
 interface TreeItemData {
@@ -285,13 +285,11 @@ CustomTreeItem.displayName = 'CustomTreeItem';
 
 // 修改数据转换函数
 const convertToTreeItem = (item: any): TreeItemData => {
-  console.log('转换前的数据:', item);
   const result = {
     id: String(item.id || ''),
     label: item.name || '',
     children: item.children?.length ? item.children.map(convertToTreeItem) : []
   };
-  console.log('转换后的数据:', result);
   return result;
 };
 
@@ -310,24 +308,11 @@ const CategoryTree = React.memo(
     onEdit: (id: number, name: string) => void;
     onAddChild: (parentId: number, name: string) => void;
   }) => {
-    const handleNodeSelect = useCallback((nodeId: string) => {
-      const id = Number(nodeId);
-      if (selectedId === id) {
-        onSelect(undefined);
-      } else {
-        onSelect(id);
-      }
-    }, [selectedId, onSelect]);
-    
     const renderTree = (node: TreeItemData) => (
       <TreeItem
         key={node.id}
         itemId={node.id}
         data-node-id={node.id}
-        onClick={(event: React.MouseEvent) => {
-          event.stopPropagation();
-          handleNodeSelect(node.id);
-        }}
         label={
           <CustomTreeItem
             item={node}
@@ -343,18 +328,18 @@ const CategoryTree = React.memo(
     );
 
     return (
-      <TreeView
+      <SimpleTreeView
         slots={{
           collapseIcon: ExpandMoreIcon,
           expandIcon: ChevronRightIcon,
         }}
         selectedItems={selectedId ? selectedId.toString() : ''}
         multiSelect={false}
-        onClick={(event: React.MouseEvent<HTMLUListElement>) => {
-          const target = event.target as HTMLElement;
-          const nodeId = target.getAttribute('data-node-id');
-          if (nodeId) {
-            handleNodeSelect(nodeId);
+        onSelectedItemsChange={(event: React.SyntheticEvent, itemIds: string | null) => {
+          if (!itemIds) {
+            onSelect(undefined);
+          } else {
+            onSelect(Number(itemIds));
           }
         }}
         sx={{ 
@@ -373,7 +358,7 @@ const CategoryTree = React.memo(
         }}
       >
         {items.map((node) => renderTree(node))}
-      </TreeView>
+      </SimpleTreeView>
     );
   }
 );
@@ -410,7 +395,7 @@ export default function KnowledgePage() {
     defaultParams: {
       current: 1,
       size: 12,
-      categoryId: selectedCategory ? Number(selectedCategory) : undefined,
+      categoryId: undefined,
     },
     autoFetch: true,
   });
@@ -432,7 +417,6 @@ export default function KnowledgePage() {
       });
       refresh();
     } catch (error) {
-      console.error("删除知识库失败:", error);
       setSnackbar({
         open: true,
         message: t("knowledge.deleteError"),
@@ -455,7 +439,6 @@ export default function KnowledgePage() {
         });
         refresh();
       } catch (error) {
-        console.error("更新知识库状态失败:", error);
         setSnackbar({
           open: true,
           message: t("knowledge.statusUpdateError"),
@@ -521,7 +504,6 @@ export default function KnowledgePage() {
       handleClose();
       refresh();
     } catch (error) {
-      console.error("保存知识库失败:", error);
       setSnackbar({
         open: true,
         message: t("knowledge.saveError"),
@@ -535,13 +517,9 @@ export default function KnowledgePage() {
     try {
       const response = await categoryService.getCategoryTree();
       const categories = response.data.data;
-      console.log('API 返回的原始分类数据:', categories);
-      
       const treeData = categories.map(convertToTreeItem);
-      console.log('最终转换后的树数据:', treeData);
       setCategoryTree(treeData);
     } catch (error) {
-      console.error("获取分类树失败:", error);
       setSnackbar({
         open: true,
         message: t("category.fetchError"),
@@ -555,17 +533,28 @@ export default function KnowledgePage() {
     fetchCategories();
   }, [fetchCategories]);
 
-
   // 修改 handleCategorySelect 函数
   const handleCategorySelect = useCallback(
     (id: number | undefined) => {
-      setSelectedCategory(id || null);
-      setParams({
-        ...params,
-        categoryId: id,
-      });
+      // 如果点击的是当前选中的分类，则取消选中
+      if (id === selectedCategory) {
+        setSelectedCategory(null);
+        setParams({
+          current: params.current,
+          size: params.size,
+          categoryId: undefined
+        });
+      } else {
+        // 否则选中新的分类
+        setSelectedCategory(id || null);
+        setParams({
+          current: params.current,
+          size: params.size,
+          categoryId: id
+        });
+      }
     },
-    [params, setParams]
+    [selectedCategory, params.current, params.size, setParams]
   );
 
   // 使用 useCallback 优化分页处理
@@ -598,7 +587,6 @@ export default function KnowledgePage() {
       });
       fetchCategories(); // 刷新分类树
     } catch (error) {
-      console.error("更新分类失败:", error);
       setSnackbar({
         open: true,
         message: t("category.updateError"),
@@ -624,7 +612,6 @@ export default function KnowledgePage() {
       });
       fetchCategories(); // 刷新分类树
     } catch (error) {
-      console.error("创建子分类失败:", error);
       setSnackbar({
         open: true,
         message: t("category.createError"),
