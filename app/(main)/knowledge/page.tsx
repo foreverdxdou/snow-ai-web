@@ -48,7 +48,7 @@ import { PerformanceLayout } from "@/app/components/common/PerformanceLayout";
 import { usePerformanceData } from "@/app/hooks/usePerformanceData";
 import { CommonButton } from "@/app/components/common/CommonButton";
 import { CommonInput } from "@/app/components/common/CommonInput";
-import { TreeView } from '@mui/x-tree-view/TreeView';
+import { TreeView } from '@mui/x-tree-view';
 import type { TreeViewProps } from '@mui/x-tree-view/TreeView';
 
 interface TreeItemData {
@@ -301,24 +301,33 @@ const CategoryTree = React.memo(
     items,
     onSelect,
     selectedId,
-    onSelectedItemsChange,
     onEdit,
     onAddChild,
   }: {
     items: TreeItemData[];
-    onSelect: (id: number) => void;
-    onSelectedItemsChange: (id: number) => void;
+    onSelect: (id: number | undefined) => void;
     selectedId: number | null;
     onEdit: (id: number, name: string) => void;
     onAddChild: (parentId: number, name: string) => void;
   }) => {
-    console.log('CategoryTree 接收到的 items:', items);
+    const handleNodeSelect = useCallback((nodeId: string) => {
+      const id = Number(nodeId);
+      if (selectedId === id) {
+        onSelect(undefined);
+      } else {
+        onSelect(id);
+      }
+    }, [selectedId, onSelect]);
     
     const renderTree = (node: TreeItemData) => (
       <TreeItem
         key={node.id}
         itemId={node.id}
         data-node-id={node.id}
+        onClick={(event: React.MouseEvent) => {
+          event.stopPropagation();
+          handleNodeSelect(node.id);
+        }}
         label={
           <CustomTreeItem
             item={node}
@@ -340,12 +349,12 @@ const CategoryTree = React.memo(
           expandIcon: ChevronRightIcon,
         }}
         selectedItems={selectedId ? selectedId.toString() : ''}
-        onSelect={(event: React.SyntheticEvent<HTMLUListElement>) => {
+        multiSelect={false}
+        onClick={(event: React.MouseEvent<HTMLUListElement>) => {
           const target = event.target as HTMLElement;
           const nodeId = target.getAttribute('data-node-id');
           if (nodeId) {
-            console.log('选中的节点:', nodeId);
-            onSelectedItemsChange(Number(nodeId));
+            handleNodeSelect(nodeId);
           }
         }}
         sx={{ 
@@ -546,36 +555,17 @@ export default function KnowledgePage() {
     fetchCategories();
   }, [fetchCategories]);
 
-  // 使用 useCallback 优化分类选择处理
+
+  // 修改 handleCategorySelect 函数
   const handleCategorySelect = useCallback(
-    (id: number) => {
-      setSelectedCategory(id);
+    (id: number | undefined) => {
+      setSelectedCategory(id || null);
       setParams({
         ...params,
         categoryId: id,
       });
     },
     [params, setParams]
-  );
-
-  const handleSelectedItemsChange = useCallback(
-    (id: number) => {
-      // 如果点击的是已选中的节点，则取消选中
-      if (selectedCategory === id) {
-        setSelectedCategory(null);
-        setParams({
-          ...params,
-          categoryId: undefined,
-        });
-      } else {
-        setSelectedCategory(id);
-        setParams({
-          ...params,
-          categoryId: id,
-        });
-      }
-    },
-    [params, setParams, selectedCategory]
   );
 
   // 使用 useCallback 优化分页处理
@@ -686,7 +676,6 @@ export default function KnowledgePage() {
               items={categoryTree}
               onSelect={handleCategorySelect}
               selectedId={selectedCategory}
-              onSelectedItemsChange={handleSelectedItemsChange}
               onEdit={handleEditCategory}
               onAddChild={handleAddChildCategory}
             />
