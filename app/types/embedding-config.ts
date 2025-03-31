@@ -8,7 +8,7 @@ export interface EmbeddingConfig {
   apiKey: string;
   remark: string;
   modelType: string;
-  dimension: number;
+  dimensions: number;
   status: number;
   createTime: string;
   updateTime: string;
@@ -38,7 +38,7 @@ export interface EmbeddingConfigSaveRequest {
   apiKey: string;
   remark: string;
   modelType: string;
-  dimension: number;
+  dimensions: number;
   status: number;
 }
 

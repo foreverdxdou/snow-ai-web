@@ -271,9 +271,6 @@ export default function LlmPage() {
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                       {t('llm.apiUrl')}: {config.apiUrl}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                      {t('llm.apiKey')}: {config.apiKey.substring(0, 8)}...
-                    </Typography>
                     <Typography variant="caption" color="text.secondary">
                       {t('common.updateTime')}: {new Date(config.updateTime).toLocaleString()}
                     </Typography>

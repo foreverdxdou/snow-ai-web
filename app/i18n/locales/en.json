@@ -309,7 +309,7 @@
     "statusUpdateSuccess": "Status updated successfully",
     "statusUpdateError": "Failed to update status",
     "modelType": "Model Code",
-    "dimension": "Dimension",
+    "dimensions": "Dimension",
     "baseUrl": "Base URL",
     "apiKey": "API Key",
     "baseUrlRequired": "Please enter base URL",

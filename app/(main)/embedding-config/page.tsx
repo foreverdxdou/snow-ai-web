@@ -43,8 +43,8 @@ export default function EmbeddingConfigPage() {
     name: "",
     remark: "",
     modelType: "",
-    dimension: 1536,
-    status: 1,
+    dimensions: 2048,
+    status: 0,
     baseUrl: "",
     apiKey: "",
   });
@@ -89,7 +89,7 @@ export default function EmbeddingConfigPage() {
         name: config.name,
         remark: config.remark,
         modelType: config.modelType,
-        dimension: config.dimension,
+        dimensions: config.dimensions,
         status: config.status,
         baseUrl: config.baseUrl,
         apiKey: config.apiKey,
@@ -100,8 +100,8 @@ export default function EmbeddingConfigPage() {
         name: "",
         remark: "",
         modelType: "",
-        dimension: 1536,
-        status: 1,
+        dimensions: 2048,
+        status: 0,
         baseUrl: "",
         apiKey: "",
       });
@@ -116,8 +116,8 @@ export default function EmbeddingConfigPage() {
       name: "",
       remark: "",
       modelType: "",
-      dimension: 1536,
-      status: 1,
+      dimensions: 2048,
+      status: 0,
       baseUrl: "",
       apiKey: "",
     });
@@ -232,24 +232,14 @@ export default function EmbeddingConfigPage() {
         render: (_: any, record: EmbeddingConfig) => record?.baseUrl || "-",
       },
       {
-        key: "apiKey" as keyof EmbeddingConfig,
-        title: t("embeddingConfig.apiKey"),
-        render: (_: any, record: EmbeddingConfig) => record?.apiKey || "-",
-      },
-      {
-        key: "remark" as keyof EmbeddingConfig,
-        title: t("common.remark"),
-        render: (_: any, record: EmbeddingConfig) => record?.remark || "-",
-      },
-      {
         key: "modelType" as keyof EmbeddingConfig,
         title: t("embeddingConfig.modelType"),
         render: (_: any, record: EmbeddingConfig) => record?.modelType || "-",
       },
       {
-        key: "dimension" as keyof EmbeddingConfig,
-        title: t("embeddingConfig.dimension"),
-        render: (_: any, record: EmbeddingConfig) => record?.dimension || "-",
+        key: "dimensions" as keyof EmbeddingConfig,
+        title: t("embeddingConfig.dimensions"),
+        render: (_: any, record: EmbeddingConfig) => record?.dimensions || "-",
       },
       {
         key: "status" as keyof EmbeddingConfig,
@@ -281,6 +271,11 @@ export default function EmbeddingConfigPage() {
           record?.updateTime ? formatDate(record.updateTime) : "-",
       },
       {
+        key: "remark" as keyof EmbeddingConfig,
+        title: t("common.remark"),
+        render: (_: any, record: EmbeddingConfig) => record?.remark || "-",
+      },
+      {
         key: "id" as keyof EmbeddingConfig,
         title: t("common.actions"),
         width: 120,
@@ -290,12 +285,14 @@ export default function EmbeddingConfigPage() {
               <Tooltip title={t("common.edit")}>
                 <CommonButton
                   buttonVariant="edit"
+                  icon
                   onClick={() => handleOpen(record)}
                 />
               </Tooltip>
               <Tooltip title={t("common.delete")}>
                 <CommonButton
                   buttonVariant="delete"
+                  icon
                   onClick={() => handleDelete(record.id)}
                 />
               </Tooltip>
@@ -409,7 +406,9 @@ export default function EmbeddingConfigPage() {
                   required
                   error={!formData.baseUrl}
                   helperText={
-                    !formData.baseUrl ? t("embeddingConfig.baseUrlRequired") : ""
+                    !formData.baseUrl
+                      ? t("embeddingConfig.baseUrlRequired")
+                      : ""
                   }
                 />
                 <CommonInput
@@ -439,16 +438,16 @@ export default function EmbeddingConfigPage() {
                   }
                 />
                 <CommonInput
-                  label={t("embeddingConfig.dimension")}
-                  value={formData.dimension.toString()}
-                  onChange={(value) =>
-                    setFormData({ ...formData, dimension: Number(value) })
-                  }
                   type="number"
+                  label={t("embeddingConfig.dimensions")}
+                  value={formData.dimensions || 2048}
+                  onChange={(value) =>
+                    setFormData({ ...formData, dimensions: Number(value) })
+                  }
                   required
-                  error={!formData.dimension || formData.dimension <= 0}
+                  error={!formData.dimensions || formData.dimensions <= 0}
                   helperText={
-                    !formData.dimension || formData.dimension <= 0
+                    !formData.dimensions || formData.dimensions <= 0
                       ? t("embeddingConfig.dimensionRequired")
                       : ""
                   }
@@ -464,7 +463,7 @@ export default function EmbeddingConfigPage() {
                 />
                 <CommonSelect
                   label={t("common.status")}
-                  value={formData.status.toString()}
+                  value={formData.status || 0}
                   onChange={(value) =>
                     setFormData({ ...formData, status: Number(value) })
                   }
@@ -488,7 +487,7 @@ export default function EmbeddingConfigPage() {
                 !formData.modelType ||
                 !formData.baseUrl ||
                 !formData.apiKey ||
-                formData.dimension <= 0
+                formData.dimensions <= 0
               }
             >
               {t("common.submit")}

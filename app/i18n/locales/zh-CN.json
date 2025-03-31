@@ -308,7 +308,7 @@
     "statusUpdateSuccess": "状态更新成功",
     "statusUpdateError": "状态更新失败",
     "modelType": "模型编码",
-    "dimension": "维度",
+    "dimensions": "维度",
     "baseUrl": "API地址",
     "apiKey": "API密钥",
     "baseUrlRequired": "请输入API地址",

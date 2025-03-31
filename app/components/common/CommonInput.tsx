@@ -67,15 +67,20 @@ const BaseInput = styled(TextField)(({ theme }) => ({
 }));
 
 interface CommonInputProps extends Omit<TextFieldProps, 'onChange'> {
-    value?: string;
-    onChange?: (value: string) => void;
+    value?: string | number;
+    onChange?: (value: string | number) => void;
     debounceTime?: number;
+    min?: number;
+    max?: number;
 }
 
 export const CommonInput: React.FC<CommonInputProps> = ({
     value = '',
     onChange,
     debounceTime = 300,
+    type = 'text',
+    min,
+    max,
     ...props
 }) => {
     const [inputValue, setInputValue] = useState(value);
@@ -87,13 +92,48 @@ export const CommonInput: React.FC<CommonInputProps> = ({
 
     // 处理输入变化
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setInputValue(event.target.value);
+        const newValue = event.target.value;
+        
+        if (type === 'number') {
+            // 数字类型输入处理
+            const numValue = Number(newValue);
+            
+            // 检查是否为有效数字
+            if (isNaN(numValue) && newValue !== '') {
+                return;
+            }
+            
+            // 检查是否在最小值和最大值范围内
+            if (min !== undefined && numValue < min) {
+                setInputValue(min);
+            } else if (max !== undefined && numValue > max) {
+                setInputValue(max);
+            } else {
+                setInputValue(newValue);
+            }
+        } else {
+            setInputValue(newValue);
+        }
     };
 
     // 处理失去焦点
     const handleBlur = () => {
         if (onChange && inputValue !== value) {
-            onChange(inputValue);
+            if (type === 'number') {
+                const numValue = Number(inputValue);
+                if (!isNaN(numValue)) {
+                    // 确保数值在有效范围内
+                    const finalValue = Math.min(
+                        Math.max(numValue, min ?? -Infinity),
+                        max ?? Infinity
+                    );
+                    onChange(finalValue);
+                } else {
+                    onChange(0);
+                }
+            } else {
+                onChange(inputValue as string);
+            }
         }
     };
 
@@ -101,6 +141,19 @@ export const CommonInput: React.FC<CommonInputProps> = ({
     const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
         if (event.key === 'Enter') {
             event.currentTarget.blur();
+        }
+        
+        // 数字类型输入限制
+        if (type === 'number') {
+            // 允许的按键：数字、小数点、负号、退格键、删除键、方向键
+            const allowedKeys = [
+                '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+                '.', '-', 'Backspace', 'Delete', 'ArrowLeft', 'ArrowRight'
+            ];
+            
+            if (!allowedKeys.includes(event.key)) {
+                event.preventDefault();
+            }
         }
     };
 
@@ -110,6 +163,13 @@ export const CommonInput: React.FC<CommonInputProps> = ({
             onChange={handleInputChange}
             onBlur={handleBlur}
             onKeyDown={handleKeyDown}
+            type={type}
+            inputProps={{
+                ...props.inputProps,
+                min,
+                max,
+                step: type === 'number' ? 'any' : undefined
+            }}
             {...props}
         />
     );
