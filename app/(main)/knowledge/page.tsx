@@ -396,13 +396,22 @@ export default function KnowledgePage() {
 
   const handleSelectedItemsChange = useCallback(
     (id: number) => {
-      setSelectedCategory(id);
-      setParams({
-        ...params,
-        categoryId: id, 
-      });
+      // 如果点击的是已选中的节点，则取消选中
+      if (selectedCategory === id) {
+        setSelectedCategory(null);
+        setParams({
+          ...params,
+          categoryId: undefined,
+        });
+      } else {
+        setSelectedCategory(id);
+        setParams({
+          ...params,
+          categoryId: id,
+        });
+      }
     },
-    [params, setParams]
+    [params, setParams, selectedCategory]
   );
 
   // 使用 useCallback 优化分页处理
