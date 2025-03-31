@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import {
     Box,
     Typography,
@@ -38,6 +38,9 @@ import rehypeHighlight from 'rehype-highlight';
 import 'highlight.js/styles/github-dark.css';
 import { Theme } from '@mui/material/styles';
 import { fetchEventSource } from '@microsoft/fetch-event-source';
+import { KnowledgeBaseSelector } from './components/KnowledgeBaseSelector';
+import { ChatMessage } from './components/ChatMessage';
+import { ChatInput } from './components/ChatInput';
 
 // 添加自定义样式
 const markdownStyles = {
@@ -146,6 +149,7 @@ export default function QaPage() {
     const [sessionId] = useState(uuidv4());
     const chatBoxRef = useRef<HTMLDivElement>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
+    const isMountedRef = useRef(true);
 
     const [snackbar, setSnackbar] = useState({
         open: false,
@@ -154,125 +158,136 @@ export default function QaPage() {
     });
 
     // 获取知识库列表
-    const fetchKnowledgeBases = async () => {
+    const fetchKnowledgeBases = useCallback(async () => {
         try {
-            const response = await knowledgeService.getList({
-                current: 1,
-                size: 100
-            });
-            const kbs = response.data.data.records;
-            setKnowledgeBases(kbs);
-            // 默认不全选
-            setSelectedKbs([]);
+            console.log('开始获取知识库列表...');
+            const response = await knowledgeService.getUserKnowledgeBases();
+            console.log('知识库列表响应:', response);
+            console.log('响应数据:', response.data);
+            console.log('响应状态:', response.status);
+            console.log('响应数据:', response.data);
+            console.log('isMountedRef.current:', isMountedRef.current);
+            if (isMountedRef.current) {
+                const kbs = response.data.data;
+                console.log('知识库列表数据:', kbs);
+                console.log('知识库列表类型:', typeof kbs);
+                console.log('是否是数组:', Array.isArray(kbs));
+                if (Array.isArray(kbs)) {
+                    console.log('知识库列表长度:', kbs.length);
+                    console.log('知识库列表内容:', JSON.stringify(kbs, null, 2));
+                    // 过滤掉状态为0的知识库
+                    const activeKbs = kbs.filter(kb => kb.status === 1);
+                    console.log('激活的知识库列表:', activeKbs);
+                    setKnowledgeBases(activeKbs);
+                    setSelectedKbs([]);
+                } else {
+                    console.error('知识库列表格式不正确:', kbs);
+                    setKnowledgeBases([]);
+                    setSelectedKbs([]);
+                }
+            }
         } catch (error) {
             console.error('获取知识库列表失败:', error);
+            if (isMountedRef.current) {
+                setSnackbar({
+                    open: true,
+                    message: t('knowledge.fetchError'),
+                    severity: 'error',
+                });
+                setKnowledgeBases([]);
+                setSelectedKbs([]);
+            }
         }
-    };
+    }, [t]);
 
     // 获取历史记录
-    const fetchChatHistory = async () => {
+    const fetchChatHistory = useCallback(async () => {
         try {
             const response = await qaService.getChatHistory(sessionId);
-            setChatHistory(response.data.data.records);
-            scrollToBottom();
+            if (isMountedRef.current) {
+                setChatHistory(response.data.data.records);
+                scrollToBottom();
+            }
         } catch (error) {
             console.error('获取历史记录失败:', error);
-            setSnackbar({
-                open: true,
-                message: t('qa.loadHistoryError'),
-                severity: 'error',
-            });
+            if (isMountedRef.current) {
+                setSnackbar({
+                    open: true,
+                    message: t('qa.loadHistoryError'),
+                    severity: 'error',
+                });
+            }
         }
-    };
+    }, [sessionId, t]);
 
     useEffect(() => {
+        isMountedRef.current = true;
         fetchKnowledgeBases();
-    }, []);
+        return () => {
+            isMountedRef.current = false;
+            setKnowledgeBases([]);
+            setSelectedKbs([]);
+        };
+    }, [fetchKnowledgeBases]);
 
     useEffect(() => {
         if (sessionId) {
+            isMountedRef.current = true;
             fetchChatHistory();
+            return () => {
+                isMountedRef.current = false;
+                setChatHistory([]);
+            };
         }
-    }, [sessionId]);
+    }, [sessionId, fetchChatHistory]);
 
-    const scrollToBottom = () => {
-        if (chatBoxRef.current) {
-            setTimeout(() => {
-                chatBoxRef.current?.scrollTo({
-                    top: chatBoxRef.current.scrollHeight,
-                    behavior: 'smooth'
-                });
-            }, 100); // 给一点时间让 markdown 渲染完成
-        }
-    };
-
-    // 处理全选/取消全选
-    const handleSelectAll = () => {
-        setSelectedKbs(prev =>
-            prev.length === knowledgeBases.length ? [] : knowledgeBases.map(kb => kb.id)
-        );
-    };
-
-    // 处理单个知识库选择
-    const handleKbSelect = (id: number, checked: boolean) => {
-        setSelectedKbs(prev =>
-            checked ? [...prev, id] : prev.filter(kbId => kbId !== id)
-        );
-    };
-
-    // 清空历史记录
-    const handleClearHistory = async () => {
-        if (!window.confirm(t('qa.clearHistoryConfirm'))) return;
-        try {
-            await qaService.clearChatHistory(sessionId);
-            setChatHistory([]);
-            setSnackbar({
-                open: true,
-                message: t('qa.clearHistorySuccess'),
-                severity: 'success',
-            });
-        } catch (error) {
-            console.error('清空历史记录失败:', error);
-            setSnackbar({
-                open: true,
-                message: t('qa.clearHistoryError'),
-                severity: 'error',
-            });
-        }
-    };
-
-    // 处理按键事件
-    const handleKeyPress = (event: React.KeyboardEvent) => {
-        if (event.key === 'Enter' && !event.shiftKey) {
-            event.preventDefault();
-            handleSend();
-        }
-    };
-
-    // 中断会话
-    const handleAbort = () => {
+    // 使用 useCallback 优化中断会话处理
+    const handleAbort = useCallback(() => {
         if (abortControllerRef.current) {
             abortControllerRef.current.abort();
             abortControllerRef.current = null;
             setLoading(false);
         }
-    };
+    }, []);
+
+    // 使用 useCallback 优化聊天历史更新
+    const updateChatHistory = useCallback((answer: string) => {
+        if (isMountedRef.current) {
+            setChatHistory(prev => {
+                const newHistory = [...prev];
+                newHistory[newHistory.length - 1].answer = answer;
+                return newHistory;
+            });
+        }
+    }, []);
+
+    // 使用 useCallback 优化滚动处理
+    const scrollToBottom = useCallback(() => {
+        if (chatBoxRef.current) {
+            const timeoutId = setTimeout(() => {
+                if (chatBoxRef.current) {
+                    chatBoxRef.current.scrollTo({
+                        top: chatBoxRef.current.scrollHeight,
+                        behavior: 'smooth'
+                    });
+                }
+            }, 100);
+            return () => clearTimeout(timeoutId);
+        }
+    }, []);
 
     // 发送消息
-    const handleSend = async () => {
+    const handleSend = useCallback(async () => {
         if (!question.trim() || loading) return;
 
-        // 如果有正在进行的会话，先中断它
         handleAbort();
 
         setLoading(true);
         const questionText = question;
         setQuestion('');
 
-        // 创建新的 AbortController
         abortControllerRef.current = new AbortController();
 
-        // 添加用户问题到历史记录
         const newQuestion: KbChatHistory = {
             id: Date.now(),
             sessionId,
@@ -285,7 +300,10 @@ export default function QaPage() {
             createTime: new Date().toISOString(),
             updateTime: new Date().toISOString(),
         };
-        setChatHistory(prev => [...prev, newQuestion]);
+
+        if (isMountedRef.current) {
+            setChatHistory(prev => [...prev, newQuestion]);
+        }
         scrollToBottom();
 
         try {
@@ -296,7 +314,6 @@ export default function QaPage() {
                 maxTokens: 2000
             };
 
-            // 构建请求 URL 和参数
             const baseUrl = '/api/v1/kb/qa';
             const endpoint = selectedKbs.length > 0 ? 'chat/stream' : 'general/stream';
             const queryParams = selectedKbs.length > 0 ? `?kbIds=${selectedKbs}` : '';
@@ -315,6 +332,8 @@ export default function QaPage() {
                 body: JSON.stringify(requestData),
                 signal: abortControllerRef.current.signal,
                 onmessage(ev) {
+                    if (!isMountedRef.current) return;
+                    
                     if (ev.event === 'done' || ev.event === 'complete') {
                         setLoading(false);
                         abortControllerRef.current = null;
@@ -322,19 +341,18 @@ export default function QaPage() {
                     }
                     const data = ev.data;
                     answer += data;
-                    setChatHistory(prev => {
-                        const newHistory = [...prev];
-                        newHistory[newHistory.length - 1].answer = answer;
-                        return newHistory;
-                    });
+                    updateChatHistory(answer);
                     scrollToBottom();
                 },
                 onclose() {
-                    setLoading(false);
-                    abortControllerRef.current = null;
+                    if (isMountedRef.current) {
+                        setLoading(false);
+                        abortControllerRef.current = null;
+                    }
                 },
                 onerror(err) {
-                    // 如果是用户主动中断，不显示错误提示
+                    if (!isMountedRef.current) return;
+                    
                     if (err.name === 'AbortError') {
                         return;
                     }
@@ -350,7 +368,8 @@ export default function QaPage() {
                 },
             });
         } catch (error) {
-            // 如果是用户主动中断，不显示错误提示
+            if (!isMountedRef.current) return;
+            
             if (error instanceof Error && error.name === 'AbortError') {
                 return;
             }
@@ -363,14 +382,81 @@ export default function QaPage() {
             setLoading(false);
             abortControllerRef.current = null;
         }
-    };
+    }, [question, loading, sessionId, selectedKbs, t, handleAbort, scrollToBottom, updateChatHistory]);
 
-    // 在组件卸载时中断会话
+    // 使用 useCallback 优化按键事件处理
+    const handleKeyPress = useCallback((event: React.KeyboardEvent) => {
+        if (event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault();
+            handleSend();
+        }
+    }, [handleSend]);
+
+    // 使用 useCallback 优化清空历史记录处理
+    const handleClearHistory = useCallback(async () => {
+        if (!window.confirm(t('qa.clearHistoryConfirm'))) return;
+        try {
+            await qaService.clearChatHistory(sessionId);
+            if (isMountedRef.current) {
+                setChatHistory([]);
+                setSnackbar({
+                    open: true,
+                    message: t('qa.clearHistorySuccess'),
+                    severity: 'success',
+                });
+            }
+        } catch (error) {
+            console.error('清空历史记录失败:', error);
+            if (isMountedRef.current) {
+                setSnackbar({
+                    open: true,
+                    message: t('qa.clearHistoryError'),
+                    severity: 'error',
+                });
+            }
+        }
+    }, [sessionId, t]);
+
+    // 使用 useCallback 优化 Snackbar 关闭处理
+    const handleSnackbarClose = useCallback(() => {
+        setSnackbar(prev => ({ ...prev, open: false }));
+    }, []);
+
+    // 处理全选/取消全选
+    const handleSelectAll = useCallback(() => {
+        setSelectedKbs(prev =>
+            prev.length === knowledgeBases.length ? [] : knowledgeBases.map(kb => kb.id)
+        );
+    }, [knowledgeBases]);
+
+    // 处理单个知识库选择
+    const handleKbSelect = useCallback((id: number, checked: boolean) => {
+        setSelectedKbs(prev =>
+            checked ? [...prev, id] : prev.filter(kbId => kbId !== id)
+        );
+    }, []);
+
+    // 使用 useCallback 优化问题输入处理
+    const handleQuestionChange = useCallback((event: React.ChangeEvent<HTMLTextAreaElement>) => {
+        setQuestion(event.target.value);
+    }, []);
+
+    // 在组件卸载时清理
     useEffect(() => {
         return () => {
+            isMountedRef.current = false;
             handleAbort();
+            setChatHistory([]);
+            setKnowledgeBases([]);
+            setSelectedKbs([]);
+            setQuestion('');
+            setLoading(false);
+            if (abortControllerRef.current) {
+                abortControllerRef.current.abort();
+                abortControllerRef.current = null;
+            }
         };
-    }, []);
+    }, [handleAbort]);
 
     return (
         <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -399,39 +485,12 @@ export default function QaPage() {
                     </Button>
                 </Box>
 
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Typography variant="subtitle1">
-                        {t('qa.selectKb')}:
-                    </Typography>
-                    <Button
-                        size="small"
-                        startIcon={selectedKbs.length === knowledgeBases.length ? <CheckBoxIcon /> : <CheckBoxOutlineBlankIcon />}
-                        onClick={handleSelectAll}
-                    >
-                        {t('qa.selectAll')}
-                    </Button>
-                </Box>
-
-                <FormGroup row sx={{ mt: 1 }}>
-                    {knowledgeBases.map((kb) => (
-                        <FormControlLabel
-                            key={kb.id}
-                            control={
-                                <Checkbox
-                                    checked={selectedKbs.includes(kb.id)}
-                                    onChange={(e) => handleKbSelect(kb.id, e.target.checked)}
-                                />
-                            }
-                            label={kb.name}
-                        />
-                    ))}
-                </FormGroup>
-
-                {selectedKbs.length === 0 && (
-                    <Alert severity="info" sx={{ mt: 1 }}>
-                        {t('qa.noKbSelected')}
-                    </Alert>
-                )}
+                <KnowledgeBaseSelector
+                    knowledgeBases={knowledgeBases}
+                    selectedKbs={selectedKbs}
+                    onSelectAll={handleSelectAll}
+                    onSelectKb={handleKbSelect}
+                />
             </Box>
 
             <Box
@@ -446,88 +505,7 @@ export default function QaPage() {
                 }}
             >
                 {chatHistory.map((chat, index) => (
-                    <Box key={index}>
-                        {/* 用户问题 */}
-                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
-                            <Paper
-                                sx={{
-                                    maxWidth: '85%',
-                                    p: 2,
-                                    bgcolor: 'primary.main',
-                                    color: 'primary.contrastText',
-                                    borderRadius: '12px 12px 0 12px',
-                                }}
-                            >
-                                <Typography>{chat.question}</Typography>
-                            </Paper>
-                        </Box>
-
-                        {/* AI 回答 */}
-                        <Box sx={{ display: 'flex', justifyContent: 'flex-start' }}>
-                            <Paper
-                                sx={{
-                                    maxWidth: '85%',
-                                    p: 2,
-                                    borderRadius: '12px 12px 12px 0',
-                                    ...markdownStyles,
-                                }}
-                            >
-                                <Box className="markdown-body">
-                                    <ReactMarkdown
-                                        remarkPlugins={[remarkGfm]}
-                                        rehypePlugins={[
-                                            rehypeRaw,
-                                            rehypeSanitize,
-                                            [rehypeHighlight, { ignoreMissing: true }]
-                                        ]}
-                                        components={{
-                                            code({ node, inline, className, children, ...props }: any) {
-                                                const match = /language-(\w+)/.exec(className || '');
-                                                return !inline && match ? (
-                                                    <Box
-                                                        component="div"
-                                                        sx={{
-                                                            position: 'relative',
-                                                            '& pre': {
-                                                                mt: '0 !important',
-                                                            },
-                                                        }}
-                                                    >
-                                                        <IconButton
-                                                            onClick={() => navigator.clipboard.writeText(String(children).replace(/\n$/, ''))}
-                                                            sx={{
-                                                                position: 'absolute',
-                                                                right: 8,
-                                                                top: 8,
-                                                                bgcolor: 'background.paper',
-                                                                opacity: 0,
-                                                                transition: 'opacity 0.2s',
-                                                                '&:hover': {
-                                                                    bgcolor: 'action.hover',
-                                                                },
-                                                            }}
-                                                            size="small"
-                                                        >
-                                                            <ContentCopyIcon fontSize="small" />
-                                                        </IconButton>
-                                                        <pre className={className}>
-                                                            <code {...props}>{children}</code>
-                                                        </pre>
-                                                    </Box>
-                                                ) : (
-                                                    <code className={className} {...props}>
-                                                        {children}
-                                                    </code>
-                                                );
-                                            }
-                                        }}
-                                    >
-                                        {chat.answer}
-                                    </ReactMarkdown>
-                                </Box>
-                            </Paper>
-                        </Box>
-                    </Box>
+                    <ChatMessage key={index} chat={chat} />
                 ))}
             </Box>
 
@@ -537,85 +515,23 @@ export default function QaPage() {
                 borderColor: 'divider',
                 bgcolor: 'background.paper',
             }}>
-                <Box sx={{ display: 'flex', gap: 2 }}>
-                    <TextField
-                        fullWidth
-                        multiline
-                        rows={3}
-                        value={question}
-                        onChange={(e) => setQuestion(e.target.value)}
-                        onKeyPress={handleKeyPress}
-                        placeholder={t('qa.inputPlaceholder')}
-                        disabled={loading}
-                    />
-                    <IconButton
-                        color="primary"
-                        onClick={loading ? handleAbort : handleSend}
-                        disabled={!question.trim() && !loading}
-                        title={loading ? t('qa.clickToStop') : t('qa.send')}
-                        sx={{
-                            alignSelf: 'flex-end',
-                            width: 56,
-                            height: 56,
-                            bgcolor: loading ? 'error.main' : 'primary.main',
-                            color: 'primary.contrastText',
-                            transition: 'all 0.3s ease',
-                            '&:hover': {
-                                bgcolor: loading ? 'error.dark' : 'primary.dark',
-                                transform: loading ? 'rotate(90deg)' : 'none',
-                            },
-                            '&.Mui-disabled': {
-                                bgcolor: 'action.disabledBackground',
-                                color: 'action.disabled',
-                            },
-                        }}
-                    >
-                        {loading ? (
-                            <Box sx={{ position: 'relative', display: 'inline-flex' }}>
-                                <CircularProgress
-                                    size={24}
-                                    color="inherit"
-                                    sx={{
-                                        position: 'absolute',
-                                        left: '50%',
-                                        top: '50%',
-                                        marginLeft: '-12px',
-                                        marginTop: '-12px',
-                                    }}
-                                />
-                                <DeleteIcon
-                                    sx={{
-                                        position: 'absolute',
-                                        left: '50%',
-                                        top: '50%',
-                                        marginLeft: '-12px',
-                                        marginTop: '-12px',
-                                        animation: 'fadeIn 0.3s ease-in-out',
-                                        '@keyframes fadeIn': {
-                                            '0%': {
-                                                opacity: 0,
-                                            },
-                                            '100%': {
-                                                opacity: 1,
-                                            },
-                                        },
-                                    }}
-                                />
-                            </Box>
-                        ) : (
-                            <SendIcon />
-                        )}
-                    </IconButton>
-                </Box>
+                <ChatInput
+                    question={question}
+                    loading={loading}
+                    onQuestionChange={handleQuestionChange}
+                    onKeyPress={handleKeyPress}
+                    onSend={handleSend}
+                    onAbort={handleAbort}
+                />
             </Box>
 
             <Snackbar
                 open={snackbar.open}
                 autoHideDuration={3000}
-                onClose={() => setSnackbar({ ...snackbar, open: false })}
+                onClose={handleSnackbarClose}
             >
                 <Alert
-                    onClose={() => setSnackbar({ ...snackbar, open: false })}
+                    onClose={handleSnackbarClose}
                     severity={snackbar.severity}
                     sx={{ width: '100%' }}
                 >
