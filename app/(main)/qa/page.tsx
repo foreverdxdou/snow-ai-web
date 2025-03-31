@@ -160,34 +160,20 @@ export default function QaPage() {
     // 获取知识库列表
     const fetchKnowledgeBases = useCallback(async () => {
         try {
-            console.log('开始获取知识库列表...');
-            const response = await knowledgeService.getUserKnowledgeBases();
-            console.log('知识库列表响应:', response);
-            console.log('响应数据:', response.data);
-            console.log('响应状态:', response.status);
-            console.log('响应数据:', response.data);
-            console.log('isMountedRef.current:', isMountedRef.current);
             if (isMountedRef.current) {
+                const response = await knowledgeService.getUserKnowledgeBases();
                 const kbs = response.data.data;
-                console.log('知识库列表数据:', kbs);
-                console.log('知识库列表类型:', typeof kbs);
-                console.log('是否是数组:', Array.isArray(kbs));
                 if (Array.isArray(kbs)) {
-                    console.log('知识库列表长度:', kbs.length);
-                    console.log('知识库列表内容:', JSON.stringify(kbs, null, 2));
                     // 过滤掉状态为0的知识库
                     const activeKbs = kbs.filter(kb => kb.status === 1);
-                    console.log('激活的知识库列表:', activeKbs);
                     setKnowledgeBases(activeKbs);
                     setSelectedKbs([]);
                 } else {
-                    console.error('知识库列表格式不正确:', kbs);
                     setKnowledgeBases([]);
                     setSelectedKbs([]);
                 }
             }
         } catch (error) {
-            console.error('获取知识库列表失败:', error);
             if (isMountedRef.current) {
                 setSnackbar({
                     open: true,
@@ -209,7 +195,6 @@ export default function QaPage() {
                 scrollToBottom();
             }
         } catch (error) {
-            console.error('获取历史记录失败:', error);
             if (isMountedRef.current) {
                 setSnackbar({
                     open: true,
@@ -356,7 +341,6 @@ export default function QaPage() {
                     if (err.name === 'AbortError') {
                         return;
                     }
-                    console.error('Stream error:', err);
                     setSnackbar({
                         open: true,
                         message: t('qa.systemError'),
@@ -373,7 +357,6 @@ export default function QaPage() {
             if (error instanceof Error && error.name === 'AbortError') {
                 return;
             }
-            console.error('发送消息失败:', error);
             setSnackbar({
                 open: true,
                 message: t('qa.systemError'),
