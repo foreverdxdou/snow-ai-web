@@ -41,11 +41,16 @@ export default function AuthLayout({
             <Box
                 sx={{
                     zIndex: 2,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: 3,
+                    width: '100%',
+                    maxWidth: '1200px',
+                    px: 2,
                 }}
             >
-               <Logo />
-            </Box>
-            <Box sx={{ position: 'relative', zIndex: 2, width: '100%', maxWidth: '1200px', px: 2 }}>
+                <Logo />
                 {children}
             </Box>
         </Box>
