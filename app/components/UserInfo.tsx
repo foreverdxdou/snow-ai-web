@@ -7,6 +7,7 @@ import { useAuth } from '@/app/hooks/useAuth';
 import type { User } from '@/app/types/userinfo';
 import dynamic from 'next/dynamic';
 import { alpha } from '@mui/material/styles';
+import { useRouter } from 'next/navigation';
 
 // 动态导入 Menu 组件，避免服务端渲染
 const UserMenu = dynamic(() => import('./UserMenu'), { 
@@ -23,6 +24,7 @@ export const UserInfo: React.FC<UserInfoProps> = ({
 }) => {
     const { t } = useTranslation();
     const { user, logout } = useAuth();
+    const router = useRouter();
     const [mounted, setMounted] = useState(false);
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
@@ -49,7 +51,7 @@ export const UserInfo: React.FC<UserInfoProps> = ({
     const handleLogout = async () => {
         try {
             await logout();
-            window.location.href = '/login';
+            router.push('/login');
         } catch (error) {
             console.error('退出登录失败:', error);
         }

@@ -32,11 +32,12 @@ export const useAuth = () => {
     }, []);
 
     const logout = useCallback(() => {
-        Cookies.remove('token');
-        Cookies.remove('user');
-        setUser(null);
-        setIsAuthenticated(false);
-        authService.logout();
+        authService.logout().then(() => {
+            Cookies.remove('token');
+            Cookies.remove('user');
+            setUser(null);
+            setIsAuthenticated(false);
+        });
     }, []);
 
     return { isAuthenticated, user, login, logout };

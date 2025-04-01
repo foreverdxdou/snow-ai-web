@@ -1,9 +1,8 @@
 import request from '@/app/utils/request';
-import axios, { AxiosInstance, AxiosResponse } from 'axios';
+import axios, { AxiosResponse } from 'axios';
 import type { Result } from '@/app/types/result';
 import { API_CONFIG } from '@/app/config/api';
 import { User } from '@/app/types/userinfo';
-import { message } from 'antd';
 
 const authRequest = axios.create({
   baseURL: API_CONFIG.prefix,
@@ -41,7 +40,7 @@ export const authService = {
   },
 
   logout: () => {
-    return request.post('/auth/logout');
+    return request.post<Result<void>>('/auth/logout');
   },
 
   getCurrentUser: () => {
