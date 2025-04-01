@@ -373,6 +373,7 @@ export default function PermissionPage() {
                                 { id: 1, name: t('common.permission.typeMenu') },
                                 { id: 2, name: t('common.permission.typeButton') },
                             ]}
+                            sx={{ minWidth: 200 }}
                         />
                         <CommonSelect
                             label={t('common.permission.status')}
@@ -382,6 +383,7 @@ export default function PermissionPage() {
                                 { id: 1, name: t('common.permission.statusEnabled') },
                                 { id: 0, name: t('common.permission.statusDisabled') },
                             ]}
+                            sx={{ minWidth: 200 }}
                         />
                         <CommonButton
                             buttonVariant="reset"

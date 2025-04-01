@@ -397,6 +397,7 @@ export default function UserPage() {
               showAll
               allValue={undefined}
               showAllLabel={t("common.all")}
+              sx={{ minWidth: 200 }}
             />
             <CommonButton
               buttonVariant="reset"
