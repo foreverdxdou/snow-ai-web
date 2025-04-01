@@ -41,7 +41,7 @@ import type { Permission, PermissionDTO } from '@/app/types/permission';
 
 // 转换函数
 const convertToTree = (items: Permission[]): Permission[] => {
-    const map = new Map<number, Permission>();
+    const map = new Map<string, Permission>();
     const roots: Permission[] = [];
 
     // 创建映射
@@ -52,7 +52,7 @@ const convertToTree = (items: Permission[]): Permission[] => {
     // 构建树
     items.forEach(item => {
         const node = map.get(item.id)!;
-        if (item.parentId === 0) {
+        if (item.parentId === '0') {
             roots.push(node);
         } else {
             const parent = map.get(item.parentId);
@@ -86,9 +86,9 @@ const convertToTree = (items: Permission[]): Permission[] => {
 const TreeNode = ({ node, level = 0, onAdd, onEdit, onDelete }: {
     node: Permission;
     level?: number;
-    onAdd: (parentId: number) => void;
+    onAdd: (parentId: string) => void;
     onEdit: (permission: Permission) => void;
-    onDelete: (id: number) => void;
+    onDelete: (id: string) => void;
 }) => {
     const [open, setOpen] = useState(true);
     const { t } = useTranslation();
@@ -203,10 +203,10 @@ export default function PermissionPage() {
     const [loading, setLoading] = useState(false);
     const [open, setOpen] = useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-    const [deletingId, setDeletingId] = useState<number | null>(null);
+    const [deletingId, setDeletingId] = useState<string | null>(null);
     const [editingPermission, setEditingPermission] = useState<Permission | null>(null);
     const [formData, setFormData] = useState<PermissionDTO>({
-        parentId: 0,
+        parentId: '0',
         name: '',
         type: 1,
         permissionCode: '',
@@ -230,6 +230,7 @@ export default function PermissionPage() {
             const response = await permissionService.getTree();
             if (response.data?.data) {
                 const treeData = convertToTree(response.data.data);
+                console.log(treeData);
                 setPermissions(treeData);
             }
         } catch (error) {
@@ -244,7 +245,7 @@ export default function PermissionPage() {
     }, [fetchPermissions]);
 
     // 处理打开对话框
-    const handleOpen = useCallback((permission?: Permission, parent?: number) => {
+    const handleOpen = useCallback((permission?: Permission, parent?: string) => {
         if (permission) {
             setEditingPermission(permission);
             setFormData({
@@ -262,7 +263,7 @@ export default function PermissionPage() {
         } else {
             setEditingPermission(null);
             setFormData({
-                parentId: parent || 0,
+                parentId: parent || '0',
                 name: '',
                 type: 1,
                 permissionCode: '',
@@ -281,7 +282,7 @@ export default function PermissionPage() {
         setOpen(false);
         setEditingPermission(null);
         setFormData({
-            parentId: 0,
+            parentId: '0',
             name: '',
             type: 1,
             permissionCode: '',
@@ -297,7 +298,7 @@ export default function PermissionPage() {
     const handleSubmit = useCallback(async () => {
         try {
             if (editingPermission) {
-                await permissionService.update(editingPermission.id, formData);
+                    await permissionService.update(editingPermission.id, formData);
                 setSnackbar({
                     open: true,
                     message: t('common.permission.updateSuccess'),
@@ -324,7 +325,7 @@ export default function PermissionPage() {
     }, [editingPermission, formData, handleClose, fetchPermissions, t]);
 
     // 处理删除
-    const handleDelete = useCallback((id: number) => {
+    const handleDelete = useCallback((id: string) => {
         setDeletingId(id);
         setDeleteDialogOpen(true);
     }, []);

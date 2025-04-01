@@ -11,7 +11,7 @@ export const permissionService = {
     },
 
     // 获取权限详情
-    getById: (id: number) => {
+    getById: (id: string) => {
         return request.get<Result<Permission>>(`${BASE_URL}/${id}`);
     },
 
@@ -21,22 +21,22 @@ export const permissionService = {
     },
 
     // 更新权限
-    update: (id: number, data: PermissionDTO) => {
+    update: (id: string, data: PermissionDTO) => {
         return request.put<Result<void>>(`${BASE_URL}/${id}`, data);
     },
 
     // 删除权限
-    delete: (id: number) => {
+    delete: (id: string) => {
         return request.delete<Result<void>>(`${BASE_URL}/${id}`);
     },
 
     // 获取用户权限列表
-    getUserPermissions: (userId: number) => {
+    getUserPermissions: (userId: string) => {
         return request.get<Result<Permission[]>>(`${BASE_URL}/user/${userId}`);
     },
 
     // 获取角色权限列表
-    getRolePermissions: (roleIds: number[]) => {
+    getRolePermissions: (roleIds: string[]) => {
         return request.get<Result<Permission[]>>(`${BASE_URL}/role`, {
             params: { roleIds }
         });

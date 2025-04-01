@@ -1,6 +1,6 @@
 export interface Permission {
-    id: number;
-    parentId: number;
+    id: string;
+    parentId: string;
     name: string;
     type: number;
     permissionCode: string;
@@ -16,8 +16,8 @@ export interface Permission {
 }
 
 export interface PermissionDTO {
-    id?: number;
-    parentId: number;
+    id?: string;
+    parentId: string;
     name: string;
     type: number;
     permissionCode: string;
@@ -29,7 +29,7 @@ export interface PermissionDTO {
 }
 
 export interface PermissionQuery {
-    parentId?: number;
+    parentId?: string;
     type?: number;
     status?: number;
 }
