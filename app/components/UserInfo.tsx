@@ -97,12 +97,12 @@ export const UserInfo: React.FC<UserInfoProps> = ({
                     height: 32,
                     fontSize: '0.875rem',
                     fontWeight: 600,
-                    backgroundColor: 'primary.main',
-                    color: 'primary.contrastText',
-                    transition: 'all 0.2s ease-in-out',
-                    '&:hover': {
-                        backgroundColor: 'primary.dark',
-                    },
+                    background: (theme) => theme.palette.mode === 'dark'
+                        ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%)'
+                        : 'linear-gradient(135deg, #66B2FF 0%, #007FFF 100%)',
+                    color: (theme) => theme.palette.mode === 'dark'
+                        ? theme.palette.background.default
+                        : '#fff',
                 }}
             >
                 {avatarText}
