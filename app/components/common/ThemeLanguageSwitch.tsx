@@ -22,7 +22,14 @@ export const ThemeLanguageSwitch: React.FC = () => {
                     onClick={toggleTheme}
                     color="inherit"
                     sx={{
-                        color: (theme) => themeMode === 'dark' ? 'primary.light' : 'primary.main',
+                        color: (theme) => themeMode === 'dark' 
+                            ? theme.palette.text.primary
+                            : theme.palette.text.primary,
+                        '&:hover': {
+                            backgroundColor: (theme) => themeMode === 'dark'
+                                ? theme.palette.action.hover
+                                : theme.palette.action.hover,
+                        },
                     }}
                 >
                     {themeMode === 'dark' ? <LightMode /> : <DarkMode />}
@@ -33,7 +40,14 @@ export const ThemeLanguageSwitch: React.FC = () => {
                     onClick={handleLanguageChange}
                     color="inherit"
                     sx={{
-                        color: (theme) => theme.palette.mode === 'dark' ? 'primary.light' : 'primary.main',
+                        color: (theme) => themeMode === 'dark'
+                            ? theme.palette.text.primary
+                            : theme.palette.text.primary,
+                        '&:hover': {
+                            backgroundColor: (theme) => themeMode === 'dark'
+                                ? theme.palette.action.hover
+                                : theme.palette.action.hover,
+                        },
                     }}
                 >
                     <TranslateRounded />
