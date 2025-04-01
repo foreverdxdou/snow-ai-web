@@ -10,7 +10,8 @@ import {
     Paper,
     TextField,
     styled,
-    alpha
+    alpha,
+    useTheme
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/app/hooks/useAuth';
@@ -147,6 +148,7 @@ LoginForm.displayName = 'LoginForm';
 
 export default function LoginPage() {
     const { t } = useTranslation();
+    const theme = useTheme();
     const router = useRouter();
     const { login } = useAuth();
     const [loading, setLoading] = useState(false);
@@ -174,13 +176,19 @@ export default function LoginPage() {
                 sx={{ 
                     p: 4,
                     borderRadius: 3,
-                    background: 'rgba(255, 255, 255, 0.9)',
+                    background: theme.palette.mode === 'dark' 
+                        ? 'rgba(255, 255, 255, 0.95)'
+                        : 'rgba(255, 255, 255, 0.9)',
                     backdropFilter: 'blur(20px)',
-                    border: '1px solid rgba(255, 255, 255, 0.3)',
-                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+                    border: theme.palette.mode === 'dark'
+                        ? '1px solid rgba(255, 255, 255, 0.2)'
+                        : '1px solid rgba(255, 255, 255, 0.3)',
+                    boxShadow: theme.palette.mode === 'dark'
+                        ? '0 8px 32px rgba(0, 0, 0, 0.3)'
+                        : '0 8px 32px rgba(0, 0, 0, 0.1)',
                 }}
             >
-             
+ 
                 <LoginForm
                     onSubmit={handleLogin}
                     loading={loading}

@@ -19,7 +19,7 @@ const Background = React.memo(() => {
                 right: 0,
                 bottom: 0,
                 background: theme.palette.mode === 'dark'
-                    ? 'linear-gradient(135deg, #2c3e50 0%, #3498db 100%)'
+                    ? 'linear-gradient(135deg, #1a1a1a 0%, #2c3e50 100%)'
                     : 'linear-gradient(135deg, #e0f2f1 0%, #b2dfdb 100%)',
                 zIndex: -1,
                 '&::before': {
@@ -29,7 +29,9 @@ const Background = React.memo(() => {
                     left: 0,
                     right: 0,
                     bottom: 0,
-                    background: 'radial-gradient(circle at center, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 70%)',
+                    background: theme.palette.mode === 'dark'
+                        ? 'radial-gradient(circle at center, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 70%)'
+                        : 'radial-gradient(circle at center, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 70%)',
                 }
             }}
         />
@@ -44,6 +46,7 @@ export default function AuthLayout({
     children: React.ReactNode;
 }) {
     const { t } = useTranslation();
+    const theme = useTheme();
 
     return (
         <Box
@@ -70,24 +73,24 @@ export default function AuthLayout({
                     gap: 1,
                     p: 1.5,
                     borderRadius: 3,
-                    background: theme => theme.palette.mode === 'dark' 
-                        ? 'rgba(255, 255, 255, 0.15)' 
+                    background: theme.palette.mode === 'dark' 
+                        ? 'rgba(255, 255, 255, 0.1)' 
                         : 'rgba(0, 0, 0, 0.1)',
                     backdropFilter: 'blur(10px)',
-                    border: theme => `1px solid ${
+                    border: `1px solid ${
                         theme.palette.mode === 'dark' 
-                            ? 'rgba(255, 255, 255, 0.3)' 
+                            ? 'rgba(255, 255, 255, 0.2)' 
                             : 'rgba(0, 0, 0, 0.2)'
                     }`,
-                    boxShadow: theme => theme.palette.mode === 'dark'
+                    boxShadow: theme.palette.mode === 'dark'
                         ? '0 4px 20px rgba(0, 0, 0, 0.3)'
                         : '0 4px 20px rgba(0, 0, 0, 0.1)',
                     '& .MuiIconButton-root': {
-                        color: theme => theme.palette.mode === 'dark'
+                        color: theme.palette.mode === 'dark'
                             ? 'rgba(255, 255, 255, 0.9)'
                             : 'rgba(0, 0, 0, 0.7)',
                         '&:hover': {
-                            backgroundColor: theme => theme.palette.mode === 'dark'
+                            backgroundColor: theme.palette.mode === 'dark'
                                 ? 'rgba(255, 255, 255, 0.1)'
                                 : 'rgba(0, 0, 0, 0.05)',
                         }
@@ -115,10 +118,16 @@ export default function AuthLayout({
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        background: 'rgba(255, 255, 255, 0.1)',
+                        background: theme.palette.mode === 'dark'
+                            ? 'rgba(255, 255, 255, 0.05)'
+                            : 'rgba(255, 255, 255, 0.1)',
                         backdropFilter: 'blur(10px)',
                         borderRadius: '50%',
-                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                        border: `1px solid ${
+                            theme.palette.mode === 'dark'
+                                ? 'rgba(255, 255, 255, 0.1)'
+                                : 'rgba(255, 255, 255, 0.2)'
+                        }`,
                     }}
                 >
                     <Logo />
@@ -128,7 +137,7 @@ export default function AuthLayout({
                     component="h1"
                     sx={{
                         fontWeight: 'bold',
-                        color: 'white',
+                        color: theme.palette.mode === 'dark' ? 'white' : 'white',
                         mb: 1,
                     }}
                 >
