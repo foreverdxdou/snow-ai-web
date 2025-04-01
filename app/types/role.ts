@@ -4,6 +4,7 @@ export interface Role {
     roleName: string;
     roleCode: string;
     description: string;
+    status: number;
     permissionNames: string;
     permissionCodes: string;
     createTime: string;
@@ -15,7 +16,8 @@ export interface RoleDTO {
     roleName: string;
     roleCode: string;
     description: string;
-    permissionCodes: string[];
+    status: number;
+    permissionIds: string[];
 }
 
 export interface RoleQuery {
