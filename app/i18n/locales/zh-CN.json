@@ -128,7 +128,44 @@
       "deleteConfirmMessage": "确定要删除该角色吗？此操作不可恢复。"
     },
     "selectAll": "全选",
-    "unselectAll": "取消全选"
+    "unselectAll": "取消全选",
+    "user": {
+      "title": "用户管理",
+      "add": "新增用户",
+      "edit": "编辑用户",
+      "delete": "删除用户",
+      "resetPassword": "重置密码",
+      "changePassword": "修改密码",
+      "username": "用户名",
+      "nickname": "昵称",
+      "email": "邮箱",
+      "phone": "手机号",
+      "password": "密码",
+      "confirmPassword": "确认密码",
+      "status": "状态",
+      "roles": "角色",
+      "createSuccess": "用户创建成功",
+      "updateSuccess": "用户更新成功",
+      "deleteSuccess": "用户删除成功",
+      "resetPasswordSuccess": "密码重置成功",
+      "changePasswordSuccess": "密码修改成功",
+      "createError": "用户创建失败",
+      "updateError": "用户更新失败",
+      "deleteError": "用户删除失败",
+      "resetPasswordError": "密码重置失败",
+      "changePasswordError": "密码修改失败",
+      "deleteConfirm": "删除确认",
+      "deleteConfirmMessage": "确定要删除该用户吗？此操作不可恢复。",
+      "usernameRequired": "请输入用户名",
+      "nicknameRequired": "请输入昵称",
+      "emailRequired": "请输入邮箱",
+      "phoneRequired": "请输入手机号",
+      "passwordRequired": "请输入密码",
+      "confirmPasswordRequired": "请确认密码",
+      "passwordNotMatch": "两次输入的密码不一致",
+      "oldPasswordRequired": "请输入原密码",
+      "newPasswordRequired": "请输入新密码"
+    }
   },
   "auth": {
     "appName": "Snow AI",
@@ -188,8 +225,8 @@
   },
   "category": {
     "title": "分类管理",
-    "searchByName": "按名称搜索",
-    "searchByStatus": "按状态筛选",
+    "searchByName": "名称",
+    "searchByStatus": "状态",
     "enabled": "已启用",
     "disabled": "已禁用",
     "all": "全部状态",
@@ -236,10 +273,10 @@
   },
   "documents": {
     "title": "文档管理",
-    "searchByName": "按名称搜索",
-    "searchByCategory": "按分类筛选",
-    "searchByStatus": "按状态筛选",
-    "searchByKb": "按知识库筛选",
+    "searchByName": "名称",
+    "searchByCategory": "分类",
+    "searchByStatus": "状态",
+    "searchByKb": "知识库",
     "enabled": "已启用",
     "disabled": "已禁用",
     "all": "全部状态",
@@ -331,7 +368,8 @@
       "title": "系统管理",
       "config": "系统配置",
       "permission": "权限管理",
-      "role": "角色管理"
+      "role": "角色管理",
+      "user": "用户管理"
     }
   },
   "qa": {

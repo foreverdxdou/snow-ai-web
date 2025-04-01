@@ -1,4 +1,6 @@
 import { Result } from './result';
+
+// 角色信息
 export interface Role {
     id: number;
     roleName: string;
@@ -9,6 +11,8 @@ export interface Role {
     permissionCodes: string;
     createTime: string;
     updateTime: string;
+    creatorName: string;
+    updaterName: string;
 }
 
 export interface RoleDTO {
@@ -20,11 +24,13 @@ export interface RoleDTO {
     permissionIds: string[];
 }
 
+// 分页查询参数
 export interface RoleQuery {
+    current: number;
+    size: number;
     roleName?: string;
     roleCode?: string;
-    pageNum: number;
-    pageSize: number;
+    status?: number;
 }
 
 export interface RoleListData {
@@ -35,10 +41,21 @@ export interface RoleListData {
     pages: number;
 }
 
-export interface ApiResponse<T> {
-    code: number;
-    message: string;
-    data: T;
+// 分页查询响应
+export interface RolePageResponse {
+    records: Role[];
+    total: number;
 }
 
-export type RoleResponse = Result<RoleListData>; 
+// 新增/修改角色请求
+export interface RoleSaveRequest {
+    id?: number;
+    roleName: string;
+    roleCode: string;
+    description: string;
+    permissionIds: string[];
+    status: number;
+}
+
+// 单个查询响应
+export interface RoleResponse extends Result<RoleListData> {} 

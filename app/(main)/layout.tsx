@@ -364,7 +364,6 @@ export default function MainLayout({
         { icon: CategoryIcon, text: t('menu.category'), path: '/category' },
         { icon: MemoryIcon, text: t('menu.llm'), path: '/llm' },
         { icon: TuneIcon, text: t('menu.embeddingConfig'), path: '/embedding-config' },
-        { icon: PeopleIcon, text: t('menu.users'), path: '/users' },
         { icon: LocalOfferIcon, text: t('menu.tags'), path: '/tags' },
         {
             id: 'system',
@@ -378,6 +377,12 @@ export default function MainLayout({
                     icon: <SettingsIcon />,
                 },
                 {
+                    id: 'user',
+                    name: t('menu.system.user'),
+                    path: '/user',
+                    icon: <PeopleIcon />,
+                },
+                {
                     id: 'role',
                     name: t('menu.system.role'),
                     path: '/role',
@@ -388,7 +393,7 @@ export default function MainLayout({
                     name: t('menu.system.permission'),
                     path: '/permission',
                     icon: <SecurityIcon />,
-                },
+                }
             ],
         }
     ], [t]);
