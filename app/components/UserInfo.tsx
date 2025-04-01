@@ -1,12 +1,12 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Box, Typography, Avatar, Menu, MenuItem, ListItemIcon, ListItemText, alpha, Divider } from '@mui/material';
-import { Logout as LogoutIcon, AccountCircle as AccountCircleIcon } from '@mui/icons-material';
+import { Box, Typography, Avatar } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/app/hooks/useAuth';
 import type { User } from '@/app/types/userinfo';
 import dynamic from 'next/dynamic';
+import { alpha } from '@mui/material/styles';
 
 // 动态导入 Menu 组件，避免服务端渲染
 const UserMenu = dynamic(() => import('./UserMenu'), { 
@@ -16,53 +16,15 @@ const UserMenu = dynamic(() => import('./UserMenu'), {
 
 interface UserInfoProps {
     userInfo: User | null;
-    anchorEl: HTMLElement | null;
-    onMenuClick: (event: React.MouseEvent<HTMLElement>) => void;
-    onMenuClose: () => void;
-    onLogout: () => void;
 }
-
-const StyledMenuItem = ({ icon: Icon, text, onClick, color = 'inherit' }: {
-    icon: React.ElementType;
-    text: string;
-    onClick?: () => void;
-    color?: string;
-}) => (
-    <MenuItem 
-        onClick={onClick}
-        sx={{
-            py: 1,
-            px: 2.5,
-            color,
-            '&:hover': {
-                backgroundColor: (theme) => 
-                    alpha(theme.palette.primary.main, theme.palette.mode === 'light' ? 0.08 : 0.15),
-            },
-        }}
-    >
-        <ListItemIcon sx={{ minWidth: 32, color: 'inherit' }}>
-            <Icon fontSize="small" />
-        </ListItemIcon>
-        <ListItemText 
-            primary={text}
-            primaryTypographyProps={{
-                variant: 'body2',
-                fontWeight: 500,
-            }}
-        />
-    </MenuItem>
-);
 
 export const UserInfo: React.FC<UserInfoProps> = ({
     userInfo,
-    anchorEl,
-    onMenuClick,
-    onMenuClose,
-    onLogout,
 }) => {
     const { t } = useTranslation();
-    const { user } = useAuth();
+    const { user, logout } = useAuth();
     const [mounted, setMounted] = useState(false);
+    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
     useEffect(() => {
         setMounted(true);
@@ -74,23 +36,45 @@ export const UserInfo: React.FC<UserInfoProps> = ({
     const displayName = mounted ? (userInfo?.nickname || user?.username || '') : '';
     const avatarText = mounted ? displayName[0]?.toUpperCase() || '' : '';
 
+    const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
+        event.preventDefault();
+        event.stopPropagation();
+        setAnchorEl(event.currentTarget);
+    };
+
+    const handleMenuClose = () => {
+        setAnchorEl(null);
+    };
+
+    const handleLogout = async () => {
+        try {
+            await logout();
+            window.location.href = '/login';
+        } catch (error) {
+            console.error('退出登录失败:', error);
+        }
+    };
+
     return (
-        <Box sx={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: 1.5,
-            cursor: 'pointer',
-            py: 0.75,
-            px: 1.5,
-            borderRadius: 1.5,
-            transition: 'all 0.2s ease-in-out',
-            '&:hover': {
-                backgroundColor: (theme) => 
-                    theme.palette.mode === 'light'
-                        ? alpha(theme.palette.primary.main, 0.08)
-                        : alpha(theme.palette.primary.main, 0.15),
-            },
-        }} onClick={onMenuClick}>
+        <Box 
+            sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: 1.5,
+                cursor: 'pointer',
+                py: 0.75,
+                px: 1.5,
+                borderRadius: 1.5,
+                transition: 'all 0.2s ease-in-out',
+                '&:hover': {
+                    backgroundColor: (theme) => 
+                        theme.palette.mode === 'light'
+                            ? alpha(theme.palette.primary.main, 0.08)
+                            : alpha(theme.palette.primary.main, 0.15),
+                },
+            }} 
+            onClick={handleMenuClick}
+        >
             <Avatar 
                 sx={{ 
                     width: 32, 
@@ -126,13 +110,13 @@ export const UserInfo: React.FC<UserInfoProps> = ({
                 <UserMenu
                     anchorEl={anchorEl}
                     open={Boolean(anchorEl)}
-                    onClose={onMenuClose}
+                    onClose={handleMenuClose}
                     displayName={displayName}
                     email={userInfo?.email}
-                    onLogout={onLogout}
+                    onLogout={handleLogout}
                     t={t}
                 />
             )}
         </Box>
     );
-}; 
+};

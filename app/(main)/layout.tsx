@@ -113,21 +113,13 @@ const TopBar = React.memo(({
     isMobile, 
     title,
     userInfo,
-    anchorEl,
     onDrawerToggle,
-    onMenuClick,
-    onMenuClose,
-    onLogout,
 }: {
     open: boolean;
     isMobile: boolean;
     title: string;
     userInfo: User | null;
-    anchorEl: HTMLElement | null;
     onDrawerToggle: () => void;
-    onMenuClick: (event: React.MouseEvent<HTMLElement>) => void;
-    onMenuClose: () => void;
-    onLogout: () => void;
 }) => (
     <AppBar
         position="fixed"
@@ -191,10 +183,6 @@ const TopBar = React.memo(({
                 <ThemeLanguageSwitch />
                 <UserInfo
                     userInfo={userInfo}
-                    anchorEl={anchorEl}
-                    onMenuClick={onMenuClick}
-                    onMenuClose={onMenuClose}
-                    onLogout={onLogout}
                 />
             </Stack>
         </Toolbar>
@@ -322,7 +310,6 @@ export default function MainLayout({
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const { user, logout } = useAuth();
     const [open, setOpen] = useState(!isMobile);
-    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [userInfo, setUserInfo] = useState<User | null>(null);
 
     // 菜单项配置
@@ -341,8 +328,7 @@ export default function MainLayout({
 
     // 事件处理函数
     const handleDrawerToggle = useCallback(() => setOpen(prev => !prev), []);
-    const handleMenuClick = useCallback((event: React.MouseEvent<HTMLElement>) => setAnchorEl(event.currentTarget), []);
-    const handleMenuClose = useCallback(() => setAnchorEl(null), []);
+
     const handleLogout = useCallback(async () => {
         try {
             await logout();
@@ -390,11 +376,7 @@ export default function MainLayout({
                 isMobile={isMobile}
                 title={pageTitle}
                 userInfo={userInfo}
-                anchorEl={anchorEl}
                 onDrawerToggle={handleDrawerToggle}
-                onMenuClick={handleMenuClick}
-                onMenuClose={handleMenuClose}
-                onLogout={handleLogout}
             />
 
             <SideBar

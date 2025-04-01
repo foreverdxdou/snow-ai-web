@@ -1,18 +1,21 @@
 'use client';
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import {
     Menu,
     Box,
     Typography,
     Divider,
+    MenuItem,
+    ListItemIcon,
+    ListItemText,
 } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import {
     AccountCircle as AccountCircleIcon,
     Logout as LogoutIcon,
 } from '@mui/icons-material';
-import { StyledMenuItem } from './StyledMenuItem';
 import { useTranslation } from 'react-i18next';
 
 interface UserMenuProps {
@@ -34,12 +37,26 @@ export default function UserMenu({
     onLogout,
     t,
 }: UserMenuProps) {
+    const router = useRouter();
+
+    const handleProfile = (event: React.MouseEvent) => {
+        event.stopPropagation();
+        onClose();
+        router.push('/profile');
+    };
+
+    const handleLogout = (event: React.MouseEvent) => {
+        event.stopPropagation();
+        onClose();
+        onLogout();
+    };
+
     return (
         <Menu
             anchorEl={anchorEl}
             open={open}
             onClose={onClose}
-            onClick={onClose}
+            onClick={(event) => event.stopPropagation()}
             transformOrigin={{ horizontal: 'right', vertical: 'top' }}
             anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
             slotProps={{
@@ -88,16 +105,49 @@ export default function UserMenu({
             </Box>
             <Divider />
             <Box sx={{ py: 1 }}>
-                <StyledMenuItem 
-                    icon={AccountCircleIcon} 
-                    text={t('common.profile')} 
-                />
-                <StyledMenuItem 
-                    icon={LogoutIcon} 
-                    text={t('common.logout')} 
-                    onClick={onLogout}
-                    color="error.main"
-                />
+                <MenuItem 
+                    onClick={handleProfile}
+                    sx={{
+                        minHeight: 48,
+                        px: 2.5,
+                        '&:hover': {
+                            backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.08),
+                        },
+                    }}
+                >
+                    <ListItemIcon>
+                        <AccountCircleIcon fontSize="small" />
+                    </ListItemIcon>
+                    <ListItemText 
+                        primary={t('common.profile')}
+                        primaryTypographyProps={{
+                            fontSize: '0.875rem',
+                            fontWeight: 500,
+                        }}
+                    />
+                </MenuItem>
+                <MenuItem 
+                    onClick={handleLogout}
+                    sx={{
+                        minHeight: 48,
+                        px: 2.5,
+                        color: 'error.main',
+                        '&:hover': {
+                            backgroundColor: (theme) => alpha(theme.palette.error.main, 0.08),
+                        },
+                    }}
+                >
+                    <ListItemIcon>
+                        <LogoutIcon fontSize="small" color="error" />
+                    </ListItemIcon>
+                    <ListItemText 
+                        primary={t('common.logout')}
+                        primaryTypographyProps={{
+                            fontSize: '0.875rem',
+                            fontWeight: 500,
+                        }}
+                    />
+                </MenuItem>
             </Box>
         </Menu>
     );

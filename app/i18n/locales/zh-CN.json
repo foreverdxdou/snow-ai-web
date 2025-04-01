@@ -52,7 +52,7 @@
       "page": "页",
       "go": "确定"
     },
-    "profile": "个人资料",
+    "profile": "个人中心",
     "dragAndDrop": "拖拽文件到此处或点击上传",
     "detail": "查看详情",
     "nameRequired": "请输入名称",
@@ -381,5 +381,15 @@
     "nicknameRequired": "请输入昵称",
     "emailRequired": "请输入邮箱",
     "emailInvalid": "请输入有效的邮箱地址"
+  },
+  "profile": {
+    "title": "个人中心",
+    "basicInfo": "基本信息",
+    "nickname": "昵称",
+    "email": "邮箱",
+    "username": "用户名",
+    "lastLogin": "最后登录时间",
+    "createdAt": "注册时间",
+    "updateProfile": "更新资料"
   }
 } 

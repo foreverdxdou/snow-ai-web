@@ -1,15 +1,11 @@
 import { useState, useCallback } from 'react';
 import Cookies from 'js-cookie';
 import { authService } from '@/app/services/auth';
-
-interface User {
-    username: string;
-    email?: string;
-}
+import type { User } from '@/app/types/userinfo';
+import type { Result } from '@/app/types/result';
 
 interface LoginResponse {
     token: string;
-    email?: string;
 }
 
 export const useAuth = () => {
@@ -21,10 +17,12 @@ export const useAuth = () => {
 
     const login = useCallback(async (username: string, password: string) => {
         const response = await authService.login(username, password);
-        const { data } = response.data as { data: LoginResponse };
+        const { data } = response.data as Result<LoginResponse>;
         if (data.token) {
             Cookies.set('token', data.token);
-            const userData = { username, email: data.email };
+            // 获取用户信息
+            const userResponse = await authService.getCurrentUser();
+            const { data: userData } = userResponse.data as Result<User>;
             Cookies.set('user', JSON.stringify(userData));
             setUser(userData);
             setIsAuthenticated(true);
@@ -38,6 +36,7 @@ export const useAuth = () => {
         Cookies.remove('user');
         setUser(null);
         setIsAuthenticated(false);
+        authService.logout();
     }, []);
 
     return { isAuthenticated, user, login, logout };
