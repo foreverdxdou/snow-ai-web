@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import i18n from '@/app/i18n';
 
 export const ThemeLanguageSwitch: React.FC = () => {
-    const { mode, toggleTheme, language, toggleLanguage } = useThemeContext();
+    const { themeMode, toggleTheme, language, toggleLanguage } = useThemeContext();
     const { t } = useTranslation();
 
     const handleLanguageChange = () => {
@@ -17,15 +17,15 @@ export const ThemeLanguageSwitch: React.FC = () => {
 
     return (
         <div className="flex items-center gap-2">
-            <Tooltip title={mode === 'dark' ? '切换到亮色模式' : '切换到暗色模式'}>
+            <Tooltip title={themeMode === 'dark' ? '切换到亮色模式' : '切换到暗色模式'}>
                 <IconButton
                     onClick={toggleTheme}
                     color="inherit"
                     sx={{
-                        color: (theme) => mode === 'dark' ? 'primary.light' : 'primary.main',
+                        color: (theme) => themeMode === 'dark' ? 'primary.light' : 'primary.main',
                     }}
                 >
-                    {mode === 'dark' ? <LightMode /> : <DarkMode />}
+                    {themeMode === 'dark' ? <LightMode /> : <DarkMode />}
                 </IconButton>
             </Tooltip>
             <Tooltip title={language === 'zh' ? 'Switch to English' : '切换到中文'}>

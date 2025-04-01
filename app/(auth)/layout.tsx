@@ -3,6 +3,7 @@
 import React from 'react';
 import { Box, useTheme } from '@mui/material';
 import Logo from '@/app/components/Logo';
+import { ThemeLanguageSwitch } from '@/app/components/common/ThemeLanguageSwitch';
 
 export default function AuthLayout({
     children,
@@ -38,6 +39,16 @@ export default function AuthLayout({
                 }
             }}
         >
+            <Box
+                sx={{
+                    position: 'absolute',
+                    top: 16,
+                    right: 16,
+                    zIndex: 2,
+                }}
+            >
+                <ThemeLanguageSwitch />
+            </Box>
             <Box
                 sx={{
                     zIndex: 2,
