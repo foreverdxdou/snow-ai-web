@@ -11,7 +11,8 @@ import {
     TextField,
     styled,
     alpha,
-    useTheme
+    useTheme,
+    Button
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/app/hooks/useAuth';
@@ -73,6 +74,7 @@ const LoginForm = React.memo(({
     error: string | null;
 }) => {
     const { t } = useTranslation();
+    const router = useRouter();
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
 
@@ -139,6 +141,24 @@ const LoginForm = React.memo(({
                 >
                     {loading ? <CircularProgress size={24} /> : t('common.login')}
                 </CommonButton>
+                <Box sx={{ textAlign: 'center', mt: 2 }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                        {t('login.noAccount')}
+                    </Typography>
+                    <Button
+                        variant="text"
+                        onClick={() => router.push('/register')}
+                        sx={{
+                            color: 'primary.main',
+                            '&:hover': {
+                                backgroundColor: 'transparent',
+                                textDecoration: 'underline',
+                            }
+                        }}
+                    >
+                        {t('login.register')}
+                    </Button>
+                </Box>
             </Box>
         </form>
     );
@@ -188,7 +208,6 @@ export default function LoginPage() {
                         : '0 8px 32px rgba(0, 0, 0, 0.1)',
                 }}
             >
- 
                 <LoginForm
                     onSubmit={handleLogin}
                     loading={loading}
