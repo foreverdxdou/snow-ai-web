@@ -8,12 +8,58 @@ import {
     Alert,
     CircularProgress,
     Paper,
+    TextField,
+    styled,
+    alpha
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/app/hooks/useAuth';
 import { CommonButton } from '@/app/components/common/CommonButton';
-import { CommonInput } from '@/app/components/common/CommonInput';
-import { ThemeLanguageSwitch } from '@/app/components/common/ThemeLanguageSwitch';
+
+// 自定义输入框样式
+const StyledTextField = styled(TextField)(({ theme }) => ({
+    '& .MuiOutlinedInput-root': {
+        borderRadius: '12px',
+        backgroundColor: alpha(theme.palette.background.paper, 0.8),
+        backdropFilter: 'blur(8px)',
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        '&:hover': {
+            backgroundColor: alpha(theme.palette.background.paper, 0.9),
+            transform: 'translateY(-1px)',
+            boxShadow: `0 4px 12px ${alpha(theme.palette.common.black, 0.05)}`,
+        },
+        '&.Mui-focused': {
+            backgroundColor: theme.palette.background.paper,
+            boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.15)}`,
+            transform: 'translateY(-1px)',
+        },
+        '&.Mui-disabled': {
+            backgroundColor: alpha(theme.palette.action.disabledBackground, 0.4),
+            backdropFilter: 'none',
+        }
+    },
+    '& .MuiOutlinedInput-input': {
+        padding: '12px 16px',
+        height: '24px',
+        fontSize: '1rem',
+        letterSpacing: '0.01em',
+        '&::placeholder': {
+            fontSize: '1rem',
+            color: alpha(theme.palette.text.primary, 0.4),
+        }
+    },
+    '& .MuiOutlinedInput-notchedOutline': {
+        borderColor: alpha(theme.palette.divider, 0.3),
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    },
+    '&:hover .MuiOutlinedInput-notchedOutline': {
+        borderColor: alpha(theme.palette.primary.main, 0.4),
+    },
+    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+        borderColor: theme.palette.primary.main,
+        borderWidth: '1.5px',
+    }
+}));
 
 // 使用 React.memo 优化表单组件
 const LoginForm = React.memo(({
@@ -36,24 +82,48 @@ const LoginForm = React.memo(({
 
     return (
         <form onSubmit={handleSubmit}>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <CommonInput
-                    label={t('common.username')}
-                    value={username}
-                    onChange={(value) => setUsername(value as string)}
-                    required
-                    disabled={loading}
-                    fullWidth
-                />
-                <CommonInput
-                    label={t('common.password')}
-                    type="password"
-                    value={password}
-                    onChange={(value) => setPassword(value as string)}
-                    required
-                    disabled={loading}
-                    fullWidth
-                />
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                    <Typography
+                        variant="subtitle1"
+                        sx={{
+                            fontWeight: 600,
+                            color: 'text.primary',
+                            fontSize: '1.1rem',
+                        }}
+                    >
+                        {t('common.username')}
+                    </Typography>
+                    <StyledTextField
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        required
+                        disabled={loading}
+                        fullWidth
+                        placeholder={t('common.username')}
+                    />
+                </Box>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                    <Typography
+                        variant="subtitle1"
+                        sx={{
+                            fontWeight: 600,
+                            color: 'text.primary',
+                            fontSize: '1.1rem',
+                        }}
+                    >
+                        {t('common.password')}
+                    </Typography>
+                    <StyledTextField
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        disabled={loading}
+                        fullWidth
+                        placeholder={t('common.password')}
+                    />
+                </Box>
                 {error && (
                     <Alert severity="error" sx={{ mt: 2 }}>
                         {error}
@@ -110,30 +180,7 @@ export default function LoginPage() {
                     boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
                 }}
             >
-                <Box sx={{ mb: 4, textAlign: 'center' }}>
-                    <Typography 
-                        variant="h4" 
-                        component="h1" 
-                        gutterBottom 
-                        sx={{ 
-                            fontWeight: 'bold',
-                            color: 'primary.main',
-                            mb: 2,
-                        }}
-                    >
-                        {t('login.title')}
-                    </Typography>
-                    <Typography 
-                        variant="body1" 
-                        color="text.secondary"
-                        sx={{
-                            color: 'text.secondary',
-                            opacity: 0.8,
-                        }}
-                    >
-                        {t('login.description')}
-                    </Typography>
-                </Box>
+             
                 <LoginForm
                     onSubmit={handleLogin}
                     loading={loading}

@@ -134,14 +134,6 @@ export default function AuthLayout({
                 >
                     {t('auth.appName')}
                 </Typography>
-                <Typography
-                    variant="body1"
-                    sx={{
-                        color: 'rgba(255, 255, 255, 0.8)',
-                    }}
-                >
-                    {t('auth.appDescription')}
-                </Typography>
             </Box>
 
             {/* 主要内容区域 */}
