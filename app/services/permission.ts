@@ -1,6 +1,6 @@
 import request from '@/app/utils/request';
 import type { Result } from '@/app/types/result';
-import type { Permission, PermissionDTO, PermissionQuery } from '@/app/types/permission';
+import type { Permission, PermissionDTO, PermissionQuery, TreePermission } from '@/app/types/permission';
 
 const BASE_URL = '/system/permission';
 
@@ -40,5 +40,12 @@ export const permissionService = {
         return request.get<Result<Permission[]>>(`${BASE_URL}/role`, {
             params: { roleIds }
         });
+    },
+
+    /**
+     * 获取权限树（用于前端控件）
+     */
+    getTreeForControl: () => {
+        return request.get<Result<TreePermission[]>>(`${BASE_URL}/tree/select`);
     }
 }; 

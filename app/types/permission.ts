@@ -32,4 +32,12 @@ export interface PermissionQuery {
     parentId?: number;
     type?: number;
     status?: number;
+}
+
+export interface TreePermission {
+    id: string;
+    itemId: string;
+    parentId: string;
+    name: string;
+    children?: TreePermission[];
 } 

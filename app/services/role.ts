@@ -1,5 +1,6 @@
 import request from '@/app/utils/request';
 import type { Role, RoleDTO, RoleQuery, RoleResponse } from '@/app/types/role';
+import type { Result } from '@/app/types/result';
 
 const BASE_URL = '/system/role';
 
@@ -15,7 +16,7 @@ class RoleService {
 
     // 获取角色详情
     getDetail(id: number) {
-        return request<Role>({
+        return request<Result<Role>>({
             url: `${BASE_URL}/${id}`,
             method: 'get',
         });
@@ -23,7 +24,7 @@ class RoleService {
 
     // 创建角色
     add(data: RoleDTO) {
-        return request<Role>({
+        return request<Result<Role>>({
             url: BASE_URL,
             method: 'post',
             data,
@@ -32,7 +33,7 @@ class RoleService {
 
     // 更新角色
     update(id: number, data: RoleDTO) {
-        return request<Role>({
+        return request<Result<Role>>({
             url: `${BASE_URL}/${id}`,
             method: 'put',
             data,
@@ -41,7 +42,7 @@ class RoleService {
 
     // 删除角色
     delete(id: number) {
-        return request<void>({
+        return request<Result<void>>({
             url: `${BASE_URL}/${id}`,
             method: 'delete',
         });
@@ -49,7 +50,7 @@ class RoleService {
 
     // 获取角色权限
     getPermissions(id: number) {
-        return request<string[]>({
+        return request<Result<string[]>>({
             url: `${BASE_URL}/${id}/permissions`,
             method: 'get',
         });
@@ -57,7 +58,7 @@ class RoleService {
 
     // 更新角色权限
     updatePermissions(id: number, permissionCodes: string[]) {
-        return request<void>({
+        return request<Result<void>>({
             url: `${BASE_URL}/${id}/permissions`,
             method: 'put',
             data: { permissionCodes },

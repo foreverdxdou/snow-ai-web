@@ -1,3 +1,4 @@
+import { Result } from './result';
 export interface Role {
     id: number;
     roleName: string;
@@ -38,4 +39,4 @@ export interface ApiResponse<T> {
     data: T;
 }
 
-export type RoleResponse = ApiResponse<RoleListData>; 
+export type RoleResponse = Result<RoleListData>; 

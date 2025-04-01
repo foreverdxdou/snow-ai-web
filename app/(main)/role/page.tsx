@@ -21,12 +21,18 @@ import {
     TableHead,
     TableRow,
     TablePagination,
+    Checkbox,
+    Button,
 } from '@mui/material';
+import { SimpleTreeView } from '@mui/x-tree-view/SimpleTreeView';
+import { TreeItem } from '@mui/x-tree-view/TreeItem';
 import {
     Add as AddIcon,
     Edit as EditIcon,
     Delete as DeleteIcon,
     Security as SecurityIcon,
+    ExpandMore as ExpandMoreIcon,
+    ChevronRight as ChevronRightIcon,
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { PerformanceLayout } from '@/app/components/common/PerformanceLayout';
@@ -34,7 +40,9 @@ import { CommonButton } from '@/app/components/common/CommonButton';
 import { CommonInput } from '@/app/components/common/CommonInput';
 import { SearchBar } from '@/app/components/common/SearchBar';
 import { roleService } from '@/app/services/role';
+import { permissionService } from '@/app/services/permission';
 import type { Role, RoleDTO } from '@/app/types/role';
+import type { TreePermission } from '@/app/types/permission';
 
 export default function RolePage() {
     const { t } = useTranslation();
@@ -50,6 +58,9 @@ export default function RolePage() {
         description: '',
         permissionCodes: [],
     });
+    const [permissions, setPermissions] = useState<TreePermission[]>([]);
+    const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
+    const [selectedItems, setSelectedItems] = React.useState<string[]>([]);
 
     const [snackbar, setSnackbar] = useState({
         open: false,
@@ -60,6 +71,30 @@ export default function RolePage() {
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [total, setTotal] = useState(0);
+
+    const handleSelectedItemsChange = (event: React.SyntheticEvent, ids: string[]) => {
+        setSelectedItems(ids);
+      };
+    
+      const handleSelectClick = () => {
+        setSelectedItems((oldSelected) =>
+          oldSelected.length === 0
+            ? [
+                'grid',
+                'grid-community',
+                'grid-pro',
+                'grid-premium',
+                'pickers',
+                'pickers-community',
+                'pickers-pro',
+                'charts',
+                'charts-community',
+                'tree-view',
+                'tree-view-community',
+              ]
+            : [],
+        );
+      };
 
     // 获取角色列表
     const fetchRoles = useCallback(async () => {
@@ -85,12 +120,42 @@ export default function RolePage() {
         }
     }, [page, rowsPerPage]);
 
+    // 获取权限树
+    const fetchPermissions = useCallback(async () => {
+        try {
+            const response = await permissionService.getTreeForControl();
+            if (response.data?.code === 200 && response.data?.data) {
+                setPermissions(response.data.data);
+            }
+        } catch (error) {
+            console.error('获取权限列表失败:', error);
+            setSnackbar({
+                open: true,
+                message: '获取权限列表失败',
+                severity: 'error',
+            });
+        }
+    }, []);
+
+    // 获取角色权限
+    const fetchRolePermissions = useCallback(async (roleId: number) => {
+        try {
+            const response = await roleService.getPermissions(roleId);
+            if (response.data?.code === 200 && response.data?.data) {
+                setSelectedPermissions(response.data.data);
+            }
+        } catch (error) {
+            console.error('获取角色权限失败:', error);
+        }
+    }, []);
+
     useEffect(() => {
         fetchRoles();
-    }, [fetchRoles]);
+        fetchPermissions();
+    }, [fetchRoles, fetchPermissions]);
 
     // 处理打开对话框
-    const handleOpen = useCallback((role?: Role) => {
+    const handleOpen = useCallback(async (role?: Role) => {
         if (role) {
             setEditingRole(role);
             setFormData({
@@ -98,8 +163,9 @@ export default function RolePage() {
                 roleName: role.roleName,
                 roleCode: role.roleCode,
                 description: role.description,
-                permissionCodes: role.permissionCodes.split(','),
+                permissionCodes: [],
             });
+            await fetchRolePermissions(role.id);
         } else {
             setEditingRole(null);
             setFormData({
@@ -108,9 +174,10 @@ export default function RolePage() {
                 description: '',
                 permissionCodes: [],
             });
+            setSelectedPermissions([]);
         }
         setOpen(true);
-    }, []);
+    }, [fetchRolePermissions]);
 
     // 处理关闭对话框
     const handleClose = useCallback(() => {
@@ -124,18 +191,45 @@ export default function RolePage() {
         });
     }, []);
 
+
+    // 处理全选/取消全选
+    const handleSelectAll = useCallback(() => {
+        setSelectedPermissions(prev => 
+            prev.length === 0
+                ? permissions.map(p => p.itemId)
+                : []
+        );
+    }, [permissions]);
+
+    // 渲染权限树节点
+    const renderPermissionTree = useCallback((nodes: TreePermission[]) => {
+        return nodes.map((node) => (
+            <TreeItem
+                key={node.itemId}
+                itemId={node.itemId}
+                label={node.name}
+            >
+                {node.children && node.children.length > 0 && renderPermissionTree(node.children)}
+            </TreeItem>
+        ));
+    }, []);
+
     // 处理提交
     const handleSubmit = useCallback(async () => {
         try {
+            const submitData = {
+                ...formData,
+                permissionCodes: selectedPermissions,
+            };
             if (editingRole) {
-                await roleService.update(editingRole.id, formData);
+                await roleService.update(editingRole.id, submitData);
                 setSnackbar({
                     open: true,
                     message: t('common.role.updateSuccess'),
                     severity: 'success',
                 });
             } else {
-                await roleService.add(formData);
+                await roleService.add(submitData);
                 setSnackbar({
                     open: true,
                     message: t('common.role.createSuccess'),
@@ -152,7 +246,7 @@ export default function RolePage() {
                 severity: 'error',
             });
         }
-    }, [editingRole, formData, handleClose, fetchRoles, t]);
+    }, [editingRole, formData, selectedPermissions, handleClose, fetchRoles, t]);
 
     // 处理删除
     const handleDelete = useCallback((id: number) => {
@@ -321,7 +415,7 @@ export default function RolePage() {
                     )}
                 </Box>
 
-                <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+                <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
                     <DialogTitle>
                         {editingRole ? t('common.edit') : t('common.add')}
                     </DialogTitle>
@@ -363,6 +457,29 @@ export default function RolePage() {
                                 multiline
                                 rows={3}
                             />
+                            <Box>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                                    <Typography variant="subtitle1">
+                                        {t('common.role.permissions')}
+                                    </Typography>
+                                    <Button
+                                        size="small"
+                                        onClick={handleSelectAll}
+                                    >
+                                        {selectedPermissions.length === 0 ? t('common.selectAll') : t('common.unselectAll')}
+                                    </Button>
+                                </Box>
+                                <Paper sx={{  }}>
+                                    <SimpleTreeView
+                                        selectedItems={selectedItems}
+                                        onSelectedItemsChange={handleSelectedItemsChange}
+                                        multiSelect
+                                        checkboxSelection
+                                    >
+                                        {renderPermissionTree(permissions)}
+                                    </SimpleTreeView>
+                                </Paper>
+                            </Box>
                         </Box>
                     </DialogContent>
                     <DialogActions>
