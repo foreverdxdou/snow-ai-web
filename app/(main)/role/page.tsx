@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useMemo } from "react";
 import {
   Box,
   Typography,
@@ -11,43 +11,26 @@ import {
   Alert,
   Snackbar,
   Stack,
-  IconButton,
-  Tooltip,
   Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TablePagination,
-  Checkbox,
-  Button,
 } from "@mui/material";
 import { SimpleTreeView } from "@mui/x-tree-view/SimpleTreeView";
 import { TreeItem } from "@mui/x-tree-view/TreeItem";
-import {
-  Add as AddIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  Security as SecurityIcon,
-  ExpandMore as ExpandMoreIcon,
-  ChevronRight as ChevronRightIcon,
-} from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 import { PerformanceLayout } from "@/app/components/common/PerformanceLayout";
 import { CommonButton } from "@/app/components/common/CommonButton";
 import { CommonInput } from "@/app/components/common/CommonInput";
 import { SearchBar } from "@/app/components/common/SearchBar";
+import { Pagination } from "@/app/components/common/Pagination";
+import { PerformanceTable } from "@/app/components/common/PerformanceTable";
 import { roleService } from "@/app/services/role";
 import { permissionService } from "@/app/services/permission";
 import type { Role, RoleDTO } from "@/app/types/role";
 import type { TreePermission } from "@/app/types/permission";
+import { usePerformanceData } from "@/app/hooks/usePerformanceData";
+import { useDebouncedCallback } from "@/app/utils/performance";
 
 export default function RolePage() {
   const { t } = useTranslation();
-  const [roles, setRoles] = useState<Role[]>([]);
-  const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
@@ -68,64 +51,30 @@ export default function RolePage() {
     severity: "success" as "success" | "error",
   });
 
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [total, setTotal] = useState(0);
+  // 使用 useMemo 优化 defaultParams
+  const defaultParams = useMemo(
+    () => ({
+      current: 1,
+      size: 10,
+      roleName: "",
+      roleCode: "",
+    }),
+    []
+  );
 
-  const handleSelectedItemsChange = (
-    event: React.SyntheticEvent,
-    ids: string[]
-  ) => {
-    setSelectedItems(ids);
-    setFormData({
-      ...formData,
-      permissionIds: ids,
-    });
-  };
-
-  const handleSelectClick = () => {
-    setSelectedItems((oldSelected) =>
-      oldSelected.length === 0
-        ? [
-            "grid",
-            "grid-community",
-            "grid-pro",
-            "grid-premium",
-            "pickers",
-            "pickers-community",
-            "pickers-pro",
-            "charts",
-            "charts-community",
-            "tree-view",
-            "tree-view-community",
-          ]
-        : []
-    );
-  };
-
-  // 获取角色列表
-  const fetchRoles = useCallback(async () => {
-    setLoading(true);
-    try {
-      const response = await roleService.getList({
-        pageNum: page + 1,
-        pageSize: rowsPerPage,
-      });
-      if (response.data?.code === 200 && response.data?.data) {
-        setRoles(response.data.data.records);
-        setTotal(response.data.data.total);
-      }
-    } catch (error) {
-      console.error("获取角色列表失败:", error);
-      setSnackbar({
-        open: true,
-        message: "获取角色列表失败",
-        severity: "error",
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [page, rowsPerPage]);
+  // 使用 usePerformanceData 优化数据获取
+  const {
+    data: roles,
+    loading,
+    total,
+    params,
+    setParams,
+    refresh,
+  } = usePerformanceData<Role>({
+    fetchData: roleService.getList,
+    defaultParams,
+    autoFetch: true,
+  });
 
   // 获取权限树
   const fetchPermissions = useCallback(async () => {
@@ -138,11 +87,11 @@ export default function RolePage() {
       console.error("获取权限列表失败:", error);
       setSnackbar({
         open: true,
-        message: "获取权限列表失败",
+        message: t("common.permission.fetchError"),
         severity: "error",
       });
     }
-  }, []);
+  }, [t]);
 
   // 获取角色权限
   const fetchRolePermissions = useCallback(async (roleId: number) => {
@@ -157,9 +106,8 @@ export default function RolePage() {
   }, []);
 
   useEffect(() => {
-    fetchRoles();
     fetchPermissions();
-  }, [fetchRoles, fetchPermissions]);
+  }, [fetchPermissions]);
 
   // 处理打开对话框
   const handleOpen = useCallback(
@@ -207,8 +155,8 @@ export default function RolePage() {
   // 处理全选/取消全选
   const handleSelectAll = useCallback(() => {
     setSelectedItems((prev) =>
-        prev.length === 0 ? getAllItemIds(permissions) : []
-      );
+      prev.length === 0 ? getAllItemIds(permissions) : []
+    );
   }, [permissions]);
 
   const getAllItemIds = (nodes: TreePermission[]): string[] => {
@@ -231,6 +179,18 @@ export default function RolePage() {
       </TreeItem>
     ));
   }, []);
+
+  // 处理权限选择变化
+  const handleSelectedItemsChange = useCallback(
+    (event: React.SyntheticEvent, ids: string[]) => {
+      setSelectedItems(ids);
+      setFormData({
+        ...formData,
+        permissionIds: ids,
+      });
+    },
+    [formData]
+  );
 
   // 处理提交
   const handleSubmit = useCallback(async () => {
@@ -255,7 +215,7 @@ export default function RolePage() {
         });
       }
       handleClose();
-      fetchRoles();
+      refresh();
     } catch (error) {
       console.error(`${editingRole ? "更新" : "创建"}角色失败:`, error);
       setSnackbar({
@@ -266,7 +226,7 @@ export default function RolePage() {
         severity: "error",
       });
     }
-  }, [editingRole, formData, selectedItems, handleClose, fetchRoles, t]);
+  }, [editingRole, formData, selectedItems, handleClose, refresh, t]);
 
   // 处理删除
   const handleDelete = useCallback((id: number) => {
@@ -284,7 +244,7 @@ export default function RolePage() {
         message: t("common.role.deleteSuccess"),
         severity: "success",
       });
-      fetchRoles();
+      refresh();
     } catch (error) {
       console.error("删除角色失败:", error);
       setSnackbar({
@@ -296,19 +256,71 @@ export default function RolePage() {
       setDeleteDialogOpen(false);
       setDeletingId(null);
     }
-  }, [deletingId, fetchRoles, t]);
+  }, [deletingId, refresh, t]);
 
-  // 处理分页
-  const handleChangePage = useCallback((event: unknown, newPage: number) => {
-    setPage(newPage);
-  }, []);
+  // 使用 useDebouncedCallback 优化分页处理
+  const handlePageChange = useCallback((page: number, size: number) => {
+    setParams({
+      ...params,
+      current: page,
+      size: size,
+    });
+  }, [params, setParams]);
 
-  const handleChangeRowsPerPage = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      setRowsPerPage(parseInt(event.target.value, 10));
-      setPage(0);
-    },
-    []
+  // 表格列定义
+  const columns = useMemo(
+    () => [
+      {
+        key: "roleName" as keyof Role,
+        title: t("common.role.roleName"),
+        width: 200,
+      },
+      {
+        key: "roleCode" as keyof Role,
+        title: t("common.role.roleCode"),
+        width: 150,
+      },
+      {
+        key: "description" as keyof Role,
+        title: t("common.role.description"),
+        width: 200,
+      },
+      {
+        key: "permissionNames" as keyof Role,
+        title: t("common.role.permissions"),
+        width: 300,
+      },
+      {
+        key: "createTime" as keyof Role,
+        title: t("common.createTime"),
+        width: 180,
+      },
+      {
+        key: "updateTime" as keyof Role,
+        title: t("common.updateTime"),
+        width: 180,
+      },
+      {
+        key: "actions" as keyof Role,
+        title: t("common.operation"),
+        width: 150,
+        render: (_: any, record: Role) => (
+          <Stack direction="row" spacing={0.5}>
+            <CommonButton
+              buttonVariant="edit"
+              icon
+              onClick={() => handleOpen(record)}
+            />
+            <CommonButton
+              buttonVariant="delete"
+              icon
+              onClick={() => handleDelete(record.id)}
+            />
+          </Stack>
+        ),
+      },
+    ],
+    [t, handleOpen, handleDelete]
   );
 
   return (
@@ -324,28 +336,24 @@ export default function RolePage() {
         >
           <SearchBar>
             <CommonInput
-              label={t("common.role.name")}
-              value={formData.roleName}
+              label={t("common.role.roleName")}
+              value={params.roleName || ""}
               onChange={(value) =>
-                setFormData({ ...formData, roleName: value as string })
+                setParams({ ...params, roleName: value as string })
               }
             />
             <CommonInput
-              label={t("common.role.code")}
-              value={formData.roleCode}
+              label={t("common.role.roleCode")}
+              value={params.roleCode || ""}
               onChange={(value) =>
-                setFormData({ ...formData, roleCode: value as string })
+                setParams({ ...params, roleCode: value as string })
               }
             />
             <CommonButton
               buttonVariant="reset"
               onClick={() => {
-                setFormData({
-                  ...formData,
-                  roleName: "",
-                  roleCode: "",
-                });
-                fetchRoles();
+                setParams(defaultParams);
+                refresh();
               }}
             >
               {t("common.reset")}
@@ -355,103 +363,39 @@ export default function RolePage() {
               onClick={() => handleOpen()}
               sx={{ marginLeft: "auto" }}
             >
-              {t("common.add")}
+              {t("common.role.add")}
             </CommonButton>
           </SearchBar>
         </Box>
 
         <Box sx={{ p: 3, flex: 1, overflow: "auto" }}>
-          {loading ? (
-            <Typography variant="body2" color="text.secondary" sx={{ p: 2 }}>
-              {t("common.loading")}
-            </Typography>
-          ) : roles.length === 0 ? (
-            <Typography variant="body2" color="text.secondary" sx={{ p: 2 }}>
-              {t("common.noData")}
-            </Typography>
-          ) : (
-            <Paper sx={{ width: "100%" }}>
-              <TableContainer>
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>{t("common.role.name")}</TableCell>
-                      <TableCell>{t("common.role.code")}</TableCell>
-                      <TableCell>{t("common.role.description")}</TableCell>
-                      <TableCell>{t("common.role.permissions")}</TableCell>
-                      <TableCell>{t("common.role.createTime")}</TableCell>
-                      <TableCell>{t("common.role.updateTime")}</TableCell>
-                      <TableCell>{t("common.operation")}</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {roles.map((role) => (
-                      <TableRow key={role.id}>
-                        <TableCell>{role.roleName}</TableCell>
-                        <TableCell>{role.roleCode}</TableCell>
-                        <TableCell>{role.description}</TableCell>
-                        <TableCell>{role.permissionNames}</TableCell>
-                        <TableCell>{role.createTime}</TableCell>
-                        <TableCell>{role.updateTime}</TableCell>
-                        <TableCell>
-                          <Stack direction="row" spacing={0.5}>
-                            <Tooltip title={t("common.role.permissions")}>
-                              <IconButton
-                                size="small"
-                                onClick={() => handleOpen(role)}
-                              >
-                                <SecurityIcon fontSize="small" />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title={t("common.edit")}>
-                              <IconButton
-                                size="small"
-                                onClick={() => handleOpen(role)}
-                              >
-                                <EditIcon fontSize="small" />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title={t("common.delete")}>
-                              <IconButton
-                                size="small"
-                                onClick={() => handleDelete(role.id)}
-                              >
-                                <DeleteIcon fontSize="small" />
-                              </IconButton>
-                            </Tooltip>
-                          </Stack>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-              <TablePagination
-                component="div"
-                count={total}
-                page={page}
-                onPageChange={handleChangePage}
-                rowsPerPage={rowsPerPage}
-                onRowsPerPageChange={handleChangeRowsPerPage}
-                labelRowsPerPage={t("common.rowsPerPage")}
-                labelDisplayedRows={({ from, to, count }) =>
-                  `${from}-${to} / ${count}`
-                }
-              />
-            </Paper>
-          )}
+          <PerformanceTable
+            data={roles}
+            columns={columns}
+            loading={loading}
+            emptyMessage={t("common.noData")}
+          />
+
+          <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
+            <Pagination
+              total={total}
+              current={Number(params.current)}
+              pageSize={Number(params.size)}
+              onChange={handlePageChange}
+            />
+          </Box>
         </Box>
 
         <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
           <DialogTitle>
-            {editingRole ? t("common.edit") : t("common.add")}
+            {editingRole ? t("common.role.edit") : t("common.role.add")}
           </DialogTitle>
           <DialogContent>
             <Box
               sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 2 }}
             >
               <CommonInput
-                label={t("common.role.name")}
+                label={t("common.role.roleName")}
                 value={formData.roleName}
                 onChange={(value) =>
                   setFormData({ ...formData, roleName: value as string })
@@ -464,7 +408,7 @@ export default function RolePage() {
                 }
               />
               <CommonInput
-                label={t("common.role.code")}
+                label={t("common.role.roleCode")}
                 value={formData.roleCode}
                 onChange={(value) =>
                   setFormData({ ...formData, roleCode: value as string })
@@ -498,11 +442,15 @@ export default function RolePage() {
                   <Typography variant="subtitle1">
                     {t("common.role.permissions")}
                   </Typography>
-                  <Button size="small" onClick={handleSelectAll}>
+                  <CommonButton
+                    buttonVariant="default"
+                    size="small"
+                    onClick={handleSelectAll}
+                  >
                     {selectedItems.length === 0
                       ? t("common.selectAll")
                       : t("common.unselectAll")}
-                  </Button>
+                  </CommonButton>
                 </Box>
                 <Paper sx={{}}>
                   <SimpleTreeView

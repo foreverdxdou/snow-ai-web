@@ -116,7 +116,16 @@
       "permissions": "权限设置",
       "deleteConfirm": "确定要删除该角色吗？",
       "deleteSuccess": "删除成功",
-      "saveSuccess": "保存成功"
+      "saveSuccess": "保存成功",
+      "nameRequired": "请输入角色名称",
+      "codeRequired": "请输入角色代码",
+      "fetchError": "获取角色列表失败",
+      "createSuccess": "创建角色成功",
+      "createError": "创建角色失败",
+      "updateSuccess": "更新角色成功",
+      "updateError": "更新角色失败",
+      "deleteError": "删除角色失败",
+      "deleteConfirmMessage": "确定要删除该角色吗？此操作不可恢复。"
     },
     "selectAll": "全选",
     "unselectAll": "取消全选"
