@@ -11,6 +11,7 @@ import {
   Alert,
   Snackbar,
   Stack,
+  IconButton,
 } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import { PerformanceLayout } from "@/app/components/common/PerformanceLayout";
@@ -27,6 +28,7 @@ import { userService } from "@/app/services/user";
 import { roleService } from "@/app/services/role";
 import type { User, UserSaveRequest } from "@/app/types/user";
 import type { Role } from "@/app/types/role";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 
 export default function UserPage() {
   const { t } = useTranslation();
@@ -35,6 +37,8 @@ export default function UserPage() {
   const [deletingId, setDeletingId] = React.useState<number | null>(null);
   const [editingUser, setEditingUser] = React.useState<User | null>(null);
   const [roles, setRoles] = React.useState<Role[]>([]);
+  const [showPassword, setShowPassword] = React.useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
   const [formData, setFormData] = React.useState<UserSaveRequest>({
     username: "",
     nickname: "",
@@ -43,6 +47,11 @@ export default function UserPage() {
     password: "",
     status: 1,
     roleIds: [],
+  });
+
+  const [passwordStrength, setPasswordStrength] = React.useState({
+    score: 0,
+    isValid: false,
   });
 
   const [snackbar, setSnackbar] = React.useState({
@@ -81,34 +90,49 @@ export default function UserPage() {
 
   // 获取角色列表
   const fetchRoles = useCallback(async () => {
+    let isMounted = true;
     try {
       const response = await roleService.getList({ current: 1, size: 100 });
-      if (response.data?.code === 200 && response.data?.data) {
+      if (isMounted && response.data?.code === 200 && response.data?.data) {
         setRoles(response.data.data.records);
       }
     } catch (error) {
       console.error("获取角色列表失败:", error);
     }
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   React.useEffect(() => {
-    fetchRoles();
+    const cleanupFetch = fetchRoles();
+    return () => {
+      cleanupFetch.then(cleanup => cleanup?.());
+      setRoles([]);
+      setFormData({
+        username: "",
+        nickname: "",
+        email: "",
+        phone: "",
+        password: "",
+        status: 1,
+        roleIds: [],
+      });
+      setEditingUser(null);
+      setDeletingId(null);
+      setOpen(false);
+      setDeleteDialogOpen(false);
+      setSnackbar({
+        open: false,
+        message: "",
+        severity: "success",
+      });
+    };
   }, [fetchRoles]);
 
   // 使用 useCallback 优化事件处理函数
   const handleOpen = useCallback((user?: User) => {
-    if (user) {
-      setEditingUser(user);
-      setFormData({
-        id: user.id,
-        username: user.username,
-        nickname: user.nickname,
-        email: user.email,
-        phone: user.phone,
-        status: user.status,
-        roleIds: user.roleIds,
-      });
-    } else {
+    if (!user) {
       setEditingUser(null);
       setFormData({
         username: "",
@@ -118,6 +142,17 @@ export default function UserPage() {
         password: "",
         status: 1,
         roleIds: [],
+      });
+    } else {
+      setEditingUser(user);
+      setFormData({
+        id: user.id,
+        username: user.username,
+        nickname: user.nickname,
+        email: user.email,
+        phone: user.phone,
+        status: user.status,
+        roleIds: user.roleIds || [],
       });
     }
     setOpen(true);
@@ -204,6 +239,32 @@ export default function UserPage() {
       size: size,
     });
   }, [params, setParams]);
+
+  // 密码强度校验
+  const checkPasswordStrength = useCallback((password: string) => {
+    // 密码必须包含大小写字母、数字和特殊字符，且长度不少于8位
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumbers = /\d/.test(password);
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+    const isLongEnough = password.length >= 8;
+
+    let score = 0;
+    if (hasUpperCase) score++;
+    if (hasLowerCase) score++;
+    if (hasNumbers) score++;
+    if (hasSpecialChar) score++;
+    if (isLongEnough) score++;
+
+    const isValid = score === 5;
+    setPasswordStrength({ score, isValid });
+  }, []);
+
+  // 处理密码变化
+  const handlePasswordChange = useCallback((value: string | number) => {
+    setFormData(prev => ({ ...prev, password: String(value) }));
+    checkPasswordStrength(String(value));
+  }, [checkPasswordStrength]);
 
   // 使用 useMemo 优化表格配置
   const columns = useMemo(
@@ -390,6 +451,7 @@ export default function UserPage() {
                 }
                 fullWidth
                 required
+                autoComplete="off"
                 error={!formData.username}
                 helperText={
                   !formData.username ? t("common.user.usernameRequired") : ""
@@ -403,6 +465,7 @@ export default function UserPage() {
                 }
                 fullWidth
                 required
+                autoComplete="off"
                 error={!formData.nickname}
                 helperText={
                   !formData.nickname ? t("common.user.nicknameRequired") : ""
@@ -416,6 +479,7 @@ export default function UserPage() {
                 }
                 fullWidth
                 required
+                autoComplete="off"
                 error={!formData.email}
                 helperText={
                   !formData.email ? t("common.user.emailRequired") : ""
@@ -429,6 +493,7 @@ export default function UserPage() {
                 }
                 fullWidth
                 required
+                autoComplete="off"
                 error={!formData.phone}
                 helperText={
                   !formData.phone ? t("common.user.phoneRequired") : ""
@@ -438,21 +503,64 @@ export default function UserPage() {
                 <>
                   <CommonInput
                     label={t("common.user.password")}
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     value={formData.password}
-                    onChange={(value) =>
-                      setFormData({ ...formData, password: value as string })
-                    }
+                    onChange={handlePasswordChange}
                     fullWidth
                     required
-                    error={!formData.password}
+                    autoComplete="new-password"
+                    error={!formData.password || !passwordStrength.isValid}
                     helperText={
-                      !formData.password ? t("common.user.passwordRequired") : ""
+                      !formData.password 
+                        ? t("common.user.passwordRequired")
+                        : !passwordStrength.isValid
+                        ? t("register.passwordRequirements")
+                        : ""
                     }
+                    InputProps={{
+                      endAdornment: (
+                        <IconButton
+                          onClick={() => setShowPassword(!showPassword)}
+                          edge="end"
+                          size="small"
+                        >
+                          {showPassword ? <Visibility /> : <VisibilityOff />}
+                        </IconButton>
+                      ),
+                    }}
                   />
+                  {formData.password && (
+                    <Box sx={{ mt: 1, mb: 2 }}>
+                      <Typography variant="caption" color="textSecondary">
+                        {t("register.passwordStrength")}
+                      </Typography>
+                      <Box
+                        sx={{
+                          mt: 0.5,
+                          height: 4,
+                          borderRadius: 2,
+                          bgcolor: "grey.200",
+                          overflow: "hidden",
+                        }}
+                      >
+                        <Box
+                          sx={{
+                            height: "100%",
+                            width: `${(passwordStrength.score / 5) * 100}%`,
+                            bgcolor: passwordStrength.isValid
+                              ? "success.main"
+                              : passwordStrength.score >= 3
+                              ? "warning.main"
+                              : "error.main",
+                            transition: "all 0.3s ease",
+                          }}
+                        />
+                      </Box>
+                    </Box>
+                  )}
                   <CommonInput
                     label={t("common.user.confirmPassword")}
-                    type="password"
+                    type={showConfirmPassword ? "text" : "password"}
                     value={formData.confirmPassword}
                     onChange={(value) =>
                       setFormData({
@@ -462,6 +570,7 @@ export default function UserPage() {
                     }
                     fullWidth
                     required
+                    autoComplete="new-password"
                     error={
                       !formData.confirmPassword ||
                       formData.password !== formData.confirmPassword
@@ -473,6 +582,17 @@ export default function UserPage() {
                         ? t("common.user.passwordNotMatch")
                         : ""
                     }
+                    InputProps={{
+                      endAdornment: (
+                        <IconButton
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          edge="end"
+                          size="small"
+                        >
+                          {showConfirmPassword ? <Visibility /> : <VisibilityOff />}
+                        </IconButton>
+                      ),
+                    }}
                   />
                 </>
               )}
@@ -513,7 +633,7 @@ export default function UserPage() {
                 !formData.nickname ||
                 !formData.email ||
                 !formData.phone ||
-                (!editingUser && (!formData.password || !formData.confirmPassword))
+                (!editingUser && (!formData.password || !formData.confirmPassword || !passwordStrength.isValid))
               }
             >
               {t("common.save")}

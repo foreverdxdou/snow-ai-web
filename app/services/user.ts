@@ -7,10 +7,16 @@ const BASE_URL = '/system/user';
 export const userService = {
     // 获取用户列表
     getList: (params: UserQuery) => {
+        // 移除值为空的参数
+        const cleanParams = Object.fromEntries(
+            Object.entries(params).filter(([_, value]) => 
+                value !== undefined && value !== null && value !== ''
+            )
+        );
         return request.get<Result<{
             records: User[];
             total: number;
-        }>>(`${BASE_URL}/page`, { params });
+        }>>(`${BASE_URL}/page`, { params: cleanParams });
     },
 
     // 获取用户详情
