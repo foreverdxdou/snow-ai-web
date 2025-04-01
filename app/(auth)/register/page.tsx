@@ -12,8 +12,12 @@ import {
     styled,
     alpha,
     useTheme,
-    Button
+    Button,
+    LinearProgress,
+    InputAdornment,
+    IconButton
 } from '@mui/material';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { authService } from '@/app/services/auth';
 
@@ -62,11 +66,38 @@ const StyledTextField = styled(TextField)(({ theme }) => ({
     }
 }));
 
+// 密码强度检查函数
+const checkPasswordStrength = (password: string): { score: number; label: string; color: string } => {
+    let score = 0;
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasNumbers = /\d/.test(password);
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+    const isLongEnough = password.length >= 8;
+
+    if (hasLowerCase) score++;
+    if (hasUpperCase) score++;
+    if (hasNumbers) score++;
+    if (hasSpecialChar) score++;
+    if (isLongEnough) score++;
+
+    if (score <= 2) return { score, label: '弱', color: '#f44336' };
+    if (score <= 3) return { score, label: '中', color: '#ff9800' };
+    return { score, label: '强', color: '#4caf50' };
+};
+
 interface RegisterForm {
     username: string;
     password: string;
     nickname: string;
     email: string;
+}
+
+interface FormErrors {
+    username?: string;
+    password?: string;
+    nickname?: string;
+    email?: string;
 }
 
 export default function RegisterPage() {
@@ -75,24 +106,78 @@ export default function RegisterPage() {
     const theme = useTheme();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [showPassword, setShowPassword] = useState(false);
+    const [passwordStrength, setPasswordStrength] = useState<{ score: number; label: string; color: string }>({ score: 0, label: '', color: '' });
     const [formData, setFormData] = useState<RegisterForm>({
         username: '',
         password: '',
         nickname: '',
         email: ''
     });
+    const [formErrors, setFormErrors] = useState<FormErrors>({});
 
     const handleChange = (field: keyof RegisterForm) => (
         e: React.ChangeEvent<HTMLInputElement>
     ) => {
+        const value = e.target.value;
         setFormData(prev => ({
             ...prev,
-            [field]: e.target.value
+            [field]: value
         }));
+
+        // 清除对应字段的错误
+        setFormErrors(prev => ({
+            ...prev,
+            [field]: undefined
+        }));
+
+        if (field === 'password') {
+            setPasswordStrength(checkPasswordStrength(value));
+        }
+    };
+
+    const validateForm = (): boolean => {
+        const errors: FormErrors = {};
+        let isValid = true;
+
+        // 用户名验证
+        if (!formData.username.trim()) {
+            errors.username = t('register.usernameRequired');
+            isValid = false;
+        }
+
+        // 密码验证
+        if (!formData.password) {
+            errors.password = t('register.passwordRequired');
+            isValid = false;
+        } else if (passwordStrength.score < 3) {
+            errors.password = t('register.passwordTooWeak');
+            isValid = false;
+        }
+
+        // 昵称验证
+        if (!formData.nickname.trim()) {
+            errors.nickname = t('register.nicknameRequired');
+            isValid = false;
+        }
+
+        // 邮箱验证
+        if (!formData.email.trim()) {
+            errors.email = t('register.emailRequired');
+            isValid = false;
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+            errors.email = t('register.emailInvalid');
+            isValid = false;
+        }
+
+        setFormErrors(errors);
+        return isValid;
     };
 
     const handleSubmit = useCallback(async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!validateForm()) return;
+
         try {
             setLoading(true);
             setError(null);
@@ -104,7 +189,7 @@ export default function RegisterPage() {
         } finally {
             setLoading(false);
         }
-    }, [formData, router, t]);
+    }, [formData, router, t, passwordStrength.score]);
 
     return (
         <Box sx={{ width: '100%', maxWidth: 400, mx: 'auto' }}>
@@ -125,7 +210,7 @@ export default function RegisterPage() {
                         : '0 8px 32px rgba(0, 0, 0, 0.1)',
                 }}
             >
-                <form onSubmit={handleSubmit}>
+                <form onSubmit={handleSubmit} autoComplete="off">
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                             <Typography
@@ -145,6 +230,9 @@ export default function RegisterPage() {
                                 disabled={loading}
                                 fullWidth
                                 placeholder={t('common.username')}
+                                error={!!formErrors.username}
+                                helperText={formErrors.username}
+                                autoComplete="off"
                             />
                         </Box>
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -159,14 +247,53 @@ export default function RegisterPage() {
                                 {t('common.password')}
                             </Typography>
                             <StyledTextField
-                                type="password"
+                                type={showPassword ? 'text' : 'password'}
                                 value={formData.password}
                                 onChange={handleChange('password')}
                                 required
                                 disabled={loading}
                                 fullWidth
                                 placeholder={t('common.password')}
+                                helperText={formErrors.password || t('register.passwordRequirements')}
+                                error={!!formErrors.password}
+                                autoComplete="new-password"
+                                InputProps={{
+                                    endAdornment: (
+                                        <InputAdornment position="end">
+                                            <IconButton
+                                                onClick={() => setShowPassword(!showPassword)}
+                                                edge="end"
+                                            >
+                                                {showPassword ? <VisibilityOff /> : <Visibility />}
+                                            </IconButton>
+                                        </InputAdornment>
+                                    ),
+                                }}
                             />
+                            {formData.password && (
+                                <Box sx={{ mt: 1 }}>
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                                        <Typography variant="caption" color="text.secondary">
+                                            {t('register.passwordStrength')}: {passwordStrength.label}
+                                        </Typography>
+                                        <Typography variant="caption" color="text.secondary">
+                                            {passwordStrength.score}/5
+                                        </Typography>
+                                    </Box>
+                                    <LinearProgress
+                                        variant="determinate"
+                                        value={(passwordStrength.score / 5) * 100}
+                                        sx={{
+                                            height: 6,
+                                            borderRadius: 3,
+                                            backgroundColor: alpha(theme.palette.grey[300], 0.5),
+                                            '& .MuiLinearProgress-bar': {
+                                                backgroundColor: passwordStrength.color,
+                                            }
+                                        }}
+                                    />
+                                </Box>
+                            )}
                         </Box>
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                             <Typography
@@ -186,6 +313,9 @@ export default function RegisterPage() {
                                 disabled={loading}
                                 fullWidth
                                 placeholder={t('common.nickname')}
+                                error={!!formErrors.nickname}
+                                helperText={formErrors.nickname}
+                                autoComplete="off"
                             />
                         </Box>
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -207,6 +337,9 @@ export default function RegisterPage() {
                                 disabled={loading}
                                 fullWidth
                                 placeholder={t('common.email')}
+                                error={!!formErrors.email}
+                                helperText={formErrors.email}
+                                autoComplete="off"
                             />
                         </Box>
                         {error && (

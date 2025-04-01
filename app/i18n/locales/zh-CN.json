@@ -372,6 +372,14 @@
     "description": "请填写以下信息完成注册",
     "error": "注册失败，请稍后重试",
     "hasAccount": "已有账号？",
-    "login": "立即登录"
+    "login": "立即登录",
+    "passwordStrength": "密码强度",
+    "passwordTooWeak": "密码强度不足，请确保密码包含大小写字母、数字和特殊字符，且长度不少于8位",
+    "passwordRequirements": "密码必须包含大小写字母、数字和特殊字符，长度不少于8位",
+    "usernameRequired": "请输入用户名",
+    "passwordRequired": "请输入密码",
+    "nicknameRequired": "请输入昵称",
+    "emailRequired": "请输入邮箱",
+    "emailInvalid": "请输入有效的邮箱地址"
   }
 } 
