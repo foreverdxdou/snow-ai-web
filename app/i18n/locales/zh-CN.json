@@ -54,16 +54,32 @@
     },
     "profile": "个人资料",
     "dragAndDrop": "拖拽文件到此处或点击上传",
-    "detail": "查看详情"
+    "detail": "查看详情",
+    "nameRequired": "请输入名称",
+    "createKnowledge": "创建知识库",
+    "editKnowledge": "编辑知识库",
+    "deleteKnowledge": "删除知识库",
+    "deleteConfirm": "确定要删除该知识库吗？",
+    "deleteSuccess": "删除成功",
+    "deleteError": "删除失败",
+    "updateSuccess": "更新成功",
+    "updateError": "更新失败",
+    "createSuccess": "创建成功",
+    "createError": "创建失败",
+    "statusUpdateSuccess": "状态更新成功",
+    "statusUpdateError": "状态更新失败",
+    "saveError": "保存失败"
   },
   "auth": {
-    "loginTitle": "登录 Snow AI",
+    "appName": "Snow AI",
+    "appDescription": "智能知识管理系统",
+    "loginTitle": "欢迎回来",
+    "loginDescription": "请登录您的账号",
     "rememberMe": "记住我",
     "forgotPassword": "忘记密码？",
     "loginButton": "登录",
     "registerNow": "立即注册",
     "welcomeBack": "欢迎回来",
-    "loginDescription": "登录以继续使用 Snow AI",
     "usernameRequired": "请输入用户名！",
     "passwordRequired": "请输入密码！",
     "loginSuccess": "登录成功",
@@ -86,9 +102,6 @@
   "knowledge": {
     "title": "知识库管理",
     "categoryTree": "分类树",
-    "createKnowledge": "创建知识库",
-    "editKnowledge": "编辑知识库",
-    "deleteKnowledge": "删除知识库",
     "deleteConfirm": "确定要删除该知识库吗？此操作不可恢复。",
     "nameRequired": "请输入知识库名称",
     "createSuccess": "创建知识库成功",
@@ -339,5 +352,10 @@
     "fetchError": "获取配置失败",
     "statusUpdateSuccess": "状态更新成功",
     "statusUpdateError": "状态更新失败"
+  },
+  "login": {
+    "title": "登录",
+    "description": "请输入您的账号和密码",
+    "error": "用户名或密码错误"
   }
 } 

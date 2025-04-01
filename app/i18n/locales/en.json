@@ -57,13 +57,15 @@
     "detail": "View Details"
   },
   "auth": {
-    "loginTitle": "Login to Snow AI",
+    "appName": "Snow AI",
+    "appDescription": "Intelligent Knowledge Management System",
+    "loginTitle": "Welcome Back",
+    "loginDescription": "Please sign in to your account",
     "rememberMe": "Remember me",
     "forgotPassword": "Forgot password?",
     "loginButton": "Login",
     "registerNow": "Register now",
     "welcomeBack": "Welcome Back",
-    "loginDescription": "Sign in to continue to Snow AI",
     "usernameRequired": "Please input your username!",
     "passwordRequired": "Please input your password!",
     "loginSuccess": "Login successful",
@@ -342,5 +344,38 @@
     "fetchError": "Failed to fetch configurations",
     "statusUpdateSuccess": "Status updated successfully",
     "statusUpdateError": "Failed to update status"
+  },
+  "login": {
+    "title": "Login",
+    "description": "Please enter your username and password",
+    "error": "Invalid username or password"
+  },
+  "common": {
+    "username": "Username",
+    "password": "Password",
+    "login": "Login",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "save": "Save",
+    "edit": "Edit",
+    "delete": "Delete",
+    "refresh": "Refresh",
+    "enable": "Enable",
+    "disable": "Disable",
+    "noData": "No Data",
+    "nameRequired": "Please enter a name",
+    "createKnowledge": "Create Knowledge Base",
+    "editKnowledge": "Edit Knowledge Base",
+    "deleteKnowledge": "Delete Knowledge Base",
+    "deleteConfirm": "Are you sure you want to delete this knowledge base?",
+    "deleteSuccess": "Delete successful",
+    "deleteError": "Delete failed",
+    "updateSuccess": "Update successful",
+    "updateError": "Update failed",
+    "createSuccess": "Create successful",
+    "createError": "Create failed",
+    "statusUpdateSuccess": "Status update successful",
+    "statusUpdateError": "Status update failed",
+    "saveError": "Save failed"
   }
 } 

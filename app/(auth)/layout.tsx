@@ -1,8 +1,7 @@
 'use client';
 
-import React, { useMemo } from 'react';
-import { Box, Container, useTheme } from '@mui/material';
-import { PerformanceLayout } from '@/app/components/common/PerformanceLayout';
+import React from 'react';
+import { Box, Container, useTheme, Typography } from '@mui/material';
 import Logo from '../components/Logo';
 import { useTranslation } from 'react-i18next';
 import { ThemeLanguageSwitch } from '../components/common/ThemeLanguageSwitch';
@@ -20,9 +19,18 @@ const Background = React.memo(() => {
                 right: 0,
                 bottom: 0,
                 background: theme.palette.mode === 'dark'
-                    ? 'linear-gradient(45deg, #1a237e 30%, #0d47a1 90%)'
-                    : 'linear-gradient(45deg, #2196f3 30%, #21cbf3 90%)',
+                    ? 'linear-gradient(135deg, #2c3e50 0%, #3498db 100%)'
+                    : 'linear-gradient(135deg, #e0f2f1 0%, #b2dfdb 100%)',
                 zIndex: -1,
+                '&::before': {
+                    content: '""',
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: 'radial-gradient(circle at center, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 70%)',
+                }
             }}
         />
     );
@@ -37,76 +45,109 @@ export default function AuthLayout({
 }) {
     const { t } = useTranslation();
 
-    // 使用 useMemo 优化容器样式
-    const containerStyle = useMemo(() => ({
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        py: 4,
-    }), []);
-
     return (
-        <PerformanceLayout>
+        <Box
+            sx={{
+                minHeight: '100vh',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                py: 4,
+                position: 'relative',
+            }}
+        >
             <Background />
-            <Container maxWidth="sm" sx={containerStyle}>
-                {/* 主题和语言切换 */}
-                <div style={{
+            
+            {/* 主题和语言切换 */}
+            <Box
+                sx={{
                     position: 'absolute',
-                    top: '16px',
-                    right: '16px',
+                    top: 16,
+                    right: 16,
                     zIndex: 10,
-                }}>
-                    <ThemeLanguageSwitch />
-                </div>
+                    display: 'flex',
+                    gap: 1,
+                    p: 1.5,
+                    borderRadius: 3,
+                    background: theme => theme.palette.mode === 'dark' 
+                        ? 'rgba(255, 255, 255, 0.15)' 
+                        : 'rgba(0, 0, 0, 0.1)',
+                    backdropFilter: 'blur(10px)',
+                    border: theme => `1px solid ${
+                        theme.palette.mode === 'dark' 
+                            ? 'rgba(255, 255, 255, 0.3)' 
+                            : 'rgba(0, 0, 0, 0.2)'
+                    }`,
+                    boxShadow: theme => theme.palette.mode === 'dark'
+                        ? '0 4px 20px rgba(0, 0, 0, 0.3)'
+                        : '0 4px 20px rgba(0, 0, 0, 0.1)',
+                    '& .MuiIconButton-root': {
+                        color: theme => theme.palette.mode === 'dark'
+                            ? 'rgba(255, 255, 255, 0.9)'
+                            : 'rgba(0, 0, 0, 0.7)',
+                        '&:hover': {
+                            backgroundColor: theme => theme.palette.mode === 'dark'
+                                ? 'rgba(255, 255, 255, 0.1)'
+                                : 'rgba(0, 0, 0, 0.05)',
+                        }
+                    }
+                }}
+            >
+                <ThemeLanguageSwitch />
+            </Box>
 
-                {/* 登录卡片 */}
-                <div style={{
-                    width: '100%',
-                    maxWidth: '420px',
-                    margin: '0 16px',
-                    position: 'relative',
-                }}>
-                    <div style={{
-                        backgroundColor: 'white',
-                        borderRadius: '16px',
-                        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-                        padding: '32px',
-                    }}>
-                        {/* Logo 和标题区域 */}
-                        <div style={{
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
-                            marginBottom: '32px',
-                        }}>
-                            <div style={{
-                                width: '80px',
-                                height: '80px',
-                                marginBottom: '24px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                            }}>
-                                <Logo />
-                            </div>
-                            <h1 style={{
-                                fontSize: '24px',
-                                fontWeight: 'bold',
-                                color: '#1f2937',
-                                marginBottom: '8px',
-                            }}>{t('auth.loginTitle')}</h1>
-                            <p style={{
-                                color: '#6b7280',
-                                margin: 0,
-                            }}>{t('auth.loginDescription')}</p>
-                        </div>
+            {/* Logo 和标题区域 */}
+            <Box
+                sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    mb: 4,
+                    textAlign: 'center',
+                }}
+            >
+                <Box
+                    sx={{
+                        width: 80,
+                        height: 80,
+                        mb: 2,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        background: 'rgba(255, 255, 255, 0.1)',
+                        backdropFilter: 'blur(10px)',
+                        borderRadius: '50%',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                    }}
+                >
+                    <Logo />
+                </Box>
+                <Typography
+                    variant="h4"
+                    component="h1"
+                    sx={{
+                        fontWeight: 'bold',
+                        color: 'white',
+                        mb: 1,
+                    }}
+                >
+                    {t('auth.appName')}
+                </Typography>
+                <Typography
+                    variant="body1"
+                    sx={{
+                        color: 'rgba(255, 255, 255, 0.8)',
+                    }}
+                >
+                    {t('auth.appDescription')}
+                </Typography>
+            </Box>
 
-                        {/* 表单内容 */}
-                        {children}
-                    </div>
-                </div>
+            {/* 主要内容区域 */}
+            <Container maxWidth="sm">
+                {children}
             </Container>
-        </PerformanceLayout>
+        </Box>
     );
 } 
