@@ -35,6 +35,9 @@ import {
     Settings as SettingsIcon,
     Logout as LogoutIcon,
     Tune as TuneIcon,
+    Security as SecurityIcon,
+    AdminPanelSettings as AdminPanelSettingsIcon,
+    ManageAccounts as ManageAccountsIcon,
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/app/hooks/useAuth';
@@ -50,20 +53,23 @@ const DRAWER_WIDTH = 260;
 const TOPBAR_HEIGHT = { xs: 56, sm: 64 };
 
 interface MenuItem {
-    icon: React.ElementType;
-    text: string;
-    path: string;
+    id?: string;
+    name?: string;
+    icon: React.ElementType | React.ReactNode;
+    text?: string;
+    path?: string;
+    children?: MenuItem[];
 }
 
 // 菜单项组件
 const MenuItemComponent = React.memo(({ 
-    icon: Icon, 
+    icon, 
     text, 
     selected, 
     onClick 
 }: { 
-    icon: React.ElementType; 
-    text: string; 
+    icon: React.ElementType | React.ReactNode; 
+    text?: string; 
     selected: boolean; 
     onClick: () => void;
 }) => (
@@ -93,15 +99,17 @@ const MenuItemComponent = React.memo(({
         }}
     >
         <ListItemIcon>
-            <Icon fontSize="small" />
+            {React.isValidElement(icon) ? icon : React.createElement(icon as React.ElementType, { fontSize: 'small' })}
         </ListItemIcon>
-        <ListItemText 
-            primary={text} 
-            primaryTypographyProps={{
-                fontSize: '0.875rem',
-                fontWeight: selected ? 600 : 400,
-            }}
-        />
+        {text && (
+            <ListItemText 
+                primary={text} 
+                primaryTypographyProps={{
+                    fontSize: '0.875rem',
+                    fontWeight: selected ? 600 : 400,
+                }}
+            />
+        )}
     </ListItemButton>
 ));
 
@@ -192,6 +200,15 @@ const TopBar = React.memo(({
 TopBar.displayName = 'TopBar';
 
 // 侧边栏组件
+interface SideBarProps {
+    open: boolean;
+    isMobile: boolean;
+    menuItems: MenuItem[];
+    currentPath: string;
+    onDrawerToggle: () => void;
+    onNavigate: (path: string) => void;
+}
+
 const SideBar = React.memo(({ 
     open,
     isMobile,
@@ -199,101 +216,127 @@ const SideBar = React.memo(({
     currentPath,
     onDrawerToggle,
     onNavigate,
-}: {
-    open: boolean;
-    isMobile: boolean;
-    menuItems: MenuItem[];
-    currentPath: string;
-    onDrawerToggle: () => void;
-    onNavigate: (path: string) => void;
-}) => (
-    <Drawer
-        variant={isMobile ? 'temporary' : 'permanent'}
-        open={open}
-        onClose={onDrawerToggle}
-        ModalProps={{ keepMounted: true }}
-        sx={{
-            width: DRAWER_WIDTH,
-            flexShrink: 0,
-            '& .MuiDrawer-paper': {
+}: SideBarProps) => {
+    const [expandedItems, setExpandedItems] = useState<string[]>([]);
+
+    const handleToggle = (itemId: string) => {
+        setExpandedItems(prev => 
+            prev.includes(itemId) 
+                ? prev.filter(id => id !== itemId)
+                : [...prev, itemId]
+        );
+    };
+
+    const renderMenuItem = (item: MenuItem) => {
+        const hasChildren = Boolean(item.children?.length);
+        const isExpanded = expandedItems.includes(item.id || '');
+        const isSelected = currentPath === item.path;
+
+        return (
+            <React.Fragment key={item.id || item.path}>
+                <ListItem disablePadding>
+                    <MenuItemComponent
+                        icon={item.icon}
+                        text={item.text || item.name}
+                        selected={isSelected}
+                        onClick={() => {
+                            if (hasChildren) {
+                                handleToggle(item.id || '');
+                            } else if (item.path) {
+                                onNavigate(item.path);
+                            }
+                        }}
+                    />
+                </ListItem>
+                {hasChildren && isExpanded && item.children && (
+                    <List sx={{ pl: 2 }}>
+                        {item.children.map(child => renderMenuItem(child))}
+                    </List>
+                )}
+            </React.Fragment>
+        );
+    };
+
+    return (
+        <Drawer
+            variant={isMobile ? 'temporary' : 'permanent'}
+            open={open}
+            onClose={onDrawerToggle}
+            ModalProps={{ keepMounted: true }}
+            sx={{
                 width: DRAWER_WIDTH,
-                boxSizing: 'border-box',
-                border: 'none',
-                backgroundColor: (theme) => 
-                    theme.palette.mode === 'light' 
-                        ? alpha(theme.palette.background.default, 0.98)
-                        : alpha(theme.palette.background.default, 0.95),
-                backdropFilter: 'blur(6px)',
-            },
-        }}
-    >
-        <Box sx={{ 
-            height: '100%', 
-            display: 'flex', 
-            flexDirection: 'column',
-        }}>
+                flexShrink: 0,
+                '& .MuiDrawer-paper': {
+                    width: DRAWER_WIDTH,
+                    boxSizing: 'border-box',
+                    border: 'none',
+                    backgroundColor: (theme) => 
+                        theme.palette.mode === 'light' 
+                            ? alpha(theme.palette.background.default, 0.98)
+                            : alpha(theme.palette.background.default, 0.95),
+                    backdropFilter: 'blur(6px)',
+                },
+            }}
+        >
             <Box sx={{ 
-                minHeight: TOPBAR_HEIGHT,
-                p: 2, 
+                height: '100%', 
                 display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'space-between',
-                borderBottom: 1,
-                borderColor: 'divider',
+                flexDirection: 'column',
             }}>
-                <Typography 
-                    variant="h6" 
-                    noWrap 
-                    component="div" 
-                    sx={{ 
-                        flexGrow: 1,
-                        fontWeight: 700,
-                        background: (theme) => 
-                            theme.palette.mode === 'light'
-                                ? 'linear-gradient(45deg, #007FFF 30%, #0059B2 90%)'
-                                : 'linear-gradient(45deg, #66B2FF 30%, #0059B2 90%)',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
-                    }}
-                >
-                    Snow AI
-                </Typography>
-                {isMobile && (
-                    <IconButton 
-                        onClick={onDrawerToggle}
-                        sx={{
-                            '&:hover': {
-                                backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.08),
-                            },
+                <Box sx={{ 
+                    minHeight: TOPBAR_HEIGHT,
+                    p: 2, 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'space-between',
+                    borderBottom: 1,
+                    borderColor: 'divider',
+                }}>
+                    <Typography 
+                        variant="h6" 
+                        noWrap 
+                        component="div" 
+                        sx={{ 
+                            flexGrow: 1,
+                            fontWeight: 700,
+                            background: (theme) => 
+                                theme.palette.mode === 'light'
+                                    ? 'linear-gradient(45deg, #007FFF 30%, #0059B2 90%)'
+                                    : 'linear-gradient(45deg, #66B2FF 30%, #0059B2 90%)',
+                            WebkitBackgroundClip: 'text',
+                            WebkitTextFillColor: 'transparent',
                         }}
                     >
-                        <ChevronLeftIcon />
-                    </IconButton>
-                )}
-            </Box>
+                        Snow AI
+                    </Typography>
+                    {isMobile && (
+                        <IconButton 
+                            onClick={onDrawerToggle}
+                            sx={{
+                                '&:hover': {
+                                    backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.08),
+                                },
+                            }}
+                        >
+                            <ChevronLeftIcon />
+                        </IconButton>
+                    )}
+                </Box>
 
-            <List sx={{ 
-                flex: 1, 
-                px: 1.5, 
-                py: 2,
-                '& > *:not(:last-child)': {
-                    mb: 0.5,
-                },
-            }}>
-                {menuItems.map((item) => (
-                    <ListItem key={item.path} disablePadding>
-                        <MenuItemComponent
-                            icon={item.icon}
-                            text={item.text}
-                            selected={currentPath === item.path}
-                            onClick={() => onNavigate(item.path)}
-                        />
-                    </ListItem>
-                ))}
-            </List>
-        </Box>
-    </Drawer>
-));
+                <List sx={{ 
+                    flex: 1, 
+                    px: 1.5, 
+                    py: 2,
+                    '& > *:not(:last-child)': {
+                        mb: 0.5,
+                    },
+                }}>
+                    {menuItems.map(item => renderMenuItem(item))}
+                </List>
+            </Box>
+        </Drawer>
+    );
+});
 
 SideBar.displayName = 'SideBar';
 
@@ -323,20 +366,35 @@ export default function MainLayout({
         { icon: TuneIcon, text: t('menu.embeddingConfig'), path: '/embedding-config' },
         { icon: PeopleIcon, text: t('menu.users'), path: '/users' },
         { icon: LocalOfferIcon, text: t('menu.tags'), path: '/tags' },
-        { icon: SettingsIcon, text: t('menu.systemConfig'), path: '/system-config' },
+        {
+            id: 'system',
+            name: t('menu.system.title'),
+            icon: <AdminPanelSettingsIcon />,
+            children: [
+                {
+                    id: 'system-config',
+                    name: t('menu.system.config'),
+                    path: '/system-config',
+                    icon: <SettingsIcon />,
+                },
+                {
+                    id: 'role',
+                    name: t('menu.system.role'),
+                    path: '/role',
+                    icon: <ManageAccountsIcon />,
+                },
+                {
+                    id: 'permission',
+                    name: t('menu.system.permission'),
+                    path: '/permission',
+                    icon: <SecurityIcon />,
+                },
+            ],
+        }
     ], [t]);
 
     // 事件处理函数
     const handleDrawerToggle = useCallback(() => setOpen(prev => !prev), []);
-
-    const handleLogout = useCallback(async () => {
-        try {
-            await logout();
-            router.push('/login');
-        } catch (error) {
-            console.error('退出登录失败:', error);
-        }
-    }, [logout, router]);
 
     const handleNavigation = useCallback((path: string) => {
         router.push(path);
