@@ -230,7 +230,6 @@ export default function PermissionPage() {
             const response = await permissionService.getTree();
             if (response.data?.data) {
                 const treeData = convertToTree(response.data.data);
-                console.log(treeData);
                 setPermissions(treeData);
             }
         } catch (error) {
