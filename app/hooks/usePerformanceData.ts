@@ -87,6 +87,10 @@ export function usePerformanceData<T>({
         if (autoFetch) {
             debouncedFetch();
         }
+        return () => {
+            setData([]);
+            setTotal(0);
+        };
     }, [debouncedFetch, autoFetch]);
 
     // 刷新数据

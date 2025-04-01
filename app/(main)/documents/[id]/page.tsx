@@ -94,6 +94,11 @@ export default function DocumentDetailPage({ params }: { params: { id: string } 
       setLoading(false);
     };
     fetchData();
+    return () => {
+      setDocument(null);
+      setVersions([]);
+      setTags([]);
+    };
   }, [params.id]);
 
   // 回滚版本

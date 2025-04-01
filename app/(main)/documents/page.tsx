@@ -68,6 +68,15 @@ export default function DocumentsPage() {
                 kbId: Number(kbId)
             }));
         }
+        return () => {
+            setParams({
+                current: 1,
+                size: 10,
+                kbId: undefined,
+                categoryId: undefined,
+                title: undefined,
+            });
+        };
     }, [kbId, setParams]);
 
     // 使用自定义 Hook 管理文档操作

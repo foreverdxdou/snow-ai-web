@@ -610,6 +610,9 @@ export default function KnowledgePage() {
   // 使用 useEffect 获取分类树数据
   React.useEffect(() => {
     fetchCategories();
+    return () => {
+      setCategoryTree([]);
+    };
   }, [fetchCategories]);
 
   // 修改 handleCategorySelect 函数

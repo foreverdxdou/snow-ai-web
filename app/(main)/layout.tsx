@@ -376,6 +376,9 @@ export default function MainLayout({
         if (user) {
             fetchUserInfo();
         }
+        return () => {
+            setUserInfo(null);
+        };
     }, [user]);
 
     const pageTitle = menuItems.find(item => item.path === pathname)?.text || 'Snow AI';

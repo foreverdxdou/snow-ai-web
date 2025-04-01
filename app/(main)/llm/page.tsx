@@ -73,6 +73,9 @@ export default function LlmPage() {
 
   useEffect(() => {
     fetchConfigs();
+    return () => {
+      setConfigs([]);
+    };
   }, []);
 
   const handleOpen = (config?: LlmConfig) => {

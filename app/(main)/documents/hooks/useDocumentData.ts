@@ -131,6 +131,12 @@ export function useDocumentData() {
         fetchCategories();
         fetchTags();
         fetchKnowledgeBases();
+        return () => {
+            setDocuments([]);
+            setCategories([]);
+            setTags([]);
+            setKnowledgeBases([]);
+        };
     }, [fetchCategories, fetchTags, fetchKnowledgeBases]);
 
     // 刷新数据

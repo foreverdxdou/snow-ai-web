@@ -24,6 +24,9 @@ export default function SettingsPage() {
         language: user.settings.language,
       });
     }
+    return () => {
+      form.resetFields();
+    };
   }, [user, form]);
 
   const onFinish = (values: any) => {

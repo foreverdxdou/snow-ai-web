@@ -88,6 +88,9 @@ export const CommonInput: React.FC<CommonInputProps> = ({
     // 当外部 value 变化时更新内部状态
     useEffect(() => {
         setInputValue(value);
+        return () => {
+            setInputValue('');
+        };
     }, [value]);
 
     // 处理输入变化
