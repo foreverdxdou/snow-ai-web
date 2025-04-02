@@ -391,7 +391,18 @@
     "noKbSelected": "未选择知识库，将使用通用问答模式",
     "selectModel": "选择大模型",
     "modelPlaceholder": "请选择大模型",
-    "noModelSelected": "未选择大模型"
+    "noModelSelected": "未选择大模型",
+    "chatHistory": "对话历史",
+    "newChat": "新对话",
+    "noHistory": "暂无对话历史",
+    "deleteHistoryConfirm": "确定要删除该对话吗？",
+    "deleteHistorySuccess": "删除对话成功",
+    "deleteHistoryError": "删除对话失败",
+    "today": "今天",
+    "yesterday": "昨天",
+    "lastSevenDays": "最近7天",
+    "lastThirtyDays": "最近30天",
+    "earlier": "更早"
   },
   "systemConfig": {
     "title": "系统配置管理",

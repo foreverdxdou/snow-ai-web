@@ -19,6 +19,11 @@ import {
     MenuItem,
     FormControl,
     InputLabel,
+    List,
+    ListItem,
+    ListItemButton,
+    ListItemText,
+    Divider,
 } from '@mui/material';
 import {
     Send as SendIcon,
@@ -26,6 +31,7 @@ import {
     CheckBox as CheckBoxIcon,
     CheckBoxOutlineBlank as CheckBoxOutlineBlankIcon,
     ContentCopy as ContentCopyIcon,
+    Add as AddIcon,
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { v4 as uuidv4 } from 'uuid';
@@ -156,7 +162,9 @@ export default function QaPage() {
     const [chatHistory, setChatHistory] = useState<KbChatHistory[]>([]);
     const [loading, setLoading] = useState(false);
     const [initialLoading, setInitialLoading] = useState(true);
-    const [sessionId] = useState(uuidv4());
+    const [sessionId, setSessionId] = useState(uuidv4());
+    const [userChatHistory, setUserChatHistory] = useState<KbChatHistory[]>([]);
+    const [selectedSessionId, setSelectedSessionId] = useState<string>('');
     const chatBoxRef = useRef<HTMLDivElement>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
     const isMountedRef = useRef(true);
@@ -229,37 +237,24 @@ export default function QaPage() {
         }
     }, []);
 
-    useEffect(() => {
-        isMountedRef.current = true;
-        setInitialLoading(true);
-        // 并行加载知识库列表、历史记录和大模型配置
-        Promise.all([
-            fetchKnowledgeBases(),
-            fetchChatHistory(),
-            fetchLlmModels()
-        ]).catch(error => {
+    // 获取用户对话历史列表
+    const fetchUserChatHistory = useCallback(async () => {
+        try {
+            const response = await qaService.getUserChatHistory();
+            if (isMountedRef.current) {
+                setUserChatHistory(response.data.data);
+            }
+        } catch (error) {
+            console.error('获取用户对话历史失败:', error);
             if (isMountedRef.current) {
                 setSnackbar({
                     open: true,
-                    message: t('qa.loadError'),
+                    message: t('qa.loadHistoryError'),
                     severity: 'error',
                 });
             }
-        }).finally(() => {
-            if (isMountedRef.current) {
-                setInitialLoading(false);
-            }
-        });
-        return () => {
-            isMountedRef.current = false;
-            setKnowledgeBases([]);
-            setSelectedKbs([]);
-            setChatHistory([]);
-            setLlmModels([]);
-            setSelectedModel('');
-            setInitialLoading(false);
-        };
-    }, [fetchKnowledgeBases, fetchChatHistory, fetchLlmModels, t]);
+        }
+    }, [t]);
 
     // 使用 useCallback 优化中断会话处理
     const handleAbort = useCallback(() => {
@@ -522,130 +517,265 @@ export default function QaPage() {
         setQuestion(event.target.value);
     }, []);
 
-    // 在组件卸载时清理
+    // 处理选择历史会话
+    const handleSelectSession = useCallback(async (sid: string) => {
+        setSelectedSessionId(sid);
+        setSessionId(sid);
+        try {
+            const response = await qaService.getChatHistory(sid);
+            if (isMountedRef.current) {
+                setChatHistory(response.data.data.records);
+                scrollToBottom();
+            }
+        } catch (error) {
+            console.error('获取对话历史失败:', error);
+            if (isMountedRef.current) {
+                setSnackbar({
+                    open: true,
+                    message: t('qa.loadHistoryError'),
+                    severity: 'error',
+                });
+            }
+        }
+    }, [t, scrollToBottom]);
+
+    // 开始新对话
+    const handleNewChat = useCallback(() => {
+        const newSessionId = uuidv4();
+        setSessionId(newSessionId);
+        setSelectedSessionId(newSessionId);
+        setChatHistory([]);
+    }, []);
+
+    // 初始化加载
     useEffect(() => {
+        isMountedRef.current = true;
+        setInitialLoading(true);
+
+        const initializeData = async () => {
+            try {
+                await Promise.all([
+                    fetchKnowledgeBases(),
+                    fetchChatHistory(),
+                    fetchLlmModels(),
+                    fetchUserChatHistory(),
+                ]);
+            } catch (error) {
+                if (isMountedRef.current) {
+                    setSnackbar({
+                        open: true,
+                        message: t('qa.loadError'),
+                        severity: 'error',
+                    });
+                }
+            } finally {
+                if (isMountedRef.current) {
+                    setInitialLoading(false);
+                }
+            }
+        };
+
+        initializeData();
+
         return () => {
             isMountedRef.current = false;
-            handleAbort();
-            setChatHistory([]);
             setKnowledgeBases([]);
             setSelectedKbs([]);
-            setQuestion('');
-            setLoading(false);
+            setChatHistory([]);
+            setLlmModels([]);
+            setSelectedModel('');
+            setInitialLoading(false);
             if (abortControllerRef.current) {
                 abortControllerRef.current.abort();
                 abortControllerRef.current = null;
             }
         };
-    }, [handleAbort]);
+    }, [fetchKnowledgeBases, fetchChatHistory, fetchLlmModels, fetchUserChatHistory, t]);
+
+    // 在发送消息后刷新对话历史列表
+    useEffect(() => {
+        if (chatHistory.length > 0) {
+            fetchUserChatHistory();
+        }
+    }, [chatHistory, fetchUserChatHistory]);
 
     return (
-        <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <Box sx={{ height: '100%', display: 'flex' }}>
+            {/* 左侧对话历史面板 */}
             <Box sx={{
-                p: 3,
-                borderBottom: '1px solid',
+                width: 260,
+                borderRight: '1px solid',
                 borderColor: 'divider',
                 bgcolor: 'background.paper',
+                display: 'flex',
+                flexDirection: 'column',
             }}>
                 <Box sx={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    mb: 2,
+                    p: 2,
+                    borderBottom: '1px solid',
+                    borderColor: 'divider',
                 }}>
-                    <Typography variant="h5" sx={{ fontWeight: 600 }}>
-                        {t('qa.title')}
-                    </Typography>
                     <Button
-                        variant="outlined"
-                        color="error"
-                        startIcon={<DeleteIcon />}
-                        onClick={handleClearHistory}
+                        fullWidth
+                        variant="contained"
+                        startIcon={<AddIcon />}
+                        onClick={handleNewChat}
                     >
-                        {t('qa.clearHistory')}
+                        {t('qa.newChat')}
                     </Button>
                 </Box>
-
-                {initialLoading ? (
-                    <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
-                        <CircularProgress size={24} />
-                    </Box>
-                ) : (
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                        <KnowledgeBaseSelector
-                            knowledgeBases={knowledgeBases}
-                            selectedKbs={selectedKbs}
-                            onSelectAll={handleSelectAll}
-                            onSelectKb={handleKbSelect}
-                        />
-                    </Box>
-                )}
-            </Box>
-
-            <Box
-                ref={chatBoxRef}
-                sx={{
+                <List sx={{
                     flex: 1,
                     overflow: 'auto',
-                    p: 3,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 2,
-                }}
-            >
-                {initialLoading ? (
-                    <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-                        <CircularProgress />
-                    </Box>
-                ) : (
-                    chatHistory.map((chat, index) => (
-                        <ChatMessage key={index} chat={chat} />
-                    ))
-                )}
+                    py: 0,
+                }}>
+                    {userChatHistory.length === 0 ? (
+                        <ListItem>
+                            <ListItemText
+                                primary={t('qa.noHistory')}
+                                sx={{ color: 'text.secondary', textAlign: 'center' }}
+                            />
+                        </ListItem>
+                    ) : (
+                        userChatHistory.map((chat) => (
+                            <ListItemButton
+                                key={chat.sessionId}
+                                selected={chat.sessionId === selectedSessionId}
+                                onClick={() => handleSelectSession(chat.sessionId)}
+                                sx={{
+                                    py: 2,
+                                    borderBottom: '1px solid',
+                                    borderColor: 'divider',
+                                    '&.Mui-selected': {
+                                        bgcolor: 'action.selected',
+                                    },
+                                }}
+                            >
+                                <ListItemText
+                                    primary={chat.question}
+                                    primaryTypographyProps={{
+                                        noWrap: true,
+                                        sx: { fontWeight: chat.sessionId === selectedSessionId ? 600 : 400 }
+                                    }}
+                                    secondary={new Date(chat.createTime).toLocaleDateString()}
+                                    secondaryTypographyProps={{
+                                        sx: { fontSize: '0.75rem' }
+                                    }}
+                                />
+                            </ListItemButton>
+                        ))
+                    )}
+                </List>
             </Box>
 
-            <Box sx={{
-                p: 3,
-                borderTop: '1px solid',
-                borderColor: 'divider',
-                bgcolor: 'background.paper',
-            }}>
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    <FormControl size="small" sx={{ alignSelf: 'flex-start', width: 200 }}>
-                        <InputLabel id="model-select-label">{t('qa.selectModel')}</InputLabel>
-                        <Select
-                            labelId="model-select-label"
-                            value={selectedModel}
-                            label={t('qa.selectModel')}
-                            onChange={(e) => setSelectedModel(e.target.value)}
-                            sx={{
-                                bgcolor: 'background.paper',
-                                '& .MuiOutlinedInput-notchedOutline': {
-                                    borderColor: 'divider',
-                                },
-                                '&:hover .MuiOutlinedInput-notchedOutline': {
-                                    borderColor: 'primary.main',
-                                },
-                            }}
+            {/* 右侧聊天面板 */}
+            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                <Box sx={{
+                    p: 3,
+                    borderBottom: '1px solid',
+                    borderColor: 'divider',
+                    bgcolor: 'background.paper',
+                }}>
+                    <Box sx={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        mb: 2,
+                    }}>
+                        <Typography variant="h5" sx={{ fontWeight: 600 }}>
+                            {t('qa.title')}
+                        </Typography>
+                        <Button
+                            variant="outlined"
+                            color="error"
+                            startIcon={<DeleteIcon />}
+                            onClick={handleClearHistory}
                         >
-                            <MenuItem value="">
-                                <em>{t('qa.noModelSelected')}</em>
-                            </MenuItem>
-                            {llmModels.map((model) => (
-                                <MenuItem key={model.id} value={model.id}>
-                                    {model.modelName}
+                            {t('qa.clearHistory')}
+                        </Button>
+                    </Box>
+
+                    {initialLoading ? (
+                        <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+                            <CircularProgress size={24} />
+                        </Box>
+                    ) : (
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                            <KnowledgeBaseSelector
+                                knowledgeBases={knowledgeBases}
+                                selectedKbs={selectedKbs}
+                                onSelectAll={handleSelectAll}
+                                onSelectKb={handleKbSelect}
+                            />
+                        </Box>
+                    )}
+                </Box>
+
+                <Box
+                    ref={chatBoxRef}
+                    sx={{
+                        flex: 1,
+                        overflow: 'auto',
+                        p: 3,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 2,
+                    }}
+                >
+                    {initialLoading ? (
+                        <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+                            <CircularProgress />
+                        </Box>
+                    ) : (
+                        chatHistory.map((chat, index) => (
+                            <ChatMessage key={index} chat={chat} />
+                        ))
+                    )}
+                </Box>
+
+                <Box sx={{
+                    p: 3,
+                    borderTop: '1px solid',
+                    borderColor: 'divider',
+                    bgcolor: 'background.paper',
+                }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        <FormControl size="small" sx={{ alignSelf: 'flex-start', width: 200 }}>
+                            <InputLabel id="model-select-label">{t('qa.selectModel')}</InputLabel>
+                            <Select
+                                labelId="model-select-label"
+                                value={selectedModel}
+                                label={t('qa.selectModel')}
+                                onChange={(e) => setSelectedModel(e.target.value)}
+                                sx={{
+                                    bgcolor: 'background.paper',
+                                    '& .MuiOutlinedInput-notchedOutline': {
+                                        borderColor: 'divider',
+                                    },
+                                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                                        borderColor: 'primary.main',
+                                    },
+                                }}
+                            >
+                                <MenuItem value="">
+                                    <em>{t('qa.noModelSelected')}</em>
                                 </MenuItem>
-                            ))}
-                        </Select>
-                    </FormControl>
-                    <ChatInput
-                        question={question}
-                        loading={loading}
-                        onQuestionChange={handleQuestionChange}
-                        onKeyPress={handleKeyPress}
-                        onSend={handleSend}
-                        onAbort={handleAbort}
-                    />
+                                {llmModels.map((model) => (
+                                    <MenuItem key={model.id} value={model.id}>
+                                        {model.modelName}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
+                        <ChatInput
+                            question={question}
+                            loading={loading}
+                            onQuestionChange={handleQuestionChange}
+                            onKeyPress={handleKeyPress}
+                            onSend={handleSend}
+                            onAbort={handleAbort}
+                        />
+                    </Box>
                 </Box>
             </Box>
 

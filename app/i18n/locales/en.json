@@ -378,7 +378,18 @@
     "noKbSelected": "No knowledge base selected, using general Q&A mode",
     "selectModel": "Select LLM Model",
     "modelPlaceholder": "Please select a model",
-    "noModelSelected": "No model selected"
+    "noModelSelected": "No model selected",
+    "chatHistory": "Chat History",
+    "newChat": "New Chat",
+    "noHistory": "No chat history",
+    "deleteHistoryConfirm": "Are you sure to delete this chat?",
+    "deleteHistorySuccess": "Chat deleted successfully",
+    "deleteHistoryError": "Failed to delete chat",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "lastSevenDays": "Last 7 Days",
+    "lastThirtyDays": "Last 30 Days",
+    "earlier": "Earlier"
   },
   "systemConfig": {
     "title": "System Configuration",
