@@ -24,6 +24,11 @@ import {
     ListItemButton,
     ListItemText,
     Divider,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogContentText,
+    DialogActions,
 } from '@mui/material';
 import {
     Send as SendIcon,
@@ -32,6 +37,7 @@ import {
     CheckBoxOutlineBlank as CheckBoxOutlineBlankIcon,
     ContentCopy as ContentCopyIcon,
     Add as AddIcon,
+    DeleteOutline as DeleteOutlineIcon,
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { v4 as uuidv4 } from 'uuid';
@@ -54,6 +60,7 @@ import { ChatInput } from './components/ChatInput';
 import { llmService } from '@/app/services/llm';
 import type { LlmConfig } from '@/app/types/llm';
 import { CommonSelect } from '@/app/components/common/CommonSelect';
+import { format, isToday, isWithinInterval, subDays } from 'date-fns';
 
 // 添加自定义样式
 const markdownStyles = {
@@ -152,6 +159,33 @@ const markdownStyles = {
     },
 };
 
+// 添加分组函数
+const groupChatHistory = (history: KbChatHistory[]) => {
+    const today = new Date();
+    const sevenDaysAgo = subDays(today, 7);
+    const thirtyDaysAgo = subDays(today, 30);
+
+    return history.reduce((groups, chat) => {
+        const chatDate = new Date(chat.createTime);
+        
+        if (isToday(chatDate)) {
+            if (!groups.today) groups.today = [];
+            groups.today.push(chat);
+        } else if (isWithinInterval(chatDate, { start: sevenDaysAgo, end: today })) {
+            if (!groups.lastSevenDays) groups.lastSevenDays = [];
+            groups.lastSevenDays.push(chat);
+        } else if (isWithinInterval(chatDate, { start: thirtyDaysAgo, end: sevenDaysAgo })) {
+            if (!groups.lastThirtyDays) groups.lastThirtyDays = [];
+            groups.lastThirtyDays.push(chat);
+        } else {
+            if (!groups.earlier) groups.earlier = [];
+            groups.earlier.push(chat);
+        }
+        
+        return groups;
+    }, {} as Record<string, KbChatHistory[]>);
+};
+
 export default function QaPage() {
     const { t } = useTranslation();
     const [knowledgeBases, setKnowledgeBases] = useState<KnowledgeBaseVO[]>([]);
@@ -173,6 +207,14 @@ export default function QaPage() {
         open: false,
         message: '',
         severity: 'success' as 'success' | 'error',
+    });
+
+    const [deleteDialog, setDeleteDialog] = useState<{
+        open: boolean;
+        sessionId: string;
+    }>({
+        open: false,
+        sessionId: '',
     });
 
     // 获取知识库列表
@@ -547,6 +589,51 @@ export default function QaPage() {
         setChatHistory([]);
     }, []);
 
+    // 处理删除单个会话
+    const handleDeleteSession = useCallback(async (sid: string, event: React.MouseEvent) => {
+        event.stopPropagation(); // 阻止事件冒泡，避免触发会话选择
+        setDeleteDialog({
+            open: true,
+            sessionId: sid,
+        });
+    }, []);
+
+    // 确认删除会话
+    const handleConfirmDelete = useCallback(async () => {
+        const sid = deleteDialog.sessionId;
+        try {
+            await qaService.clearChatHistory(sid);
+            if (isMountedRef.current) {
+                if (sid === sessionId) {
+                    setChatHistory([]);
+                }
+                setSnackbar({
+                    open: true,
+                    message: t('qa.deleteHistorySuccess'),
+                    severity: 'success',
+                });
+                // 重新获取会话列表
+                fetchUserChatHistory();
+            }
+        } catch (error) {
+            console.error('删除会话失败:', error);
+            if (isMountedRef.current) {
+                setSnackbar({
+                    open: true,
+                    message: t('qa.deleteHistoryError'),
+                    severity: 'error',
+                });
+            }
+        } finally {
+            setDeleteDialog({ open: false, sessionId: '' });
+        }
+    }, [deleteDialog.sessionId, sessionId, t, fetchUserChatHistory]);
+
+    // 取消删除
+    const handleCancelDelete = useCallback(() => {
+        setDeleteDialog({ open: false, sessionId: '' });
+    }, []);
+
     // 初始化加载
     useEffect(() => {
         isMountedRef.current = true;
@@ -614,12 +701,22 @@ export default function QaPage() {
                     p: 2,
                     borderBottom: '1px solid',
                     borderColor: 'divider',
+                    bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
                 }}>
                     <Button
                         fullWidth
                         variant="contained"
                         startIcon={<AddIcon />}
                         onClick={handleNewChat}
+                        sx={{
+                            borderRadius: 2,
+                            textTransform: 'none',
+                            fontWeight: 500,
+                            boxShadow: 'none',
+                            '&:hover': {
+                                boxShadow: 1,
+                            },
+                        }}
                     >
                         {t('qa.newChat')}
                     </Button>
@@ -628,41 +725,153 @@ export default function QaPage() {
                     flex: 1,
                     overflow: 'auto',
                     py: 0,
+                    '&::-webkit-scrollbar': {
+                        width: 4,
+                    },
+                    '&::-webkit-scrollbar-track': {
+                        background: 'transparent',
+                    },
+                    '&::-webkit-scrollbar-thumb': {
+                        background: (theme) => theme.palette.mode === 'dark' ? '#555' : '#ddd',
+                        borderRadius: 2,
+                    },
+                    '&::-webkit-scrollbar-thumb:hover': {
+                        background: (theme) => theme.palette.mode === 'dark' ? '#666' : '#bbb',
+                    },
                 }}>
                     {userChatHistory.length === 0 ? (
-                        <ListItem>
-                            <ListItemText
-                                primary={t('qa.noHistory')}
-                                sx={{ color: 'text.secondary', textAlign: 'center' }}
-                            />
-                        </ListItem>
+                        <Box sx={{ 
+                            display: 'flex', 
+                            flexDirection: 'column', 
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            height: '100%',
+                            p: 3,
+                            color: 'text.secondary',
+                        }}>
+                            <Typography variant="body2" sx={{ mb: 1 }}>
+                                {t('qa.noHistory')}
+                            </Typography>
+                            <Typography variant="caption" sx={{ textAlign: 'center' }}>
+                                点击"新对话"开始聊天
+                            </Typography>
+                        </Box>
                     ) : (
-                        userChatHistory.map((chat) => (
-                            <ListItemButton
-                                key={chat.sessionId}
-                                selected={chat.sessionId === selectedSessionId}
-                                onClick={() => handleSelectSession(chat.sessionId)}
-                                sx={{
-                                    py: 2,
-                                    borderBottom: '1px solid',
-                                    borderColor: 'divider',
-                                    '&.Mui-selected': {
-                                        bgcolor: 'action.selected',
-                                    },
-                                }}
-                            >
-                                <ListItemText
-                                    primary={chat.question}
-                                    primaryTypographyProps={{
-                                        noWrap: true,
-                                        sx: { fontWeight: chat.sessionId === selectedSessionId ? 600 : 400 }
+                        Object.entries(groupChatHistory(userChatHistory)).map(([group, chats]) => (
+                            <Box key={group}>
+                                <ListItem
+                                    sx={{
+                                        py: 1,
+                                        px: 2,
+                                        position: 'sticky',
+                                        top: 0,
+                                        zIndex: 1,
+                                        bgcolor: (theme) => 
+                                            theme.palette.mode === 'dark' 
+                                                ? 'rgba(0, 0, 0, 0.8)'
+                                                : 'rgba(255, 255, 255, 0.9)',
+                                        backdropFilter: 'blur(8px)',
+                                        borderBottom: '1px solid',
+                                        borderColor: 'divider',
                                     }}
-                                    secondary={new Date(chat.createTime).toLocaleDateString()}
-                                    secondaryTypographyProps={{
-                                        sx: { fontSize: '0.75rem' }
-                                    }}
-                                />
-                            </ListItemButton>
+                                >
+                                    <Typography
+                                        variant="caption"
+                                        sx={{
+                                            color: 'text.secondary',
+                                            fontWeight: 600,
+                                            fontSize: '0.7rem',
+                                            textTransform: 'uppercase',
+                                            letterSpacing: 0.5,
+                                            opacity: 0.8,
+                                        }}
+                                    >
+                                        {t(`qa.${group}`)}
+                                    </Typography>
+                                </ListItem>
+                                {chats.map((chat) => (
+                                    <ListItemButton
+                                        key={chat.sessionId}
+                                        selected={chat.sessionId === selectedSessionId}
+                                        onClick={() => handleSelectSession(chat.sessionId)}
+                                        sx={{
+                                            py: 1.5,
+                                            px: 2,
+                                            minHeight: 48,
+                                            transition: 'all 0.2s ease',
+                                            borderLeft: '2px solid',
+                                            borderLeftColor: chat.sessionId === selectedSessionId ? 'primary.main' : 'transparent',
+                                            position: 'relative',
+                                            '&::after': {
+                                                content: '""',
+                                                position: 'absolute',
+                                                bottom: 0,
+                                                left: chat.sessionId === selectedSessionId ? '8px' : '2px',
+                                                right: 2,
+                                                height: '1px',
+                                                bgcolor: 'divider',
+                                                opacity: 0.5,
+                                            },
+                                            '&.Mui-selected': {
+                                                bgcolor: (theme) => theme.palette.mode === 'dark' 
+                                                    ? 'rgba(144, 202, 249, 0.08)' 
+                                                    : 'rgba(33, 150, 243, 0.08)',
+                                                '&:hover': {
+                                                    bgcolor: (theme) => theme.palette.mode === 'dark'
+                                                        ? 'rgba(144, 202, 249, 0.12)'
+                                                        : 'rgba(33, 150, 243, 0.12)',
+                                                },
+                                                '& .delete-button': {
+                                                    opacity: 1,
+                                                },
+                                            },
+                                            '&:hover': {
+                                                bgcolor: (theme) => theme.palette.mode === 'dark'
+                                                    ? 'rgba(255, 255, 255, 0.05)'
+                                                    : 'rgba(0, 0, 0, 0.04)',
+                                                '& .delete-button': {
+                                                    opacity: 1,
+                                                },
+                                            },
+                                        }}
+                                    >
+                                        <ListItemText
+                                            primary={chat.question}
+                                            primaryTypographyProps={{
+                                                noWrap: true,
+                                                sx: { 
+                                                    fontWeight: chat.sessionId === selectedSessionId ? 500 : 400,
+                                                    fontSize: '0.875rem',
+                                                    color: chat.sessionId === selectedSessionId ? 'primary.main' : 'text.primary',
+                                                    opacity: chat.sessionId === selectedSessionId ? 1 : 0.85,
+                                                    pr: 4, // 为删除按钮留出空间
+                                                }
+                                            }}
+                                        />
+                                        <IconButton
+                                            size="small"
+                                            className="delete-button"
+                                            onClick={(e) => handleDeleteSession(chat.sessionId, e)}
+                                            sx={{
+                                                position: 'absolute',
+                                                right: 8,
+                                                opacity: 0,
+                                                transition: 'opacity 0.2s ease',
+                                                color: 'text.secondary',
+                                                p: 0.5,
+                                                '&:hover': {
+                                                    color: 'error.main',
+                                                    bgcolor: (theme) => theme.palette.mode === 'dark'
+                                                        ? 'rgba(244, 67, 54, 0.08)'
+                                                        : 'rgba(244, 67, 54, 0.04)',
+                                                },
+                                            }}
+                                        >
+                                            <DeleteOutlineIcon sx={{ fontSize: 18 }} />
+                                        </IconButton>
+                                    </ListItemButton>
+                                ))}
+                            </Box>
                         ))
                     )}
                 </List>
@@ -792,6 +1001,57 @@ export default function QaPage() {
                     {snackbar.message}
                 </Alert>
             </Snackbar>
+
+            {/* 删除确认对话框 */}
+            <Dialog
+                open={deleteDialog.open}
+                onClose={handleCancelDelete}
+                PaperProps={{
+                    sx: {
+                        width: '100%',
+                        maxWidth: 400,
+                        borderRadius: 2,
+                    }
+                }}
+            >
+                <DialogTitle sx={{ 
+                    pb: 1,
+                    fontWeight: 600,
+                }}>
+                    {t('qa.deleteHistoryConfirm')}
+                </DialogTitle>
+                <DialogContent>
+                    <DialogContentText sx={{ 
+                        color: 'text.secondary',
+                        fontSize: '0.875rem',
+                    }}>
+                        此操作将永久删除该对话，是否继续？
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions sx={{ px: 3, pb: 3 }}>
+                    <Button
+                        onClick={handleCancelDelete}
+                        variant="outlined"
+                        sx={{
+                            minWidth: 80,
+                            fontWeight: 500,
+                        }}
+                    >
+                        取消
+                    </Button>
+                    <Button
+                        onClick={handleConfirmDelete}
+                        variant="contained"
+                        color="error"
+                        sx={{
+                            minWidth: 80,
+                            fontWeight: 500,
+                        }}
+                    >
+                        删除
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 } 
