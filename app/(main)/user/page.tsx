@@ -66,10 +66,10 @@ export default function UserPage() {
     () => ({
       current: 1,
       size: 10,
-      username: "",
-      nickname: "",
-      email: "",
-      phone: "",
+      username: undefined,
+      nickname:undefined,
+      email: undefined,
+      phone: undefined,
       status: undefined,
     }),
     []
@@ -86,13 +86,17 @@ export default function UserPage() {
   } = usePerformanceData<User>({
     fetchData: userService.getList,
     defaultParams,
-    autoFetch: true,
+    autoFetch: false,
   });
+
+  // 使用 useEffect 来处理初始数据获取
+  React.useEffect(() => {
+    refresh();
+  }, [refresh]);
 
   // 获取角色列表
   const fetchRoles = useCallback(async () => {
     let isMounted = true;
-    console.log("fetchRoles");
     try {
       const response = await roleService.getList({ current: 1, size: 100 });
       if (isMounted && response.data?.code === 200 && response.data?.data) {
@@ -106,6 +110,7 @@ export default function UserPage() {
     };
   }, []);
 
+  // 使用 useEffect 来处理角色列表获取
   React.useEffect(() => {
     const cleanupFetch = fetchRoles();
     return () => {
@@ -414,7 +419,6 @@ export default function UserPage() {
               buttonVariant="reset"
               onClick={() => {
                 setParams(defaultParams);
-                refresh();
               }}
               sx={{ ml: 1 }}
             >
