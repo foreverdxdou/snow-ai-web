@@ -46,11 +46,6 @@ import { knowledgeService } from '@/app/services/knowledge';
 import type { KnowledgeBaseVO } from '@/app/types/knowledge';
 import type { KbChatHistory, QaRequest } from '@/app/types/qa';
 import Cookies from 'js-cookie';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import rehypeRaw from 'rehype-raw';
-import rehypeSanitize from 'rehype-sanitize';
-import rehypeHighlight from 'rehype-highlight';
 import 'highlight.js/styles/github-dark.css';
 import { Theme } from '@mui/material/styles';
 import { fetchEventSource } from '@microsoft/fetch-event-source';
@@ -59,7 +54,6 @@ import { ChatMessage } from './components/ChatMessage';
 import { ChatInput } from './components/ChatInput';
 import { llmService } from '@/app/services/llm';
 import type { LlmConfig } from '@/app/types/llm';
-import { CommonSelect } from '@/app/components/common/CommonSelect';
 import { format, isToday, isWithinInterval, subDays } from 'date-fns';
 
 // 添加自定义样式
