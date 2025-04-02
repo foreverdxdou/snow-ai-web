@@ -397,7 +397,7 @@ export default function UserPage() {
             />
             <CommonSelect
               label={t("common.user.status")}
-              value={params.status || ""}
+              value={params.status}
               onChange={(value) =>
                 setParams({ ...params, status: value as number })
               }
