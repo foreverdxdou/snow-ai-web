@@ -11,7 +11,7 @@ export const llmService = {
   },
 
   // 获取指定大模型配置
-  getById: (id: number) => {
+  getById: (id: string) => {
     return request.get<Result<LlmConfig>>(`${BASE_URL}/${id}`);
   },
 
@@ -26,7 +26,12 @@ export const llmService = {
   },
 
   // 删除大模型配置
-  delete: (id: number) => {
+  delete: (id: string) => {
     return request.delete<Result<boolean>>(`${BASE_URL}/${id}`);
-  }
+  },
+
+  // 获取可用的大模型配置
+  getEnabledLlmConfig: () => {
+    return request.get<Result<LlmConfig[]>>(`${BASE_URL}/enabled`);
+  },
 }; 

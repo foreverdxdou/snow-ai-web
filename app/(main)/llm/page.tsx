@@ -156,7 +156,7 @@ export default function LlmPage() {
     }
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string) => {
     if (!window.confirm(t('llm.deleteConfirmMessage'))) return;
     try {
       const response = await llmService.delete(id);

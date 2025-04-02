@@ -1,5 +1,5 @@
 export interface LlmConfig {
-  id: number;
+  id: string;
   modelName: string;
   apiUrl: string;
   apiKey: string;
