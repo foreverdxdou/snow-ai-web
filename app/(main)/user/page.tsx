@@ -29,6 +29,7 @@ import { roleService } from "@/app/services/role";
 import type { User, UserSaveRequest } from "@/app/types/user";
 import type { Role } from "@/app/types/role";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
+import { alpha, Theme } from "@mui/material/styles";
 
 export default function UserPage() {
   const { t } = useTranslation();
@@ -353,6 +354,11 @@ export default function UserPage() {
             borderBottom: "1px solid",
             borderColor: "divider",
             bgcolor: "background.paper",
+            position: "sticky",
+            top: 0,
+            zIndex: 1,
+            backdropFilter: "blur(8px)",
+            backgroundColor: (theme) => alpha(theme.palette.background.paper, 0.8),
           }}
         >
           <SearchBar>
@@ -362,6 +368,7 @@ export default function UserPage() {
               onChange={(value) =>
                 setParams({ ...params, username: value as string })
               }
+              sx={{ minWidth: 200 }}
             />
             <CommonInput
               label={t("common.user.nickname")}
@@ -369,6 +376,7 @@ export default function UserPage() {
               onChange={(value) =>
                 setParams({ ...params, nickname: value as string })
               }
+              sx={{ minWidth: 200 }}
             />
             <CommonInput
               label={t("common.user.email")}
@@ -376,6 +384,7 @@ export default function UserPage() {
               onChange={(value) =>
                 setParams({ ...params, email: value as string })
               }
+              sx={{ minWidth: 200 }}
             />
             <CommonInput
               label={t("common.user.phone")}
@@ -383,6 +392,7 @@ export default function UserPage() {
               onChange={(value) =>
                 setParams({ ...params, phone: value as string })
               }
+              sx={{ minWidth: 200 }}
             />
             <CommonSelect
               label={t("common.user.status")}
@@ -405,13 +415,14 @@ export default function UserPage() {
                 setParams(defaultParams);
                 refresh();
               }}
+              sx={{ ml: 1 }}
             >
               {t("common.reset")}
             </CommonButton>
             <CommonButton
               buttonVariant="add"
               onClick={() => handleOpen()}
-              sx={{ marginLeft: "auto" }}
+              sx={{ ml: "auto" }}
             >
               {t("common.user.add")}
             </CommonButton>
@@ -424,9 +435,23 @@ export default function UserPage() {
             data={users}
             columns={columns}
             emptyMessage={t("common.noData")}
+            sx={{
+              '& .MuiTableCell-root': {
+                py: 2,
+                px: 3,
+                fontSize: '0.875rem',
+              },
+              '& .MuiTableHead-root .MuiTableCell-root': {
+                fontWeight: 600,
+                backgroundColor: (theme: Theme) => alpha(theme.palette.primary.main, 0.04),
+              },
+              '& .MuiTableRow-root:hover': {
+                backgroundColor: (theme: Theme) => alpha(theme.palette.primary.main, 0.04),
+              },
+            }}
           />
 
-          <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
+          <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 3 }}>
             <Pagination
               total={total}
               current={Number(params.current)}
@@ -436,13 +461,39 @@ export default function UserPage() {
           </Box>
         </Box>
 
-        <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-          <DialogTitle>
+        <Dialog 
+          open={open} 
+          onClose={handleClose} 
+          maxWidth="sm" 
+          fullWidth
+          PaperProps={{
+            sx: {
+              borderRadius: 2,
+              boxShadow: (theme) => `0 8px 32px ${alpha(theme.palette.common.black, 0.1)}`,
+            }
+          }}
+        >
+          <DialogTitle sx={{ 
+            pb: 2,
+            borderBottom: '1px solid',
+            borderColor: 'divider',
+            backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.04),
+          }}>
             {editingUser ? t("common.user.edit") : t("common.user.add")}
           </DialogTitle>
-          <DialogContent>
+          <DialogContent sx={{ pt: 3 }}>
             <Box
-              sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 2 }}
+              sx={{ 
+                display: "flex", 
+                flexDirection: "column", 
+                gap: 2.5,
+                '& .MuiFormControl-root': {
+                  transition: 'all 0.2s ease-in-out',
+                  '&:hover': {
+                    transform: 'translateY(-1px)',
+                  }
+                }
+              }}
             >
               <CommonInput
                 label={t("common.user.username")}
@@ -622,7 +673,13 @@ export default function UserPage() {
               />
             </Box>
           </DialogContent>
-          <DialogActions>
+          <DialogActions sx={{ 
+            px: 3, 
+            py: 2,
+            borderTop: '1px solid',
+            borderColor: 'divider',
+            backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.02),
+          }}>
             <CommonButton buttonVariant="cancel" onClick={handleClose}>
               {t("common.cancel")}
             </CommonButton>
@@ -647,19 +704,44 @@ export default function UserPage() {
           onClose={() => setDeleteDialogOpen(false)}
           maxWidth="xs"
           fullWidth
+          PaperProps={{
+            sx: {
+              borderRadius: 2,
+              boxShadow: (theme) => `0 8px 32px ${alpha(theme.palette.common.black, 0.1)}`,
+            }
+          }}
         >
-          <DialogTitle>{t("common.user.deleteConfirm")}</DialogTitle>
-          <DialogContent>
-            <Typography>{t("common.user.deleteConfirmMessage")}</Typography>
+          <DialogTitle sx={{ 
+            pb: 2,
+            borderBottom: '1px solid',
+            borderColor: 'divider',
+            backgroundColor: (theme) => alpha(theme.palette.error.main, 0.04),
+          }}>
+            {t("common.user.deleteConfirm")}
+          </DialogTitle>
+          <DialogContent sx={{ pt: 3 }}>
+            <Typography color="error.main">
+              {t("common.user.deleteConfirmMessage")}
+            </Typography>
           </DialogContent>
-          <DialogActions>
+          <DialogActions sx={{ 
+            px: 3, 
+            py: 2,
+            borderTop: '1px solid',
+            borderColor: 'divider',
+            backgroundColor: (theme) => alpha(theme.palette.error.main, 0.02),
+          }}>
             <CommonButton
               buttonVariant="cancel"
               onClick={() => setDeleteDialogOpen(false)}
             >
               {t("common.cancel")}
             </CommonButton>
-            <CommonButton buttonVariant="confirm" onClick={handleDeleteConfirm}>
+            <CommonButton 
+              buttonVariant="confirm" 
+              onClick={handleDeleteConfirm}
+              color="error"
+            >
               {t("common.confirm")}
             </CommonButton>
           </DialogActions>
@@ -669,11 +751,24 @@ export default function UserPage() {
           open={snackbar.open}
           autoHideDuration={3000}
           onClose={() => setSnackbar({ ...snackbar, open: false })}
+          anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+          sx={{
+            '& .MuiSnackbarContent-root': {
+              borderRadius: 2,
+              boxShadow: (theme) => `0 8px 32px ${alpha(theme.palette.common.black, 0.1)}`,
+            }
+          }}
         >
           <Alert
             onClose={() => setSnackbar({ ...snackbar, open: false })}
             severity={snackbar.severity}
-            sx={{ width: "100%" }}
+            sx={{ 
+              width: "100%",
+              borderRadius: 2,
+              '& .MuiAlert-icon': {
+                fontSize: '1.5rem',
+              }
+            }}
           >
             {snackbar.message}
           </Alert>

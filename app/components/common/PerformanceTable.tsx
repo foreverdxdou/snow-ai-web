@@ -26,6 +26,7 @@ interface PerformanceTableProps<T> {
     emptyMessage?: string;
     rowHeight?: number;
     overscan?: number;
+    sx?: any;
 }
 
 export function PerformanceTable<T>({
@@ -35,6 +36,7 @@ export function PerformanceTable<T>({
     emptyMessage = '暂无数据',
     rowHeight = 48,
     overscan = 10,
+    sx,
 }: PerformanceTableProps<T>) {
     const [tableHeight, setTableHeight] = useState(600);
 
@@ -84,6 +86,7 @@ export function PerformanceTable<T>({
                 height: tableHeight, 
                 overflow: 'auto',
                 position: 'relative',
+                ...sx,
             }}
         >
             <Table stickyHeader sx={{ borderCollapse: 'separate' }}>
