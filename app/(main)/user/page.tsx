@@ -92,6 +92,7 @@ export default function UserPage() {
   // 获取角色列表
   const fetchRoles = useCallback(async () => {
     let isMounted = true;
+    console.log("fetchRoles");
     try {
       const response = await roleService.getList({ current: 1, size: 100 });
       if (isMounted && response.data?.code === 200 && response.data?.data) {
