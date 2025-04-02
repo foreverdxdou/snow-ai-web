@@ -21,7 +21,7 @@ export interface QaResponse {
 export interface KbChatHistory {
     id: number;
     sessionId: string;
-    kbId: number;
+    kbIds: string;
     userId: number;
     question: string;
     answer: string;

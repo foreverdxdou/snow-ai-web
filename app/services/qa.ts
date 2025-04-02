@@ -1,6 +1,6 @@
 import request from '@/app/utils/request';
 import type { Result } from '@/app/types/result';
-import type { QaRequest, QaResponse, PageKbChatHistory } from '@/app/types/qa';
+import type { QaRequest, QaResponse, PageKbChatHistory, KbChatHistory } from '@/app/types/qa';
 
 const BASE_URL = '/kb/qa';
 
@@ -23,6 +23,11 @@ export const qaService = {
     // 知识库流式问答
     chatStream: (kbIds: number[], data: QaRequest) => {
         return request.post<Result<any>>(`${BASE_URL}/chat/stream?kbIds=${kbIds.join(',')}`, data);
+    },
+
+    // 获取用户对话历史列表
+    getUserChatHistory: () => {
+        return request.get<Result<KbChatHistory[]>>(`${BASE_URL}/history/user`);
     },
 
     // 获取对话历史

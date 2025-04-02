@@ -311,7 +311,7 @@ export default function QaPage() {
         const newQuestion: KbChatHistory = {
             id: Date.now(),
             sessionId,
-            kbId: selectedKbs[0] || 0,
+            kbIds: selectedKbs.join(','),
             userId: 0,
             question: questionText,
             answer: t('qa.thinking'),
@@ -342,7 +342,7 @@ export default function QaPage() {
 
             let answer = '';
             let retryCount = 0;
-            const maxRetries = 3;
+            const maxRetries = 1;
             let isRetrying = false;
 
             const connect = async () => {
