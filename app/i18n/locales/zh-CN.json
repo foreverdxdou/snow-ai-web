@@ -388,7 +388,10 @@
     "systemError": "系统错误，请稍后重试",
     "connecting": "正在连接...",
     "thinking": "思考中...",
-    "noKbSelected": "未选择知识库，将使用通用问答模式"
+    "noKbSelected": "未选择知识库，将使用通用问答模式",
+    "selectModel": "选择大模型",
+    "modelPlaceholder": "请选择大模型",
+    "noModelSelected": "未选择大模型"
   },
   "systemConfig": {
     "title": "系统配置管理",

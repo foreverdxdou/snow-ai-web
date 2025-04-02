@@ -375,7 +375,10 @@
     "systemError": "System error, please try again later",
     "connecting": "Connecting...",
     "thinking": "Thinking...",
-    "noKbSelected": "No knowledge base selected, using general Q&A mode"
+    "noKbSelected": "No knowledge base selected, using general Q&A mode",
+    "selectModel": "Select LLM Model",
+    "modelPlaceholder": "Please select a model",
+    "noModelSelected": "No model selected"
   },
   "systemConfig": {
     "title": "System Configuration",

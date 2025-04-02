@@ -15,6 +15,10 @@ import {
     Alert,
     Snackbar,
     CircularProgress,
+    Select,
+    MenuItem,
+    FormControl,
+    InputLabel,
 } from '@mui/material';
 import {
     Send as SendIcon,
@@ -41,6 +45,9 @@ import { fetchEventSource } from '@microsoft/fetch-event-source';
 import { KnowledgeBaseSelector } from './components/KnowledgeBaseSelector';
 import { ChatMessage } from './components/ChatMessage';
 import { ChatInput } from './components/ChatInput';
+import { llmService } from '@/app/services/llm';
+import type { LlmConfig } from '@/app/types/llm';
+import { CommonSelect } from '@/app/components/common/CommonSelect';
 
 // 添加自定义样式
 const markdownStyles = {
@@ -143,6 +150,8 @@ export default function QaPage() {
     const { t } = useTranslation();
     const [knowledgeBases, setKnowledgeBases] = useState<KnowledgeBaseVO[]>([]);
     const [selectedKbs, setSelectedKbs] = useState<number[]>([]);
+    const [llmModels, setLlmModels] = useState<LlmConfig[]>([]);
+    const [selectedModel, setSelectedModel] = useState<string>('');
     const [question, setQuestion] = useState('');
     const [chatHistory, setChatHistory] = useState<KbChatHistory[]>([]);
     const [loading, setLoading] = useState(false);
@@ -206,13 +215,28 @@ export default function QaPage() {
         }
     }, [sessionId, t]);
 
+    // 获取可用的大模型配置
+    const fetchLlmModels = useCallback(async () => {
+        try {
+            if (isMountedRef.current) {
+                const response = await llmService.getEnabledLlmConfig();
+                if (response.data.code === 200 && response.data.data) {
+                    setLlmModels(response.data.data);
+                }
+            }
+        } catch (error) {
+            console.error('获取大模型配置失败:', error);
+        }
+    }, []);
+
     useEffect(() => {
         isMountedRef.current = true;
         setInitialLoading(true);
-        // 并行加载知识库列表和历史记录
+        // 并行加载知识库列表、历史记录和大模型配置
         Promise.all([
             fetchKnowledgeBases(),
-            fetchChatHistory()
+            fetchChatHistory(),
+            fetchLlmModels()
         ]).catch(error => {
             if (isMountedRef.current) {
                 setSnackbar({
@@ -231,9 +255,11 @@ export default function QaPage() {
             setKnowledgeBases([]);
             setSelectedKbs([]);
             setChatHistory([]);
+            setLlmModels([]);
+            setSelectedModel('');
             setInitialLoading(false);
         };
-    }, [fetchKnowledgeBases, fetchChatHistory, t]);
+    }, [fetchKnowledgeBases, fetchChatHistory, fetchLlmModels, t]);
 
     // 使用 useCallback 优化中断会话处理
     const handleAbort = useCallback(() => {
@@ -305,7 +331,8 @@ export default function QaPage() {
                 question: questionText,
                 sessionId,
                 temperature: 0.7,
-                maxTokens: 2000
+                maxTokens: 2000,
+                ...(selectedModel && { llmId: selectedModel })
             };
 
             const baseUrl = '/api/v1/kb/qa';
@@ -436,7 +463,7 @@ export default function QaPage() {
             setLoading(false);
             abortControllerRef.current = null;
         }
-    }, [question, loading, sessionId, selectedKbs, t, handleAbort, scrollToBottom, updateChatHistory]);
+    }, [question, loading, sessionId, selectedKbs, selectedModel, t, handleAbort, scrollToBottom, updateChatHistory]);
 
     // 使用 useCallback 优化按键事件处理
     const handleKeyPress = useCallback((event: React.KeyboardEvent) => {
@@ -544,12 +571,14 @@ export default function QaPage() {
                         <CircularProgress size={24} />
                     </Box>
                 ) : (
-                    <KnowledgeBaseSelector
-                        knowledgeBases={knowledgeBases}
-                        selectedKbs={selectedKbs}
-                        onSelectAll={handleSelectAll}
-                        onSelectKb={handleKbSelect}
-                    />
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        <KnowledgeBaseSelector
+                            knowledgeBases={knowledgeBases}
+                            selectedKbs={selectedKbs}
+                            onSelectAll={handleSelectAll}
+                            onSelectKb={handleKbSelect}
+                        />
+                    </Box>
                 )}
             </Box>
 
@@ -581,14 +610,43 @@ export default function QaPage() {
                 borderColor: 'divider',
                 bgcolor: 'background.paper',
             }}>
-                <ChatInput
-                    question={question}
-                    loading={loading}
-                    onQuestionChange={handleQuestionChange}
-                    onKeyPress={handleKeyPress}
-                    onSend={handleSend}
-                    onAbort={handleAbort}
-                />
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <FormControl size="small" sx={{ alignSelf: 'flex-start', width: 200 }}>
+                        <InputLabel id="model-select-label">{t('qa.selectModel')}</InputLabel>
+                        <Select
+                            labelId="model-select-label"
+                            value={selectedModel}
+                            label={t('qa.selectModel')}
+                            onChange={(e) => setSelectedModel(e.target.value)}
+                            sx={{
+                                bgcolor: 'background.paper',
+                                '& .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: 'divider',
+                                },
+                                '&:hover .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: 'primary.main',
+                                },
+                            }}
+                        >
+                            <MenuItem value="">
+                                <em>{t('qa.noModelSelected')}</em>
+                            </MenuItem>
+                            {llmModels.map((model) => (
+                                <MenuItem key={model.id} value={model.id}>
+                                    {model.modelName}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
+                    <ChatInput
+                        question={question}
+                        loading={loading}
+                        onQuestionChange={handleQuestionChange}
+                        onKeyPress={handleKeyPress}
+                        onSend={handleSend}
+                        onAbort={handleAbort}
+                    />
+                </Box>
             </Box>
 
             <Snackbar
