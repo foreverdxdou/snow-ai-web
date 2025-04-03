@@ -23,6 +23,7 @@ import {
 import {
     Menu as MenuIcon,
     ChevronLeft as ChevronLeftIcon,
+    ChevronRight as ChevronRightIcon,
     Home as HomeIcon,
     QuestionAnswer as QuestionAnswerIcon,
     LibraryBooks as LibraryBooksIcon,
@@ -50,6 +51,7 @@ import type { User } from '@/app/types/userinfo';
 
 // 常量和类型定义
 const DRAWER_WIDTH = 260;
+const DRAWER_COLLAPSED_WIDTH = 100;
 const TOPBAR_HEIGHT = { xs: 56, sm: 64 };
 
 interface MenuItem {
@@ -161,18 +163,6 @@ const TopBar = React.memo(({
                 >
                     <MenuIcon />
                 </IconButton>
-                <Typography 
-                    variant="h6" 
-                    noWrap 
-                    component="div"
-                    sx={{ 
-                        color: 'text.primary',
-                        fontWeight: 600,
-                        letterSpacing: '0.5px',
-                    }}
-                >
-                    {title}
-                </Typography>
             </Box>
 
             <Stack 
@@ -264,10 +254,10 @@ const SideBar = React.memo(({
             onClose={onDrawerToggle}
             ModalProps={{ keepMounted: true }}
             sx={{
-                width: DRAWER_WIDTH,
+                width: open ? DRAWER_WIDTH : DRAWER_COLLAPSED_WIDTH,
                 flexShrink: 0,
                 '& .MuiDrawer-paper': {
-                    width: DRAWER_WIDTH,
+                    width: open ? DRAWER_WIDTH : DRAWER_COLLAPSED_WIDTH,
                     boxSizing: 'border-box',
                     border: 'none',
                     backgroundColor: (theme) => 
@@ -275,6 +265,11 @@ const SideBar = React.memo(({
                             ? alpha(theme.palette.background.default, 0.98)
                             : alpha(theme.palette.background.default, 0.95),
                     backdropFilter: 'blur(6px)',
+                    overflowX: 'hidden',
+                    transition: (theme) => theme.transitions.create('width', {
+                        easing: theme.transitions.easing.sharp,
+                        duration: theme.transitions.duration.enteringScreen,
+                    }),
                 },
             }}
         >
@@ -288,23 +283,27 @@ const SideBar = React.memo(({
                     p: 2, 
                     display: 'flex', 
                     alignItems: 'center', 
-                    justifyContent: 'space-between',
+                    justifyContent: 'center',
                     borderBottom: 1,
                     borderColor: 'divider',
+                    position: 'relative',
                 }}>
                     <Typography 
                         variant="h6" 
                         noWrap 
                         component="div" 
                         sx={{ 
-                            flexGrow: 1,
-                            fontWeight: 700,
+                            fontWeight: 1000,
                             background: (theme) => 
                                 theme.palette.mode === 'light'
                                     ? 'linear-gradient(45deg, #007FFF 30%, #0059B2 90%)'
                                     : 'linear-gradient(45deg, #66B2FF 30%, #0059B2 90%)',
                             WebkitBackgroundClip: 'text',
                             WebkitTextFillColor: 'transparent',
+                            opacity: open ? 1 : 0,
+                            transition: (theme) => theme.transitions.create('opacity', {
+                                duration: theme.transitions.duration.enteringScreen,
+                            }),
                         }}
                     >
                         Snow AI
@@ -313,6 +312,8 @@ const SideBar = React.memo(({
                         <IconButton 
                             onClick={onDrawerToggle}
                             sx={{
+                                position: 'absolute',
+                                right: 8,
                                 '&:hover': {
                                     backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.08),
                                 },
@@ -330,9 +331,59 @@ const SideBar = React.memo(({
                     '& > *:not(:last-child)': {
                         mb: 0.5,
                     },
+                    '& .MuiListItemButton-root': {
+                        px: open ? 2 : 1.5,
+                        py: 1,
+                        justifyContent: open ? 'flex-start' : 'center',
+                        '& .MuiListItemIcon-root': {
+                            minWidth: open ? 36 : 'auto',
+                            mr: open ? 2 : 0,
+                            justifyContent: 'center',
+                        },
+                        '& .MuiListItemText-root': {
+                            opacity: open ? 1 : 0,
+                            transition: (theme) => theme.transitions.create('opacity', {
+                                duration: theme.transitions.duration.enteringScreen,
+                            }),
+                        },
+                    },
                 }}>
                     {menuItems.map(item => renderMenuItem(item))}
                 </List>
+
+                {/* 折叠按钮 */}
+                {!isMobile && (
+                    <Box sx={{ 
+                        p: 1.5,
+                        borderTop: 1,
+                        borderColor: 'divider',
+                    }}>
+                        <ListItemButton
+                            onClick={onDrawerToggle}
+                            sx={{
+                                minHeight: 48,
+                                px: 2,
+                                borderRadius: 1,
+                                justifyContent: 'center',
+                                '&:hover': {
+                                    backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.08),
+                                },
+                            }}
+                        >
+                            <ListItemIcon sx={{ 
+                                minWidth: 0,
+                                color: 'text.secondary',
+                                justifyContent: 'center',
+                                transform: open ? 'rotate(0deg)' : 'rotate(180deg)',
+                                transition: (theme) => theme.transitions.create('transform', {
+                                    duration: theme.transitions.duration.standard,
+                                }),
+                            }}>
+                                <ChevronLeftIcon />
+                            </ListItemIcon>
+                        </ListItemButton>
+                    </Box>
+                )}
             </Box>
         </Drawer>
     );
@@ -459,8 +510,8 @@ export default function MainLayout({
                     height: '100vh',
                     display: 'flex',
                     flexDirection: 'column',
-                    width: { sm: `calc(100% - ${open ? DRAWER_WIDTH : 0}px)` },
-                    ml: { sm: `${open ? DRAWER_WIDTH : 0}px` },
+                    width: { sm: `calc(100% - ${open ? DRAWER_WIDTH : DRAWER_COLLAPSED_WIDTH}px)` },
+                    ml: { sm: `${open ? DRAWER_WIDTH : DRAWER_COLLAPSED_WIDTH}px` },
                     transition: theme.transitions.create(['margin', 'width'], {
                         easing: theme.transitions.easing.sharp,
                         duration: theme.transitions.duration.leavingScreen,
@@ -470,7 +521,7 @@ export default function MainLayout({
                 <Box sx={{ 
                     position: 'fixed',
                     top: TOPBAR_HEIGHT,
-                    left: { sm: open ? DRAWER_WIDTH : 0 },
+                    left: { sm: open ? DRAWER_WIDTH : DRAWER_COLLAPSED_WIDTH },
                     right: 0,
                     bottom: 0,
                     overflow: 'auto',
