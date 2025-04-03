@@ -2,7 +2,6 @@ import { formatDistanceToNow } from 'date-fns';
 import { zhCN, enUS } from 'date-fns/locale';
 
 export const formatDistance = (date: Date | string | number, locale: string = 'zh-CN') => {
-    console.log('locale', locale);
     const distance = formatDistanceToNow(new Date(date), {
         addSuffix: true,
         locale: locale === 'zh' ? zhCN : enUS,

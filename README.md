@@ -1,36 +1,127 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Snow AI - Intelligent Knowledge Management System
 
-## Getting Started
+A modern intelligent knowledge management system built with Next.js and Material-UI, providing knowledge base management, document parsing, and AI-powered Q&A capabilities.
 
-First, run the development server:
+Author: [@foreverdxdou](https://github.com/foreverdxdou)
+
+[中文文档](README_CN.md)
+
+## ✨ Features
+
+- 🎯 Knowledge Base Management: Create and manage multiple knowledge bases with category and tag support
+- 📄 Document Processing: Support for uploading, parsing, and managing multiple document formats
+- 🤖 AI Q&A: Intelligent Q&A system based on large language models
+- 🌐 Internationalization: Support for English and Chinese
+- 🎨 Theme Switching: Light/Dark theme support
+- 🔐 Access Control: Complete user, role, and permission management system
+- 💫 Elegant Animations: Carefully designed transitions and interactions
+- 📱 Responsive: Perfect support for desktop and mobile devices
+
+## 🛠 Tech Stack
+
+- **Framework**: [Next.js 14](https://nextjs.org/)
+- **UI Library**: [Material-UI (MUI)](https://mui.com/)
+- **State Management**: React Hooks
+- **Styling Solution**: Emotion + MUI System
+- **Internationalization**: i18next
+- **Type Checking**: TypeScript
+- **Code Quality**: ESLint + Prettier
+- **HTTP Client**: Axios
+
+## 🚀 Getting Started
+
+1. Clone the repository
+
+```bash
+git clone https://github.com/foreverdxdou/snow-ai.git
+cd snow-ai
+```
+
+2. Install dependencies
+
+```bash
+npm install
+# or
+yarn install
+```
+
+3. Start the development server
 
 ```bash
 npm run dev
 # or
 yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Visit [http://localhost:3000](http://localhost:3000) to view the application.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 📦 Project Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+snow-ai/
+├── app/                    # Next.js application directory
+│   ├── (main)/            # Main layout routes
+│   ├── components/        # Shared components
+│   ├── hooks/            # Custom React hooks
+│   ├── i18n/             # Internationalization config and translations
+│   ├── services/         # API services
+│   ├── types/            # TypeScript type definitions
+│   └── utils/            # Utility functions
+├── public/               # Static assets
+└── package.json         # Project configuration
+```
 
-## Learn More
+## 🔧 Configuration
 
-To learn more about Next.js, take a look at the following resources:
+1. Environment variables (create `.env.local` file):
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```env
+NEXT_PUBLIC_API_URL=your_api_url
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+2. Internationalization configuration is located in `app/i18n/` directory
 
-## Deploy on Vercel
+3. Theme configuration is located in `app/theme/` directory
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 📚 Core Modules
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- 📊 Dashboard
+  - Statistics Overview
+  - Latest Updates
+  - Trend Charts
+
+- 💡 Knowledge Base
+  - Knowledge Base Creation & Management
+  - Document Upload & Parsing
+  - Categories & Tags Management
+
+- 🤖 AI Assistant
+  - Knowledge-based Q&A
+  - Multiple Model Support
+  - Conversation History
+
+- ⚙️ System Management
+  - User Management
+  - Role Management
+  - Permission Management
+  - System Configuration
+
+## 🤝 Contributing
+
+Contributions are welcome! Before submitting a Pull Request, please ensure:
+
+1. Your code passes ESLint checks
+2. New features include appropriate tests
+3. Documentation is updated
+
+## 📄 License
+
+[MIT License](LICENSE)
+
+## 🙏 Acknowledgments
+
+Thanks to all the developers who have contributed to this project.
+
+---
+
+Made with ❤️ by [@foreverdxdou](https://github.com/foreverdxdou)
