@@ -1,5 +1,15 @@
 # Snow AI - Intelligent Knowledge Management System
 
+```
+   _____ _   _  ______          __
+  / ____| \ | |/ __ \ \        / /
+ | (___ |  \| | |  | \ \  /\  / / 
+  \___ \| . ` | |  | |\ \/  \/ /  
+  ____) | |\  | |__| | \  /\  /   
+ |_____/|_| \_|\____/   \/  \/    
+                    * intelligent *
+```
+
 A modern intelligent knowledge management system built with Next.js and Material-UI, providing knowledge base management, document parsing, and AI-powered Q&A capabilities.
 
 Author: [@foreverdxdou](https://github.com/foreverdxdou)

@@ -21,13 +21,19 @@ import {
 import {
   Refresh as RefreshIcon,
 } from '@mui/icons-material';
-import { LlmConfig } from '@/app/types/llm';
+import { LlmConfig, ModelType } from '@/app/types/llm';
 import { llmService } from '@/app/services/llm';
 import { useTranslation } from 'react-i18next';
 import { CommonButton } from '@/app/components/common/CommonButton';
 import { CommonInput } from '@/app/components/common/CommonInput';
 import { PerformanceLayout } from '@/app/components/common/PerformanceLayout';
 import { CommonSelect } from '@/app/components/common/CommonSelect';
+
+const MODEL_TYPE_OPTIONS = [
+  { id: 'GENERAL', name: 'text-generation' },
+  { id: 'REASONING', name: 'text-reasoning' },
+  { id: 'EMBEDDING', name: 'text-embedding' },
+] as const;
 
 export default function LlmPage() {
   const { t } = useTranslation();
@@ -39,6 +45,7 @@ export default function LlmPage() {
     modelName: '',
     modelCode: '',
     modelProvider: '',
+    modelType: 'text-generation',
     apiUrl: '',
     apiKey: '',
     enabled: true,
@@ -93,6 +100,7 @@ export default function LlmPage() {
         modelName: '',
         modelCode: '',
         modelProvider: '',
+        modelType: 'text-generation',
         apiUrl: '',
         apiKey: '',
         enabled: true,
@@ -108,6 +116,7 @@ export default function LlmPage() {
       modelName: '',
       modelCode: '',
       modelProvider: '',
+      modelType: 'text-generation',
       apiUrl: '',
       apiKey: '',
       enabled: true,
@@ -289,6 +298,9 @@ export default function LlmPage() {
                       />
                     </Box>
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                      {t('llm.modelType')}: {t(`llm.types.${config.modelType}`)}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                       {t('llm.apiUrl')}: {config.apiUrl}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
@@ -343,6 +355,18 @@ export default function LlmPage() {
                 error={!formData.modelCode}
                 helperText={!formData.modelCode ? t('llm.modelCodeRequired') : ''}
                 required
+              />
+              <CommonSelect
+                label={t('llm.modelType')}
+                value={formData.modelType}
+                onChange={(value) => setFormData({ ...formData, modelType: value as ModelType })}
+                error={!formData.modelType}
+                helperText={!formData.modelType ? t('llm.modelTypeRequired') : ''}
+                required
+                options={MODEL_TYPE_OPTIONS.map(opt => ({
+                  id: opt.id,
+                  name: t(`llm.types.${opt.name}`)
+                }))}
               />
               <CommonSelect
                 label={t('llm.modelProvider')}

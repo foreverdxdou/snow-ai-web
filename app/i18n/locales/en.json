@@ -476,6 +476,13 @@
     "modelName": "Model Name",
     "modelCode": "Model Code",
     "modelProvider": "Model Provider",
+    "modelType": "Model Type",
+    "modelTypeRequired": "Please select model type",
+    "types": {
+      "text-generation": "Generation Model",
+      "text-reasoning": "Reasoning Model",
+      "text-embedding": "Embedding Model"
+    },
     "apiUrl": "API URL",
     "apiKey": "API Key",
     "enabled": "Enabled",

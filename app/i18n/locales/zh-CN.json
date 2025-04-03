@@ -489,6 +489,13 @@
     "modelName": "模型名称",
     "modelCode": "模型代码",
     "modelProvider": "模型提供商",
+    "modelType": "模型类型",
+    "modelTypeRequired": "请选择模型类型",
+    "types": {
+      "text-generation": "生成模型",
+      "text-reasoning": "推理模型",
+      "text-embedding": "向量化模型"
+    },
     "apiUrl": "API地址",
     "apiKey": "API密钥",
     "enabled": "已启用",
