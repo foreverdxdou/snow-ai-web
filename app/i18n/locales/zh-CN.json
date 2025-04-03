@@ -402,7 +402,10 @@
     "yesterday": "昨天",
     "lastSevenDays": "最近7天",
     "lastThirtyDays": "最近30天",
-    "earlier": "更早"
+    "earlier": "更早",
+    "copyMessage": "复制消息",
+    "copySuccess": "消息已复制到剪贴板",
+    "copyError": "复制失败，请重试"
   },
   "systemConfig": {
     "title": "系统配置管理",

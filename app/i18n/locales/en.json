@@ -389,7 +389,10 @@
     "yesterday": "Yesterday",
     "lastSevenDays": "Last 7 Days",
     "lastThirtyDays": "Last 30 Days",
-    "earlier": "Earlier"
+    "earlier": "Earlier",
+    "copyMessage": "Copy Message",
+    "copySuccess": "Message copied to clipboard",
+    "copyError": "Copy failed, please try again"
   },
   "systemConfig": {
     "title": "System Configuration",

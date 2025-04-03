@@ -1,4 +1,4 @@
-import { Box, Paper, Typography, IconButton, Tooltip } from '@mui/material';
+import { Box, Paper, Typography, IconButton, Tooltip, Snackbar, Alert } from '@mui/material';
 import { ContentCopy as ContentCopyIcon } from '@mui/icons-material';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -10,6 +10,7 @@ import { useTranslation } from 'react-i18next';
 import type { KbChatHistory } from '@/app/types/qa';
 import { Theme } from '@mui/material/styles';
 import { keyframes } from '@mui/system';
+import { useState } from 'react';
 
 const markdownStyles = {
     '& .markdown-body': {
@@ -162,99 +163,180 @@ interface ChatMessageProps {
 
 export const ChatMessage = ({ chat }: ChatMessageProps) => {
     const { t } = useTranslation();
+    const [snackbar, setSnackbar] = useState<{
+        open: boolean;
+        message: string;
+        severity: 'success' | 'error';
+    }>({
+        open: false,
+        message: '',
+        severity: 'success'
+    });
+
+    const handleCopyMessage = async (isQuestion: boolean) => {
+        try {
+            const messageText = isQuestion ? chat.question : chat.answer;
+            await navigator.clipboard.writeText(messageText);
+            setSnackbar({
+                open: true,
+                message: t('qa.copySuccess'),
+                severity: 'success'
+            });
+        } catch (error) {
+            console.error('复制失败:', error);
+            setSnackbar({
+                open: true,
+                message: t('qa.copyError'),
+                severity: 'error'
+            });
+        }
+    };
 
     return (
-        <Box>
-            {/* 用户问题 */}
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
-                <Paper
-                    sx={{
-                        maxWidth: '85%',
-                        p: 2,
-                        bgcolor: 'primary.main',
-                        color: 'primary.contrastText',
-                        borderRadius: '12px 12px 0 12px',
-                    }}
-                >
-                    <Typography>{chat.question}</Typography>
-                </Paper>
-            </Box>
+        <>
+            <Box>
+                {/* 用户问题 */}
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', mb: 2 }}>
+                    <Paper
+                        sx={{
+                            maxWidth: '85%',
+                            p: 2,
+                            bgcolor: 'primary.main',
+                            color: 'primary.contrastText',
+                            borderRadius: '12px 12px 0 12px',
+                        }}
+                    >
+                        <Typography>{chat.question}</Typography>
+                    </Paper>
+                    <Tooltip title={t('qa.copyMessage')}>
+                        <IconButton
+                            onClick={() => handleCopyMessage(true)}
+                            sx={{
+                                mt: 0.5,
+                                color: 'primary.main',
+                                opacity: 0.7,
+                                transition: 'all 0.2s',
+                                '&:hover': {
+                                    opacity: 1,
+                                    transform: 'scale(1.1)',
+                                },
+                            }}
+                            size="small"
+                        >
+                            <ContentCopyIcon fontSize="small" />
+                        </IconButton>
+                    </Tooltip>
+                </Box>
 
-            {/* AI 回答 */}
-            <Box sx={{ display: 'flex', justifyContent: 'flex-start' }}>
-                <Paper
-                    elevation={2}
-                    sx={{
-                        maxWidth: '85%',
-                        p: 2,
-                        borderRadius: '12px 12px 12px 0',
-                        bgcolor: 'background.paper',
-                        position: 'relative',
-                        '&:hover': {
-                            boxShadow: 3,
-                        },
-                        ...markdownStyles,
-                    }}
-                >
-                    <Box className="markdown-body">
-                        <ReactMarkdown
-                            remarkPlugins={[remarkGfm]}
-                            rehypePlugins={[
-                                rehypeRaw,
-                                rehypeSanitize,
-                                [rehypeHighlight, { ignoreMissing: true }]
-                            ]}
-                            components={{
-                                code({ node, inline, className, children, ...props }: any) {
-                                    const match = /language-(\w+)/.exec(className || '');
-                                    return !inline && match ? (
-                                        <Box
-                                            component="div"
-                                            sx={{
-                                                position: 'relative',
-                                                '& pre': {
-                                                    mt: '0 !important',
-                                                    borderRadius: 1,
-                                                    overflow: 'hidden',
-                                                },
-                                            }}
-                                        >
-                                            <IconButton
-                                                onClick={() => navigator.clipboard.writeText(String(children).replace(/\n$/, ''))}
+                {/* AI 回答 */}
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                    <Paper
+                        elevation={2}
+                        sx={{
+                            maxWidth: '85%',
+                            p: 2,
+                            borderRadius: '12px 12px 12px 0',
+                            bgcolor: 'background.paper',
+                            '&:hover': {
+                                boxShadow: 3,
+                            },
+                            ...markdownStyles,
+                        }}
+                    >
+                        <Box className="markdown-body">
+                            <ReactMarkdown
+                                remarkPlugins={[remarkGfm]}
+                                rehypePlugins={[
+                                    rehypeRaw,
+                                    rehypeSanitize,
+                                    [rehypeHighlight, { ignoreMissing: true }]
+                                ]}
+                                components={{
+                                    code({ node, inline, className, children, ...props }: any) {
+                                        const match = /language-(\w+)/.exec(className || '');
+                                        return !inline && match ? (
+                                            <Box
+                                                component="div"
                                                 sx={{
-                                                    position: 'absolute',
-                                                    right: 8,
-                                                    top: 8,
-                                                    bgcolor: 'background.paper',
-                                                    opacity: 0,
-                                                    transition: 'all 0.2s',
-                                                    '&:hover': {
-                                                        bgcolor: 'action.hover',
-                                                        opacity: 1,
+                                                    position: 'relative',
+                                                    '& pre': {
+                                                        mt: '0 !important',
+                                                        borderRadius: 1,
+                                                        overflow: 'hidden',
                                                     },
                                                 }}
-                                                size="small"
                                             >
-                                                <ContentCopyIcon fontSize="small" />
-                                            </IconButton>
-                                            <pre className={className}>
-                                                <code {...props}>{children}</code>
-                                            </pre>
-                                        </Box>
-                                    ) : (
-                                        <code className={className} {...props}>
-                                            {children}
-                                        </code>
-                                    );
-                                }
+                                                <IconButton
+                                                    onClick={() => navigator.clipboard.writeText(String(children).replace(/\n$/, ''))}
+                                                    sx={{
+                                                        position: 'absolute',
+                                                        right: 8,
+                                                        top: 8,
+                                                        bgcolor: 'background.paper',
+                                                        opacity: 0,
+                                                        transition: 'all 0.2s',
+                                                        '&:hover': {
+                                                            bgcolor: 'action.hover',
+                                                            opacity: 1,
+                                                        },
+                                                    }}
+                                                    size="small"
+                                                >
+                                                    <ContentCopyIcon fontSize="small" />
+                                                </IconButton>
+                                                <pre className={className}>
+                                                    <code {...props}>{children}</code>
+                                                </pre>
+                                            </Box>
+                                        ) : (
+                                            <code className={className} {...props}>
+                                                {children}
+                                            </code>
+                                        );
+                                    }
+                                }}
+                            >
+                                {chat.answer}
+                            </ReactMarkdown>
+                            {chat.answer === t('qa.thinking') && <ThinkingDots />}
+                        </Box>
+                    </Paper>
+                    <Tooltip title={t('qa.copyMessage')}>
+                        <IconButton
+                            onClick={() => handleCopyMessage(false)}
+                            sx={{
+                                mt: 0.5,
+                                color: 'primary.main',
+                                opacity: 0.7,
+                                transition: 'all 0.2s',
+                                '&:hover': {
+                                    opacity: 1,
+                                    transform: 'scale(1.1)',
+                                },
                             }}
+                            size="small"
                         >
-                            {chat.answer}
-                        </ReactMarkdown>
-                        {chat.answer === t('qa.thinking') && <ThinkingDots />}
-                    </Box>
-                </Paper>
+                            <ContentCopyIcon fontSize="small" />
+                        </IconButton>
+                    </Tooltip>
+                </Box>
             </Box>
-        </Box>
+
+            <Snackbar
+                open={snackbar.open}
+                autoHideDuration={3000}
+                onClose={() => setSnackbar({ ...snackbar, open: false })}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+                sx={{ zIndex: 9999 }}
+            >
+                <Alert
+                    onClose={() => setSnackbar({ ...snackbar, open: false })}
+                    severity={snackbar.severity}
+                    sx={{ width: '100%', minWidth: '200px' }}
+                >
+                    {snackbar.message}
+                </Alert>
+            </Snackbar>
+        </>
     );
 }; 
