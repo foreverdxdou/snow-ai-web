@@ -1,5 +1,5 @@
 import { Box, Paper, Typography, IconButton, Tooltip, Snackbar, Alert, Collapse } from '@mui/material';
-import { ContentCopy as ContentCopyIcon, ExpandMore as ExpandMoreIcon, ExpandLess as ExpandLessIcon } from '@mui/icons-material';
+import { ContentCopy as ContentCopyIcon, ExpandMore as ExpandMoreIcon, ExpandLess as ExpandLessIcon, KeyboardArrowUp as KeyboardArrowUpIcon } from '@mui/icons-material';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
@@ -169,6 +169,19 @@ const reasoningStyles = {
         '& .reasoning-text': {
             whiteSpace: 'pre-wrap',
             wordBreak: 'break-word',
+            position: 'relative',
+            paddingLeft: '16px',
+            color: 'text.secondary',
+            '&::before': {
+                content: '""',
+                position: 'absolute',
+                left: 0,
+                top: 0,
+                bottom: 0,
+                width: '4px',
+                backgroundColor: 'grey.400',
+                borderRadius: '2px',
+            }
         }
     },
     '& .reasoning-toggle': {
@@ -207,7 +220,7 @@ export const ChatMessage = ({ chat }: ChatMessageProps) => {
         message: '',
         severity: 'success' as 'success' | 'error',
     });
-    const [isReasoningExpanded, setIsReasoningExpanded] = useState(false);
+    const [isReasoningExpanded, setIsReasoningExpanded] = useState(true);
 
     const handleCopyMessage = async (isQuestion: boolean) => {
         try {
@@ -245,9 +258,9 @@ export const ChatMessage = ({ chat }: ChatMessageProps) => {
     };
 
     const renderAnswer = () => {
-        // 检查是否包含 </think> 标签
-        const hasThinkTag = chat.answer.includes('</think>');
-        console.log('hasThinkTag', hasThinkTag);
+        // 检查是否包含 <think> 标签
+        const hasThinkTag = chat.answer.includes('<think>');
+        const hasEndThinkTag = chat.answer.includes('</think>');
         
         if (!hasThinkTag) {
             return (
@@ -302,18 +315,20 @@ export const ChatMessage = ({ chat }: ChatMessageProps) => {
         }
 
         const parts = chat.answer.split(/<\/?think>/);
-        const hasReasoningContent = parts[1]?.trim().length > 0;
+        console.log('parts', parts);
 
         return (
             <Box sx={reasoningStyles}>
-                {hasReasoningContent && (
+                {hasThinkTag && (
                     <Box className={`reasoning-content ${isReasoningExpanded ? 'expanded' : ''}`}>
                         <Paper
                             elevation={0}
                             sx={{
                                 p: 2,
-                                bgcolor: 'action.hover',
+                                bgcolor: 'grey.100',
                                 borderRadius: 2,
+                                borderLeft: '4px solid',
+                                borderColor: 'grey.400',
                             }}
                         >
                             <Typography variant="body2" className="reasoning-text">
@@ -322,53 +337,55 @@ export const ChatMessage = ({ chat }: ChatMessageProps) => {
                         </Paper>
                     </Box>
                 )}
-                <Box className="final-answer">
-                    <ReactMarkdown
-                        remarkPlugins={[remarkGfm]}
-                        rehypePlugins={[rehypeRaw, rehypeSanitize, [rehypeHighlight, { ignoreMissing: true }]]}
-                        components={{
-                            p: ({ children }) => (
-                                <Typography 
-                                    component="p" 
-                                    sx={{ 
-                                        whiteSpace: 'pre-wrap',
-                                        wordBreak: 'break-word',
-                                        mb: 2 
-                                    }}
-                                >
-                                    {children}
-                                </Typography>
-                            ),
-                            code({ node, inline, className, children, ...props }: any) {
-                                const match = /language-(\w+)/.exec(className || '');
-                                return !inline && match ? (
-                                    <Box component="div" sx={{ position: 'relative' }}>
-                                        <IconButton
-                                            onClick={() => navigator.clipboard.writeText(String(children).replace(/\n$/, ''))}
-                                            sx={{
-                                                position: 'absolute',
-                                                right: 8,
-                                                top: 8,
-                                                bgcolor: 'background.paper',
-                                                opacity: 0,
-                                                transition: 'all 0.2s',
-                                                '&:hover': { opacity: 1 },
-                                            }}
-                                            size="small"
-                                        >
-                                            <ContentCopyIcon fontSize="small" />
-                                        </IconButton>
-                                        <pre className={className}><code {...props}>{children}</code></pre>
-                                    </Box>
-                                ) : (
-                                    <code className={className} {...props}>{children}</code>
-                                );
-                            }
-                        }}
-                    >
-                        {parts[2]}
-                    </ReactMarkdown>
-                </Box>
+                {hasEndThinkTag && (
+                    <Box className="final-answer">
+                        <ReactMarkdown
+                            remarkPlugins={[remarkGfm]}
+                            rehypePlugins={[rehypeRaw, rehypeSanitize, [rehypeHighlight, { ignoreMissing: true }]]}
+                            components={{
+                                p: ({ children }) => (
+                                    <Typography 
+                                        component="p" 
+                                        sx={{ 
+                                            whiteSpace: 'pre-wrap',
+                                            wordBreak: 'break-word',
+                                            mb: 2 
+                                        }}
+                                    >
+                                        {children}
+                                    </Typography>
+                                ),
+                                code({ node, inline, className, children, ...props }: any) {
+                                    const match = /language-(\w+)/.exec(className || '');
+                                    return !inline && match ? (
+                                        <Box component="div" sx={{ position: 'relative' }}>
+                                            <IconButton
+                                                onClick={() => navigator.clipboard.writeText(String(children).replace(/\n$/, ''))}
+                                                sx={{
+                                                    position: 'absolute',
+                                                    right: 8,
+                                                    top: 8,
+                                                    bgcolor: 'background.paper',
+                                                    opacity: 0,
+                                                    transition: 'all 0.2s',
+                                                    '&:hover': { opacity: 1 },
+                                                }}
+                                                size="small"
+                                            >
+                                                <ContentCopyIcon fontSize="small" />
+                                            </IconButton>
+                                            <pre className={className}><code {...props}>{children}</code></pre>
+                                        </Box>
+                                    ) : (
+                                        <code className={className} {...props}>{children}</code>
+                                    );
+                                }
+                            }}
+                        >
+                            {parts[2]}
+                        </ReactMarkdown>
+                    </Box>
+                )}
             </Box>
         );
     };
@@ -440,7 +457,7 @@ export const ChatMessage = ({ chat }: ChatMessageProps) => {
                             </IconButton>
                         </Tooltip>
                         {chat.answer.includes('</think>') && (
-                            <Tooltip title={isReasoningExpanded ? t('qa.collapseReasoning') : t('qa.expandReasoning')}>
+                            <Tooltip title={isReasoningExpanded || chat.answer.includes('<think>') ? t('qa.collapseReasoning') : t('qa.expandReasoning')}>
                                 <IconButton
                                     onClick={handleToggleReasoning}
                                     sx={{
@@ -451,7 +468,7 @@ export const ChatMessage = ({ chat }: ChatMessageProps) => {
                                     }}
                                     size="small"
                                 >
-                                    {isReasoningExpanded ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
+                                    {isReasoningExpanded || chat.answer.includes('<think>') ? <KeyboardArrowUpIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
                                 </IconButton>
                             </Tooltip>
                         )}
