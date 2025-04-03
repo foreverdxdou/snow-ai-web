@@ -673,13 +673,6 @@ export default function QaPage() {
         };
     }, [fetchKnowledgeBases, fetchChatHistory, fetchLlmModels, fetchUserChatHistory, t]);
 
-    // 在发送消息后刷新对话历史列表
-    useEffect(() => {
-        if (chatHistory.length > 0) {
-            fetchUserChatHistory();
-        }
-    }, [chatHistory, fetchUserChatHistory]);
-
     return (
         <Box sx={{ height: '100%', display: 'flex' }}>
             {/* 左侧对话历史面板 */}
