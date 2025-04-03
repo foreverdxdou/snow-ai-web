@@ -494,10 +494,14 @@ export default function EmbeddingConfigPage() {
         <Dialog
           open={deleteDialogOpen}
           onClose={() => setDeleteDialogOpen(false)}
+          maxWidth="xs"
+          fullWidth
         >
           <DialogTitle>{t("embeddingConfig.deleteConfirm")}</DialogTitle>
           <DialogContent>
-            <Typography>{t("embeddingConfig.deleteConfirmMessage")}</Typography>
+            <Typography>
+              {t("embeddingConfig.deleteConfirmMessage")}
+            </Typography>
           </DialogContent>
           <DialogActions>
             <CommonButton
@@ -506,8 +510,11 @@ export default function EmbeddingConfigPage() {
             >
               {t("common.cancel")}
             </CommonButton>
-            <CommonButton buttonVariant="delete" onClick={handleDeleteConfirm}>
-              {t("common.delete")}
+            <CommonButton
+              buttonVariant="confirm"
+              onClick={handleDeleteConfirm}
+            >
+              {t("common.confirm")}
             </CommonButton>
           </DialogActions>
         </Dialog>

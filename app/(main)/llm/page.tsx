@@ -27,6 +27,7 @@ import { useTranslation } from 'react-i18next';
 import { CommonButton } from '@/app/components/common/CommonButton';
 import { CommonInput } from '@/app/components/common/CommonInput';
 import { PerformanceLayout } from '@/app/components/common/PerformanceLayout';
+import { CommonSelect } from '@/app/components/common/CommonSelect';
 
 export default function LlmPage() {
   const { t } = useTranslation();
@@ -42,6 +43,8 @@ export default function LlmPage() {
     apiKey: '',
     enabled: true,
   });
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
     message: string;
@@ -162,10 +165,15 @@ export default function LlmPage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm(t('llm.deleteConfirmMessage'))) return;
+  const handleDelete = (id: string) => {
+    setDeletingId(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deletingId) return;
     try {
-      const response = await llmService.delete(id);
+      const response = await llmService.delete(deletingId);
       if (response.data.code === 200) {
         setSnackbar({
           open: true,
@@ -183,6 +191,9 @@ export default function LlmPage() {
         message: error instanceof Error ? error.message : t('llm.deleteError'),
         severity: 'error',
       });
+    } finally {
+      setDeleteDialogOpen(false);
+      setDeletingId(null);
     }
   };
 
@@ -326,12 +337,48 @@ export default function LlmPage() {
                 required
               />
               <CommonInput
+                label={t('llm.modelCode')}
+                value={formData.modelCode}
+                onChange={(value) => setFormData({ ...formData, modelCode: value as string })}
+                error={!formData.modelCode}
+                helperText={!formData.modelCode ? t('llm.modelCodeRequired') : ''}
+                required
+              />
+              <CommonSelect
+                label={t('llm.modelProvider')}
+                value={formData.modelProvider}
+                onChange={(value) => setFormData({ ...formData, modelProvider: value as string })}
+                error={!formData.modelProvider}
+                helperText={!formData.modelProvider ? t('llm.modelProviderRequired') : ''}
+                required
+                options={[
+                  { id: 'openai', name: t('llm.providers.openai') },
+                  { id: 'anthropic', name: t('llm.providers.anthropic') },
+                  { id: 'google', name: t('llm.providers.google') },
+                  { id: 'meta', name: t('llm.providers.meta') },
+                  { id: 'microsoft', name: t('llm.providers.microsoft') },
+                  { id: 'amazon', name: t('llm.providers.amazon') },
+                  { id: 'baidu', name: t('llm.providers.baidu') },
+                  { id: 'alibaba', name: t('llm.providers.alibaba') },
+                  { id: 'tencent', name: t('llm.providers.tencent') },
+                  { id: 'zhipu', name: t('llm.providers.zhipu') },
+                  { id: 'minimax', name: t('llm.providers.minimax') },
+                  { id: 'moonshot', name: t('llm.providers.moonshot') },
+                  { id: 'deepseek', name: t('llm.providers.deepseek') },
+                  { id: 'other', name: t('llm.providers.other') },
+                ]}
+              />
+              <CommonInput
                 label={t('llm.apiUrl')}
                 value={formData.apiUrl}
                 onChange={(value) => setFormData({ ...formData, apiUrl: value as string })}
                 error={!formData.apiUrl}
                 helperText={!formData.apiUrl ? t('llm.apiUrlRequired') : ''}
                 required
+                inputProps={{
+                  autoComplete: 'off',
+                  autoFill: 'off'
+                }}
               />
               <CommonInput
                 label={t('llm.apiKey')}
@@ -340,7 +387,11 @@ export default function LlmPage() {
                 error={!formData.apiKey}
                 helperText={!formData.apiKey ? t('llm.apiKeyRequired') : ''}
                 required
-                type="password"
+                isPassword
+                inputProps={{
+                  autoComplete: 'off',
+                  autoFill: 'off'
+                }}
               />
               <FormControlLabel
                 control={
@@ -363,9 +414,37 @@ export default function LlmPage() {
             <CommonButton
               buttonVariant="submit"
               onClick={handleSubmit}
-              disabled={!formData.modelName || !formData.apiUrl || !formData.apiKey}
+              disabled={!formData.modelName || !formData.modelCode || !formData.modelProvider || !formData.apiUrl || !formData.apiKey}
             >
               {t('common.submit')}
+            </CommonButton>
+          </DialogActions>
+        </Dialog>
+
+        <Dialog 
+          open={deleteDialogOpen} 
+          onClose={() => setDeleteDialogOpen(false)}
+          maxWidth="xs"
+          fullWidth
+        >
+          <DialogTitle>{t('llm.deleteConfirm')}</DialogTitle>
+          <DialogContent>
+            <Typography>
+              {t('llm.deleteConfirmMessage')}
+            </Typography>
+          </DialogContent>
+          <DialogActions>
+            <CommonButton
+              buttonVariant="cancel"
+              onClick={() => setDeleteDialogOpen(false)}
+            >
+              {t('common.cancel')}
+            </CommonButton>
+            <CommonButton
+              buttonVariant="confirm"
+              onClick={handleDeleteConfirm}
+            >
+              {t('common.confirm')}
             </CommonButton>
           </DialogActions>
         </Dialog>

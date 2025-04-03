@@ -3,8 +3,11 @@ import {
     TextField, 
     TextFieldProps,
     styled,
-    alpha
+    alpha,
+    InputAdornment,
+    IconButton
 } from '@mui/material';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
 
 // 基础输入框样式
 const BaseInput = styled(TextField)(({ theme }) => ({
@@ -72,58 +75,41 @@ interface CommonInputProps extends Omit<TextFieldProps, 'onChange'> {
     debounceTime?: number;
     min?: number;
     max?: number;
+    isPassword?: boolean;
 }
 
 export const CommonInput: React.FC<CommonInputProps> = ({
-    value = '',
+    value,
     onChange,
     debounceTime = 300,
-    type = 'text',
     min,
     max,
+    isPassword = false,
     ...props
 }) => {
-    const [inputValue, setInputValue] = useState(value);
+    const [showPassword, setShowPassword] = useState(false);
+    const [localValue, setLocalValue] = useState(value);
 
     // 当外部 value 变化时更新内部状态
     useEffect(() => {
-        setInputValue(value);
+        setLocalValue(value);
         return () => {
-            setInputValue('');
+            setLocalValue('');
         };
     }, [value]);
 
     // 处理输入变化
-    const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const newValue = event.target.value;
-        
-        if (type === 'number') {
-            // 数字类型输入处理
-            const numValue = Number(newValue);
-            
-            // 检查是否为有效数字
-            if (isNaN(numValue) && newValue !== '') {
-                return;
-            }
-            
-            // 检查是否在最小值和最大值范围内
-            if (min !== undefined && numValue < min) {
-                setInputValue(min);
-            } else if (max !== undefined && numValue > max) {
-                setInputValue(max);
-            } else {
-                setInputValue(newValue);
-            }
-        } else {
-            setInputValue(newValue);
-        }
+        setLocalValue(newValue);
+        onChange?.(newValue);
     };
 
     // 处理失去焦点
     const handleBlur = () => {
-        if (onChange && inputValue !== value) {
-            if (type === 'number') {
-                const numValue = Number(inputValue);
+        if (onChange && localValue !== value) {
+            if (typeof value === 'number') {
+                const numValue = Number(localValue);
                 if (!isNaN(numValue)) {
                     // 确保数值在有效范围内
                     const finalValue = Math.min(
@@ -135,7 +121,7 @@ export const CommonInput: React.FC<CommonInputProps> = ({
                     onChange(0);
                 }
             } else {
-                onChange(inputValue as string);
+                onChange(localValue as string);
             }
         }
     };
@@ -147,7 +133,7 @@ export const CommonInput: React.FC<CommonInputProps> = ({
         }
         
         // 数字类型输入限制
-        if (type === 'number') {
+        if (typeof value === 'number') {
             // 允许的按键：数字、小数点、负号、退格键、删除键、方向键
             const allowedKeys = [
                 '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
@@ -162,18 +148,38 @@ export const CommonInput: React.FC<CommonInputProps> = ({
 
     return (
         <BaseInput
-            value={inputValue}
-            onChange={handleInputChange}
+            {...props}
+            value={localValue}
+            onChange={handleChange}
             onBlur={handleBlur}
             onKeyDown={handleKeyDown}
-            type={type}
+            type={isPassword && !showPassword ? 'password' : 'text'}
             inputProps={{
                 ...props.inputProps,
+                autoComplete: 'new-password',
+                autoFill: 'off',
+                autoCorrect: 'off',
+                autoCapitalize: 'off',
+                spellCheck: 'false',
+                'data-lpignore': 'true',
+                'data-form-type': 'other',
                 min,
                 max,
-                step: type === 'number' ? 'any' : undefined
+                step: typeof value === 'number' ? 'any' : undefined
             }}
-            {...props}
+            InputProps={{
+                ...props.InputProps,
+                endAdornment: isPassword ? (
+                    <InputAdornment position="end">
+                        <IconButton
+                            onClick={() => setShowPassword(!showPassword)}
+                            edge="end"
+                        >
+                            {showPassword ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                    </InputAdornment>
+                ) : props.InputProps?.endAdornment,
+            }}
         />
     );
 }; 

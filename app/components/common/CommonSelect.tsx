@@ -9,7 +9,8 @@ import {
     styled,
     alpha,
     SxProps,
-    Theme
+    Theme,
+    FormHelperText
 } from '@mui/material';
 import type { SelectProps } from '@mui/material';
 import { useTranslation } from 'react-i18next';
@@ -97,6 +98,7 @@ interface CommonSelectProps extends Omit<SelectProps, 'value' | 'onChange'> {
     allValue?: string | number;
     showAllLabel?: string | number;
     multiple?: boolean;
+    helperText?: string;
 }
 
 export const CommonSelect: React.FC<CommonSelectProps> = ({
@@ -109,6 +111,7 @@ export const CommonSelect: React.FC<CommonSelectProps> = ({
     allValue = '',
     showAllLabel = '',
     multiple = false,
+    helperText,
     ...props
 }) => {
     const { t } = useTranslation();
@@ -120,6 +123,7 @@ export const CommonSelect: React.FC<CommonSelectProps> = ({
     return (
         <FormControl 
             size="small"
+            error={!!helperText}
         >
             <InputLabel>{label}</InputLabel>
             <BaseSelect
@@ -173,6 +177,9 @@ export const CommonSelect: React.FC<CommonSelectProps> = ({
                     </StyledMenu>
                 ))}
             </BaseSelect>
+            {helperText && (
+                <FormHelperText>{helperText}</FormHelperText>
+            )}
         </FormControl>
     );
 }; 
