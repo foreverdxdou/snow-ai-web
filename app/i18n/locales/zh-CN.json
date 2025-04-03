@@ -432,7 +432,11 @@
     "earlier": "更早",
     "copyMessage": "复制消息",
     "copySuccess": "消息已复制到剪贴板",
-    "copyError": "复制失败，请重试"
+    "copyError": "复制失败，请重试",
+    "expandReasoning": "展开推理过程",
+    "collapseReasoning": "收起推理过程",
+    "reasoningTitle": "推理过程",
+    "finalAnswer": "最终答案"
   },
   "systemConfig": {
     "title": "系统配置管理",

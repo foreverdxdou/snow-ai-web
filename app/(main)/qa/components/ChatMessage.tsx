@@ -1,5 +1,5 @@
-import { Box, Paper, Typography, IconButton, Tooltip, Snackbar, Alert } from '@mui/material';
-import { ContentCopy as ContentCopyIcon } from '@mui/icons-material';
+import { Box, Paper, Typography, IconButton, Tooltip, Snackbar, Alert, Collapse } from '@mui/material';
+import { ContentCopy as ContentCopyIcon, ExpandMore as ExpandMoreIcon, ExpandLess as ExpandLessIcon } from '@mui/icons-material';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
@@ -157,25 +157,73 @@ const ThinkingDots = () => (
     </Box>
 );
 
+// 添加推理内容样式
+const reasoningStyles = {
+    '& .reasoning-content': {
+        display: 'none',
+        transition: 'all 0.3s ease-out',
+    },
+    '& .reasoning-content.expanded': {
+        display: 'block',
+        marginBottom: '16px',
+        '& .reasoning-text': {
+            whiteSpace: 'pre-wrap',
+            wordBreak: 'break-word',
+        }
+    },
+    '& .reasoning-toggle': {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        cursor: 'pointer',
+        color: 'primary.main',
+        '&:hover': {
+            opacity: 0.8,
+        },
+    },
+    '& .final-answer': {
+        transition: 'margin-top 0.3s ease-out',
+        marginTop: (theme: Theme) => theme.spacing(2),
+        '& p': {
+            whiteSpace: 'pre-wrap',
+            wordBreak: 'break-word',
+        }
+    },
+    '& .message-actions': {
+        display: 'flex',
+        gap: 1,
+        mt: 0.5,
+    },
+};
+
 interface ChatMessageProps {
     chat: KbChatHistory;
 }
 
 export const ChatMessage = ({ chat }: ChatMessageProps) => {
     const { t } = useTranslation();
-    const [snackbar, setSnackbar] = useState<{
-        open: boolean;
-        message: string;
-        severity: 'success' | 'error';
-    }>({
+    const [snackbar, setSnackbar] = useState({
         open: false,
         message: '',
-        severity: 'success'
+        severity: 'success' as 'success' | 'error',
     });
+    const [isReasoningExpanded, setIsReasoningExpanded] = useState(false);
 
     const handleCopyMessage = async (isQuestion: boolean) => {
         try {
-            const messageText = isQuestion ? chat.question : chat.answer;
+            let messageText = '';
+            if (isQuestion) {
+                messageText = chat.question;
+            } else {
+                // 如果是回答，检查是否包含推理内容
+                if (chat.answer.includes('</think>')) {
+                    const parts = chat.answer.split(/<\/?think>/);
+                    // 只复制最终答案部分
+                    messageText = parts[2] || chat.answer;
+                } else {
+                    messageText = chat.answer;
+                }
+            }
             await navigator.clipboard.writeText(messageText);
             setSnackbar({
                 open: true,
@@ -190,6 +238,139 @@ export const ChatMessage = ({ chat }: ChatMessageProps) => {
                 severity: 'error'
             });
         }
+    };
+
+    const handleToggleReasoning = () => {
+        setIsReasoningExpanded(prev => !prev);
+    };
+
+    const renderAnswer = () => {
+        // 检查是否包含 </think> 标签
+        const hasThinkTag = chat.answer.includes('</think>');
+        console.log('hasThinkTag', hasThinkTag);
+        
+        if (!hasThinkTag) {
+            return (
+                <Box className="final-answer">
+                    <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        rehypePlugins={[rehypeRaw, rehypeSanitize, [rehypeHighlight, { ignoreMissing: true }]]}
+                        components={{
+                            p: ({ children }) => (
+                                <Typography 
+                                    component="p" 
+                                    sx={{ 
+                                        whiteSpace: 'pre-wrap',
+                                        wordBreak: 'break-word',
+                                        mb: 2 
+                                    }}
+                                >
+                                    {children}
+                                </Typography>
+                            ),
+                            code({ node, inline, className, children, ...props }: any) {
+                                const match = /language-(\w+)/.exec(className || '');
+                                return !inline && match ? (
+                                    <Box component="div" sx={{ position: 'relative' }}>
+                                        <IconButton
+                                            onClick={() => navigator.clipboard.writeText(String(children).replace(/\n$/, ''))}
+                                            sx={{
+                                                position: 'absolute',
+                                                right: 8,
+                                                top: 8,
+                                                bgcolor: 'background.paper',
+                                                opacity: 0,
+                                                transition: 'all 0.2s',
+                                                '&:hover': { opacity: 1 },
+                                            }}
+                                            size="small"
+                                        >
+                                            <ContentCopyIcon fontSize="small" />
+                                        </IconButton>
+                                        <pre className={className}><code {...props}>{children}</code></pre>
+                                    </Box>
+                                ) : (
+                                    <code className={className} {...props}>{children}</code>
+                                );
+                            }
+                        }}
+                    >
+                        {chat.answer}
+                    </ReactMarkdown>
+                </Box>
+            );
+        }
+
+        const parts = chat.answer.split(/<\/?think>/);
+        const hasReasoningContent = parts[1]?.trim().length > 0;
+
+        return (
+            <Box sx={reasoningStyles}>
+                {hasReasoningContent && (
+                    <Box className={`reasoning-content ${isReasoningExpanded ? 'expanded' : ''}`}>
+                        <Paper
+                            elevation={0}
+                            sx={{
+                                p: 2,
+                                bgcolor: 'action.hover',
+                                borderRadius: 2,
+                            }}
+                        >
+                            <Typography variant="body2" className="reasoning-text">
+                                {parts[1]}
+                            </Typography>
+                        </Paper>
+                    </Box>
+                )}
+                <Box className="final-answer">
+                    <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        rehypePlugins={[rehypeRaw, rehypeSanitize, [rehypeHighlight, { ignoreMissing: true }]]}
+                        components={{
+                            p: ({ children }) => (
+                                <Typography 
+                                    component="p" 
+                                    sx={{ 
+                                        whiteSpace: 'pre-wrap',
+                                        wordBreak: 'break-word',
+                                        mb: 2 
+                                    }}
+                                >
+                                    {children}
+                                </Typography>
+                            ),
+                            code({ node, inline, className, children, ...props }: any) {
+                                const match = /language-(\w+)/.exec(className || '');
+                                return !inline && match ? (
+                                    <Box component="div" sx={{ position: 'relative' }}>
+                                        <IconButton
+                                            onClick={() => navigator.clipboard.writeText(String(children).replace(/\n$/, ''))}
+                                            sx={{
+                                                position: 'absolute',
+                                                right: 8,
+                                                top: 8,
+                                                bgcolor: 'background.paper',
+                                                opacity: 0,
+                                                transition: 'all 0.2s',
+                                                '&:hover': { opacity: 1 },
+                                            }}
+                                            size="small"
+                                        >
+                                            <ContentCopyIcon fontSize="small" />
+                                        </IconButton>
+                                        <pre className={className}><code {...props}>{children}</code></pre>
+                                    </Box>
+                                ) : (
+                                    <code className={className} {...props}>{children}</code>
+                                );
+                            }
+                        }}
+                    >
+                        {parts[2]}
+                    </ReactMarkdown>
+                </Box>
+            </Box>
+        );
     };
 
     return (
@@ -216,10 +397,7 @@ export const ChatMessage = ({ chat }: ChatMessageProps) => {
                                 color: 'primary.main',
                                 opacity: 0.7,
                                 transition: 'all 0.2s',
-                                '&:hover': {
-                                    opacity: 1,
-                                    transform: 'scale(1.1)',
-                                },
+                                '&:hover': { opacity: 1, transform: 'scale(1.1)' },
                             }}
                             size="small"
                         >
@@ -237,88 +415,47 @@ export const ChatMessage = ({ chat }: ChatMessageProps) => {
                             p: 2,
                             borderRadius: '12px 12px 12px 0',
                             bgcolor: 'background.paper',
-                            '&:hover': {
-                                boxShadow: 3,
-                            },
+                            '&:hover': { boxShadow: 3 },
                             ...markdownStyles,
                         }}
                     >
                         <Box className="markdown-body">
-                            <ReactMarkdown
-                                remarkPlugins={[remarkGfm]}
-                                rehypePlugins={[
-                                    rehypeRaw,
-                                    rehypeSanitize,
-                                    [rehypeHighlight, { ignoreMissing: true }]
-                                ]}
-                                components={{
-                                    code({ node, inline, className, children, ...props }: any) {
-                                        const match = /language-(\w+)/.exec(className || '');
-                                        return !inline && match ? (
-                                            <Box
-                                                component="div"
-                                                sx={{
-                                                    position: 'relative',
-                                                    '& pre': {
-                                                        mt: '0 !important',
-                                                        borderRadius: 1,
-                                                        overflow: 'hidden',
-                                                    },
-                                                }}
-                                            >
-                                                <IconButton
-                                                    onClick={() => navigator.clipboard.writeText(String(children).replace(/\n$/, ''))}
-                                                    sx={{
-                                                        position: 'absolute',
-                                                        right: 8,
-                                                        top: 8,
-                                                        bgcolor: 'background.paper',
-                                                        opacity: 0,
-                                                        transition: 'all 0.2s',
-                                                        '&:hover': {
-                                                            bgcolor: 'action.hover',
-                                                            opacity: 1,
-                                                        },
-                                                    }}
-                                                    size="small"
-                                                >
-                                                    <ContentCopyIcon fontSize="small" />
-                                                </IconButton>
-                                                <pre className={className}>
-                                                    <code {...props}>{children}</code>
-                                                </pre>
-                                            </Box>
-                                        ) : (
-                                            <code className={className} {...props}>
-                                                {children}
-                                            </code>
-                                        );
-                                    }
-                                }}
-                            >
-                                {chat.answer}
-                            </ReactMarkdown>
+                            {renderAnswer()}
                             {chat.answer === t('qa.thinking') && <ThinkingDots />}
                         </Box>
                     </Paper>
-                    <Tooltip title={t('qa.copyMessage')}>
-                        <IconButton
-                            onClick={() => handleCopyMessage(false)}
-                            sx={{
-                                mt: 0.5,
-                                color: 'primary.main',
-                                opacity: 0.7,
-                                transition: 'all 0.2s',
-                                '&:hover': {
-                                    opacity: 1,
-                                    transform: 'scale(1.1)',
-                                },
-                            }}
-                            size="small"
-                        >
-                            <ContentCopyIcon fontSize="small" />
-                        </IconButton>
-                    </Tooltip>
+                    <Box sx={{ display: 'flex', gap: 1, mt: 0.5 }}>
+                        <Tooltip title={t('qa.copyMessage')}>
+                            <IconButton
+                                onClick={() => handleCopyMessage(false)}
+                                sx={{
+                                    color: 'primary.main',
+                                    opacity: 0.7,
+                                    transition: 'all 0.2s',
+                                    '&:hover': { opacity: 1, transform: 'scale(1.1)' },
+                                }}
+                                size="small"
+                            >
+                                <ContentCopyIcon fontSize="small" />
+                            </IconButton>
+                        </Tooltip>
+                        {chat.answer.includes('</think>') && (
+                            <Tooltip title={isReasoningExpanded ? t('qa.collapseReasoning') : t('qa.expandReasoning')}>
+                                <IconButton
+                                    onClick={handleToggleReasoning}
+                                    sx={{
+                                        color: 'primary.main',
+                                        opacity: 0.7,
+                                        transition: 'all 0.2s',
+                                        '&:hover': { opacity: 1, transform: 'scale(1.1)' },
+                                    }}
+                                    size="small"
+                                >
+                                    {isReasoningExpanded ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
+                                </IconButton>
+                            </Tooltip>
+                        )}
+                    </Box>
                 </Box>
             </Box>
 

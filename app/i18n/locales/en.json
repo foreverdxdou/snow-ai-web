@@ -419,7 +419,11 @@
     "earlier": "Earlier",
     "copyMessage": "Copy Message",
     "copySuccess": "Message copied to clipboard",
-    "copyError": "Copy failed, please try again"
+    "copyError": "Copy failed, please try again",
+    "expandReasoning": "Expand Reasoning",
+    "collapseReasoning": "Collapse Reasoning",
+    "reasoningTitle": "Reasoning Process",
+    "finalAnswer": "Final Answer"
   },
   "systemConfig": {
     "title": "System Configuration",
