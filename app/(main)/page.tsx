@@ -12,7 +12,6 @@ import {
     List,
     ListItem,
     ListItemText,
-    ListItemIcon,
     Divider,
     useTheme,
 } from '@mui/material';
@@ -20,7 +19,6 @@ import {
     QuestionAnswer as QuestionAnswerIcon,
     LibraryBooks as LibraryBooksIcon,
     Description as DescriptionIcon,
-    People as PeopleIcon,
     TrendingUp as TrendingUpIcon,
     AccessTime as AccessTimeIcon,
 } from '@mui/icons-material';
@@ -29,27 +27,6 @@ import { PerformanceLayout } from '@/app/components/common/PerformanceLayout';
 import { homeService } from '@/app/services/home';
 import type { HomeStatsVO } from '@/app/types/home';
 import { formatDistance } from '@/app/utils/date';
-import { Line } from 'react-chartjs-2';
-import {
-    Chart as ChartJS,
-    CategoryScale,
-    LinearScale,
-    PointElement,
-    LineElement,
-    Title,
-    Tooltip,
-    Legend,
-} from 'chart.js';
-
-ChartJS.register(
-    CategoryScale,
-    LinearScale,
-    PointElement,
-    LineElement,
-    Title,
-    Tooltip,
-    Legend
-);
 
 // 使用 React.memo 优化统计卡片组件
 const StatCard = React.memo(({ 
@@ -57,13 +34,15 @@ const StatCard = React.memo(({
     value, 
     icon: Icon, 
     color,
-    trend 
+    trend,
+    trendTitle
 }: { 
     title: string; 
     value: number; 
     icon: React.ElementType; 
     color: string;
     trend?: number;
+    trendTitle?: string;
 }) => (
     <Card sx={{ 
         height: '100%',
@@ -106,7 +85,7 @@ const StatCard = React.memo(({
                                 mr: 0.5, 
                                 transform: trend < 0 ? 'rotate(180deg)' : 'none' 
                             }} />
-                            {Math.abs(trend)}%
+                            {trendTitle}: {trend}
                         </Typography>
                     )}
                 </Box>
@@ -191,32 +170,36 @@ export default function HomePage() {
 
     const statCards = [
         {
-            title: t('home.stats.qa'),
-            value: stats?.kbStats.totalCount || 0,
-            icon: QuestionAnswerIcon,
-            color: '#1976d2',
-            trend: 12,
-        },
-        {
             title: t('home.stats.knowledge'),
             value: stats?.kbStats.totalCount || 0,
             icon: LibraryBooksIcon,
             color: '#2e7d32',
-            trend: 8,
+            trend: stats?.kbStats.activeCount || 0,
+            trendTitle: t('home.stats.activeKb'),
         },
         {
             title: t('home.stats.documents'),
             value: stats?.docStats.totalCount || 0,
             icon: DescriptionIcon,
             color: '#ed6c02',
-            trend: -3,
+            trend: stats?.docStats.parsedCount || 0,
+            trendTitle: t('home.stats.parsedDoc'),
         },
         {
-            title: t('home.stats.users'),
-            value: 100,
-            icon: PeopleIcon,
+            title: t('home.stats.weeklyNewKb'),
+            value: stats?.kbStats.weeklyNewCount || 0,
+            icon: QuestionAnswerIcon,
+            color: '#1976d2',
+            trend: stats?.kbStats.monthlyNewCount || 0,
+            trendTitle: t('home.stats.monthlyNewKb'),
+        },
+        {
+            title: t('home.stats.weeklyNewDoc'),
+            value: stats?.docStats.weeklyNewCount || 0,
+            icon: QuestionAnswerIcon,
             color: '#9c27b0',
-            trend: 15,
+            trend: stats?.docStats.monthlyNewCount || 0,
+            trendTitle: t('home.stats.monthlyNewDoc'),
         },
     ];
 
@@ -242,10 +225,18 @@ export default function HomePage() {
                                 <ListItemText
                                     primary={kb.name}
                                     secondary={
-                                        <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
-                                            <AccessTimeIcon sx={{ fontSize: 16, mr: 0.5 }} />
-                                            {formatDistance(kb.createTime, i18n.language)}
-                                        </Box>
+                                        <>
+                                            <Typography variant="body2" color="text.secondary" component="div" sx={{ mb: 0.5 }}>
+                                                {kb.description || t('home.latest.noDescription')}
+                                            </Typography>
+                                            <Typography variant="body2" color="text.secondary" component="div" sx={{ display: 'flex', alignItems: 'center' }}>
+                                                <AccessTimeIcon sx={{ fontSize: 16, mr: 0.5 }} />
+                                                {formatDistance(kb.createTime, i18n.language)}
+                                                <Box component="span" sx={{ ml: 2 }}>
+                                                    {t('home.latest.creator')}：{kb.creatorName}
+                                                </Box>
+                                            </Typography>
+                                        </>
                                     }
                                 />
                             )}
@@ -261,10 +252,21 @@ export default function HomePage() {
                                 <ListItemText
                                     primary={doc.title}
                                     secondary={
-                                        <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
-                                            <AccessTimeIcon sx={{ fontSize: 16, mr: 0.5 }} />
-                                            {formatDistance(doc.createTime, i18n.language)}
-                                        </Box>
+                                        <>
+                                            <Typography variant="body2" color="text.secondary" component="div" sx={{ mb: 0.5 }}>
+                                                {t('home.latest.kbName')}：{doc.kbName}
+                                            </Typography>
+                                            <Typography variant="body2" color="text.secondary" component="div" sx={{ display: 'flex', alignItems: 'center' }}>
+                                                <AccessTimeIcon sx={{ fontSize: 16, mr: 0.5 }} />
+                                                {formatDistance(doc.createTime, i18n.language)}
+                                                <Box component="span" sx={{ ml: 2 }}>
+                                                    {t('home.latest.creator')}：{doc.creatorName}
+                                                </Box>
+                                                <Box component="span" sx={{ ml: 2 }}>
+                                                    {t('home.latest.type')}：{doc.fileType}
+                                                </Box>
+                                            </Typography>
+                                        </>
                                     }
                                 />
                             )}

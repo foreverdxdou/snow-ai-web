@@ -191,7 +191,13 @@
       "qa": "问答总数",
       "knowledge": "知识库总数",
       "documents": "文档总数",
-      "users": "用户总数"
+      "users": "用户总数",
+      "activeKb": "活跃知识库",
+      "parsedDoc": "已解析文档",
+      "weeklyNewKb": "本周新增知识库",
+      "monthlyNewKb": "本月新增",
+      "weeklyNewDoc": "本周新增文档",
+      "monthlyNewDoc": "本月新增"
     },
     "trends": {
       "title": "增长趋势",
@@ -201,7 +207,11 @@
     "latest": {
       "title": "最新动态",
       "knowledge": "最新知识库",
-      "documents": "最新文档"
+      "documents": "最新文档",
+      "noDescription": "暂无描述",
+      "creator": "创建者",
+      "type": "类型",
+      "kbName": "知识库"
     },
     "welcome": "欢迎使用 Snow AI",
     "description": "您的智能知识管理与问答平台",

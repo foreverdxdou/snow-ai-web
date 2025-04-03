@@ -174,7 +174,13 @@
       "qa": "Total Q&A",
       "knowledge": "Total Knowledge Bases",
       "documents": "Total Documents",
-      "users": "Total Users"
+      "users": "Total Users",
+      "activeKb": "Active Knowledge Bases",
+      "parsedDoc": "Parsed Documents",
+      "weeklyNewKb": "Weekly New KB",
+      "monthlyNewKb": "Monthly New",
+      "weeklyNewDoc": "Weekly New Docs",
+      "monthlyNewDoc": "Monthly New"
     },
     "trends": {
       "title": "Growth Trends",
@@ -184,7 +190,11 @@
     "latest": {
       "title": "Latest Updates",
       "knowledge": "Latest Knowledge Bases",
-      "documents": "Latest Documents"
+      "documents": "Latest Documents",
+      "noDescription": "No description",
+      "creator": "Creator",
+      "type": "Type",
+      "kbName": "Knowledge Base"
     },
     "welcome": "Welcome to Snow AI",
     "description": "Your intelligent knowledge management and Q&A platform",
