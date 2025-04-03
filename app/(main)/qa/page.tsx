@@ -302,11 +302,12 @@ export default function QaPage() {
     }, []);
 
     // 使用 useCallback 优化聊天历史更新
-    const updateChatHistory = useCallback((answer: string) => {
+    const updateChatHistory = useCallback((answer: string, isStreaming: boolean) => {
         if (isMountedRef.current) {
             setChatHistory(prev => {
                 const newHistory = [...prev];
                 newHistory[newHistory.length - 1].answer = answer;
+                newHistory[newHistory.length - 1].isStreaming = isStreaming;
                 return newHistory;
             });
         }
@@ -341,7 +342,7 @@ export default function QaPage() {
 
         const newQuestion: KbChatHistory = {
             id: Date.now(),
-            sessionId,
+            sessionId: selectedSessionId || sessionId,
             kbIds: selectedKbs.join(','),
             userId: 0,
             question: questionText,
@@ -360,7 +361,7 @@ export default function QaPage() {
         try {
             const requestData: QaRequest = {
                 question: questionText,
-                sessionId,
+                sessionId: selectedSessionId || sessionId,
                 temperature: 0.7,
                 maxTokens: 2000,
                 ...(selectedModel && { llmId: selectedModel })
@@ -402,7 +403,7 @@ export default function QaPage() {
                             }
                             const data = ev.data;
                             answer += data;
-                            updateChatHistory(answer);
+                            updateChatHistory(answer, true);
                             scrollToBottom();
                         },
                         onclose() {
@@ -494,7 +495,7 @@ export default function QaPage() {
             setLoading(false);
             abortControllerRef.current = null;
         }
-    }, [question, loading, sessionId, selectedKbs, selectedModel, t, handleAbort, scrollToBottom, updateChatHistory]);
+    }, [question, loading, sessionId, selectedKbs, selectedModel, t, handleAbort, scrollToBottom, updateChatHistory, selectedSessionId]);
 
     // 使用 useCallback 优化按键事件处理
     const handleKeyPress = useCallback((event: React.KeyboardEvent) => {

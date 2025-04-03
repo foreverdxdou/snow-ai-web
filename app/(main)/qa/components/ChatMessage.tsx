@@ -209,6 +209,128 @@ const reasoningStyles = {
     },
 };
 
+// 添加更酷炫的滚动动画
+const scrollAnimation = keyframes`
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-100%);
+  }
+`;
+
+const ReasoningScroll = ({ content, isStreaming }: { content: string; isStreaming: boolean }) => {
+  const lines = content.split('\n').filter(line => line.trim());
+  const hasEndThinkTag = content.includes('</think>');
+  const hasMultipleLines = lines.length > 1;
+  
+  if (!isStreaming || hasEndThinkTag || !hasMultipleLines) {
+    return (
+      <Typography
+        variant="body2"
+        sx={{
+          color: 'text.secondary',
+          whiteSpace: 'pre-wrap',
+          wordBreak: 'break-word',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '120px',
+          width: '100%',
+          '&::before': {
+            content: '"•"',
+            mr: 1,
+            color: 'grey.400',
+            flexShrink: 0,
+          }
+        }}
+      >
+        {content}
+      </Typography>
+    );
+  }
+
+  return (
+    <Box
+      sx={{
+        position: 'relative',
+        height: '120px',
+        overflow: 'hidden',
+        width: '100%',
+        background: 'linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.1) 5%, rgba(255,255,255,0.1) 95%, rgba(255,255,255,0) 100%)',
+        '&::before, &::after': {
+          content: '""',
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          height: '30px',
+          zIndex: 1,
+          pointerEvents: 'none',
+        },
+        '&::before': {
+          top: 0,
+          background: 'linear-gradient(to bottom, grey.100, transparent)',
+        },
+        '&::after': {
+          bottom: 0,
+          background: 'linear-gradient(to top, grey.100, transparent)',
+        }
+      }}
+    >
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 1,
+          animation: `${scrollAnimation} ${Math.max(10, lines.length * 2)}s linear infinite`,
+          '&:hover': {
+            animationPlayState: 'paused',
+          },
+          width: '100%',
+          padding: '0 16px',
+          boxSizing: 'border-box',
+          '& > *': {
+            transition: 'all 0.3s ease',
+            '&:hover': {
+              transform: 'scale(1.02)',
+              color: 'primary.main',
+            }
+          }
+        }}
+      >
+        {lines.map((line, index) => (
+          <Typography
+            key={index}
+            variant="body2"
+            sx={{
+              color: 'text.secondary',
+              whiteSpace: 'pre-wrap',
+              wordBreak: 'break-word',
+              display: 'flex',
+              alignItems: 'flex-start',
+              width: '100%',
+              '&::before': {
+                content: '"•"',
+                mr: 1,
+                color: 'grey.400',
+                flexShrink: 0,
+                mt: '0.2em',
+                transition: 'all 0.3s ease',
+              },
+              '&:hover::before': {
+                color: 'primary.main',
+                transform: 'scale(1.2)',
+              }
+            }}
+          >
+            {line}
+          </Typography>
+        ))}
+      </Box>
+    </Box>
+  );
+};
+
 interface ChatMessageProps {
     chat: KbChatHistory;
 }
@@ -269,6 +391,36 @@ export const ChatMessage = ({ chat }: ChatMessageProps) => {
                         remarkPlugins={[remarkGfm]}
                         rehypePlugins={[rehypeRaw, rehypeSanitize, [rehypeHighlight, { ignoreMissing: true }]]}
                         components={{
+                            h1: ({ children }) => (
+                                <Typography variant="h1" sx={{ mt: 3, mb: 2, fontWeight: 600 }}>
+                                    {children}
+                                </Typography>
+                            ),
+                            h2: ({ children }) => (
+                                <Typography variant="h2" sx={{ mt: 3, mb: 2, fontWeight: 600 }}>
+                                    {children}
+                                </Typography>
+                            ),
+                            h3: ({ children }) => (
+                                <Typography variant="h3" sx={{ mt: 2, mb: 1.5, fontWeight: 600 }}>
+                                    {children}
+                                </Typography>
+                            ),
+                            h4: ({ children }) => (
+                                <Typography variant="h4" sx={{ mt: 2, mb: 1.5, fontWeight: 600 }}>
+                                    {children}
+                                </Typography>
+                            ),
+                            h5: ({ children }) => (
+                                <Typography variant="h5" sx={{ mt: 2, mb: 1.5, fontWeight: 600 }}>
+                                    {children}
+                                </Typography>
+                            ),
+                            h6: ({ children }) => (
+                                <Typography variant="h6" sx={{ mt: 2, mb: 1.5, fontWeight: 600 }}>
+                                    {children}
+                                </Typography>
+                            ),
                             p: ({ children }) => (
                                 <Typography 
                                     component="p" 
@@ -278,6 +430,11 @@ export const ChatMessage = ({ chat }: ChatMessageProps) => {
                                         mb: 2 
                                     }}
                                 >
+                                    {children}
+                                </Typography>
+                            ),
+                            strong: ({ children }) => (
+                                <Typography component="span" sx={{ fontWeight: 700 }}>
                                     {children}
                                 </Typography>
                             ),
@@ -315,7 +472,6 @@ export const ChatMessage = ({ chat }: ChatMessageProps) => {
         }
 
         const parts = chat.answer.split(/<\/?think>/);
-        console.log('parts', parts);
 
         return (
             <Box sx={reasoningStyles}>
@@ -331,9 +487,13 @@ export const ChatMessage = ({ chat }: ChatMessageProps) => {
                                 borderColor: 'grey.400',
                             }}
                         >
-                            <Typography variant="body2" className="reasoning-text">
-                                {parts[1]}
-                            </Typography>
+                            {chat.isStreaming && !hasEndThinkTag ? (
+                                <ReasoningScroll content={parts[1]} isStreaming={chat.isStreaming} />
+                            ) : (
+                                <Typography variant="body2" className="reasoning-text">
+                                    {parts[1]}
+                                </Typography>
+                            )}
                         </Paper>
                     </Box>
                 )}
@@ -343,6 +503,36 @@ export const ChatMessage = ({ chat }: ChatMessageProps) => {
                             remarkPlugins={[remarkGfm]}
                             rehypePlugins={[rehypeRaw, rehypeSanitize, [rehypeHighlight, { ignoreMissing: true }]]}
                             components={{
+                                h1: ({ children }) => (
+                                    <Typography variant="h1" sx={{ mt: 3, mb: 2, fontWeight: 600 }}>
+                                        {children}
+                                    </Typography>
+                                ),
+                                h2: ({ children }) => (
+                                    <Typography variant="h2" sx={{ mt: 3, mb: 2, fontWeight: 600 }}>
+                                        {children}
+                                    </Typography>
+                                ),
+                                h3: ({ children }) => (
+                                    <Typography variant="h3" sx={{ mt: 2, mb: 1.5, fontWeight: 600 }}>
+                                        {children}
+                                    </Typography>
+                                ),
+                                h4: ({ children }) => (
+                                    <Typography variant="h4" sx={{ mt: 2, mb: 1.5, fontWeight: 600 }}>
+                                        {children}
+                                    </Typography>
+                                ),
+                                h5: ({ children }) => (
+                                    <Typography variant="h5" sx={{ mt: 2, mb: 1.5, fontWeight: 600 }}>
+                                        {children}
+                                    </Typography>
+                                ),
+                                h6: ({ children }) => (
+                                    <Typography variant="h6" sx={{ mt: 2, mb: 1.5, fontWeight: 600 }}>
+                                        {children}
+                                    </Typography>
+                                ),
                                 p: ({ children }) => (
                                     <Typography 
                                         component="p" 
@@ -352,6 +542,11 @@ export const ChatMessage = ({ chat }: ChatMessageProps) => {
                                             mb: 2 
                                         }}
                                     >
+                                        {children}
+                                    </Typography>
+                                ),
+                                strong: ({ children }) => (
+                                    <Typography component="span" sx={{ fontWeight: 700 }}>
                                         {children}
                                     </Typography>
                                 ),

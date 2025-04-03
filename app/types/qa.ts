@@ -29,6 +29,7 @@ export interface KbChatHistory {
     processTime: number;
     createTime: string;
     updateTime: string;
+    isStreaming?: boolean;
 }
 
 // 分页对话历史记录
