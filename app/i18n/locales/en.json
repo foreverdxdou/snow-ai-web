@@ -169,6 +169,23 @@
     "loginFailed": "Login failed"
   },
   "home": {
+    "title": "Dashboard",
+    "stats": {
+      "qa": "Total Q&A",
+      "knowledge": "Total Knowledge Bases",
+      "documents": "Total Documents",
+      "users": "Total Users"
+    },
+    "trends": {
+      "title": "Growth Trends",
+      "knowledge": "Knowledge Base Growth",
+      "documents": "Document Growth"
+    },
+    "latest": {
+      "title": "Latest Updates",
+      "knowledge": "Latest Knowledge Bases",
+      "documents": "Latest Documents"
+    },
     "welcome": "Welcome to Snow AI",
     "description": "Your intelligent knowledge management and Q&A platform",
     "recentActivity": "Recent Activity",

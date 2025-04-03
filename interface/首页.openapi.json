@@ -1,0 +1,335 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "AI知识库",
+    "description": "",
+    "version": "1.0.0"
+  },
+  "tags": [
+    {
+      "name": "首页管理"
+    }
+  ],
+  "paths": {
+    "/api/v1/home/stats": {
+      "get": {
+        "summary": "获取首页统计信息",
+        "deprecated": false,
+        "description": "",
+        "operationId": "getHomeStats",
+        "tags": [
+          "首页管理"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RHomeStatsVO"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/home/kb/trend": {
+      "get": {
+        "summary": "获取知识库增长趋势",
+        "deprecated": false,
+        "description": "",
+        "operationId": "getKbTrend",
+        "tags": [
+          "首页管理"
+        ],
+        "parameters": [
+          {
+            "name": "startDate",
+            "in": "query",
+            "description": "",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "endDate",
+            "in": "query",
+            "description": "",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RListLong"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/home/doc/trend": {
+      "get": {
+        "summary": "获取文档增长趋势",
+        "deprecated": false,
+        "description": "",
+        "operationId": "getDocTrend",
+        "tags": [
+          "首页管理"
+        ],
+        "parameters": [
+          {
+            "name": "startDate",
+            "in": "query",
+            "description": "",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "endDate",
+            "in": "query",
+            "description": "",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RListLong"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "DocStats": {
+        "type": "object",
+        "properties": {
+          "totalCount": {
+            "type": "integer",
+            "description": "文档总数",
+            "format": "int64"
+          },
+          "parsedCount": {
+            "type": "integer",
+            "description": "已解析文档数",
+            "format": "int64"
+          },
+          "weeklyNewCount": {
+            "type": "integer",
+            "description": "本周新增数",
+            "format": "int64"
+          },
+          "monthlyNewCount": {
+            "type": "integer",
+            "description": "本月新增数",
+            "format": "int64"
+          }
+        },
+        "description": "文档统计信息"
+      },
+      "HomeStatsVO": {
+        "type": "object",
+        "properties": {
+          "kbStats": {
+            "type": "object",
+            "properties": {}
+          },
+          "docStats": {
+            "$ref": "#/components/schemas/DocStats"
+          },
+          "latestKbs": {
+            "type": "array",
+            "description": "最新知识库列表",
+            "items": {
+              "$ref": "#/components/schemas/LatestKb"
+            }
+          },
+          "latestDocs": {
+            "type": "array",
+            "description": "最新文档列表",
+            "items": {
+              "$ref": "#/components/schemas/LatestDoc"
+            }
+          }
+        },
+        "description": "首页统计信息"
+      },
+      "LatestDoc": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "文档ID",
+            "format": "int64"
+          },
+          "title": {
+            "type": "string",
+            "description": "文档标题"
+          },
+          "fileType": {
+            "type": "string",
+            "description": "文档类型"
+          },
+          "kbName": {
+            "type": "string",
+            "description": "知识库名称"
+          },
+          "createTime": {
+            "type": "string",
+            "description": "创建时间"
+          },
+          "creatorName": {
+            "type": "string",
+            "description": "创建者名称"
+          }
+        },
+        "description": "最新文档信息"
+      },
+      "LatestKb": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "知识库ID",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string",
+            "description": "知识库名称"
+          },
+          "description": {
+            "type": "string",
+            "description": "知识库描述"
+          },
+          "createTime": {
+            "type": "string",
+            "description": "创建时间"
+          },
+          "creatorName": {
+            "type": "string",
+            "description": "创建者名称"
+          }
+        },
+        "description": "最新知识库信息"
+      },
+      "RHomeStatsVO": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/HomeStatsVO"
+          }
+        }
+      },
+      "KbStats": {
+        "type": "object",
+        "properties": {
+          "totalCount": {
+            "type": "integer",
+            "description": "知识库总数",
+            "format": "int64"
+          },
+          "activeCount": {
+            "type": "integer",
+            "description": "活跃知识库数",
+            "format": "int64"
+          },
+          "weeklyNewCount": {
+            "type": "integer",
+            "description": "本周新增数",
+            "format": "int64"
+          },
+          "monthlyNewCount": {
+            "type": "integer",
+            "description": "本月新增数",
+            "format": "int64"
+          }
+        },
+        "description": "知识库统计信息"
+      },
+      "RListLong": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "bearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080",
+      "description": "开发环境"
+    }
+  ],
+  "security": []
+}

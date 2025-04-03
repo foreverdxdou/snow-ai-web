@@ -186,6 +186,23 @@
     "register": "立即注册"
   },
   "home": {
+    "title": "仪表盘",
+    "stats": {
+      "qa": "问答总数",
+      "knowledge": "知识库总数",
+      "documents": "文档总数",
+      "users": "用户总数"
+    },
+    "trends": {
+      "title": "增长趋势",
+      "knowledge": "知识库增长",
+      "documents": "文档增长"
+    },
+    "latest": {
+      "title": "最新动态",
+      "knowledge": "最新知识库",
+      "documents": "最新文档"
+    },
     "welcome": "欢迎使用 Snow AI",
     "description": "您的智能知识管理与问答平台",
     "recentActivity": "最近活动",
