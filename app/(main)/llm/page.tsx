@@ -36,6 +36,8 @@ export default function LlmPage() {
   const [editingConfig, setEditingConfig] = useState<LlmConfig | null>(null);
   const [formData, setFormData] = useState<Partial<LlmConfig>>({
     modelName: '',
+    modelCode: '',
+    modelProvider: '',
     apiUrl: '',
     apiKey: '',
     enabled: true,
@@ -86,6 +88,8 @@ export default function LlmPage() {
       setEditingConfig(null);
       setFormData({
         modelName: '',
+        modelCode: '',
+        modelProvider: '',
         apiUrl: '',
         apiKey: '',
         enabled: true,
@@ -99,6 +103,8 @@ export default function LlmPage() {
     setEditingConfig(null);
     setFormData({
       modelName: '',
+      modelCode: '',
+      modelProvider: '',
       apiUrl: '',
       apiKey: '',
       enabled: true,
@@ -107,7 +113,7 @@ export default function LlmPage() {
 
   const handleSubmit = async () => {
     try {
-      if (!formData.modelName || !formData.apiUrl || !formData.apiKey) {
+      if (!formData.modelName || !formData.apiUrl || !formData.apiKey || !formData.modelCode || !formData.modelProvider) {
         setSnackbar({
           open: true,
           message: t('llm.nameRequired'),

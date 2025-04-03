@@ -252,12 +252,14 @@ export default function CategoryPage() {
                     <Tooltip title={t('common.edit')}>
                         <CommonButton
                             buttonVariant="edit"
+                            icon
                             onClick={() => handleOpen(record)}
                         />
                     </Tooltip>
                     <Tooltip title={t('common.delete')}>
                         <CommonButton
                             buttonVariant="delete"
+                            icon
                             onClick={() => handleDelete(record.id)}
                         />
                     </Tooltip>
