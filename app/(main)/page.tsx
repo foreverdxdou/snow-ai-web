@@ -28,8 +28,7 @@ import { useTranslation } from 'react-i18next';
 import { PerformanceLayout } from '@/app/components/common/PerformanceLayout';
 import { homeService } from '@/app/services/home';
 import type { HomeStatsVO } from '@/app/types/home';
-import { formatDistanceToNow } from 'date-fns';
-import { zhCN, enUS } from 'date-fns/locale';
+import { formatDistance } from '@/app/utils/date';
 import { Line } from 'react-chartjs-2';
 import {
     Chart as ChartJS,
@@ -245,10 +244,7 @@ export default function HomePage() {
                                     secondary={
                                         <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
                                             <AccessTimeIcon sx={{ fontSize: 16, mr: 0.5 }} />
-                                            {formatDistanceToNow(new Date(kb.createTime), {
-                                                addSuffix: true,
-                                                locale: i18n.language === 'zh-CN' ? zhCN : enUS,
-                                            })}
+                                            {formatDistance(kb.createTime, i18n.language)}
                                         </Box>
                                     }
                                 />
@@ -267,10 +263,7 @@ export default function HomePage() {
                                     secondary={
                                         <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
                                             <AccessTimeIcon sx={{ fontSize: 16, mr: 0.5 }} />
-                                            {formatDistanceToNow(new Date(doc.createTime), {
-                                                addSuffix: true,
-                                                locale: i18n.language === 'zh-CN' ? zhCN : enUS,
-                                            })}
+                                            {formatDistance(doc.createTime, i18n.language)}
                                         </Box>
                                     }
                                 />
