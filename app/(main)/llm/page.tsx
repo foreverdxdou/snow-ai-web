@@ -30,9 +30,9 @@ import { PerformanceLayout } from '@/app/components/common/PerformanceLayout';
 import { CommonSelect } from '@/app/components/common/CommonSelect';
 
 const MODEL_TYPE_OPTIONS = [
-  { id: 'GENERAL', name: 'text-generation' },
-  { id: 'REASONING', name: 'text-reasoning' },
-  { id: 'EMBEDDING', name: 'text-embedding' },
+  { id: 'GENERAL' },
+  { id: 'REASONING' },
+  // { id: 'EMBEDDING' },
 ] as const;
 
 export default function LlmPage() {
@@ -45,7 +45,7 @@ export default function LlmPage() {
     modelName: '',
     modelCode: '',
     modelProvider: '',
-    modelType: 'text-generation',
+    modelType: 'GENERAL',
     apiUrl: '',
     apiKey: '',
     enabled: true,
@@ -100,7 +100,7 @@ export default function LlmPage() {
         modelName: '',
         modelCode: '',
         modelProvider: '',
-        modelType: 'text-generation',
+        modelType: 'GENERAL', 
         apiUrl: '',
         apiKey: '',
         enabled: true,
@@ -116,7 +116,7 @@ export default function LlmPage() {
       modelName: '',
       modelCode: '',
       modelProvider: '',
-      modelType: 'text-generation',
+      modelType: 'GENERAL',
       apiUrl: '',
       apiKey: '',
       enabled: true,
@@ -365,7 +365,7 @@ export default function LlmPage() {
                 required
                 options={MODEL_TYPE_OPTIONS.map(opt => ({
                   id: opt.id,
-                  name: t(`llm.types.${opt.name}`)
+                  name: t(`llm.types.${opt.id}`)
                 }))}
               />
               <CommonSelect
@@ -389,6 +389,7 @@ export default function LlmPage() {
                   { id: 'minimax', name: t('llm.providers.minimax') },
                   { id: 'moonshot', name: t('llm.providers.moonshot') },
                   { id: 'deepseek', name: t('llm.providers.deepseek') },
+                  { id: 'ollama', name: t('llm.providers.ollama') },
                   { id: 'other', name: t('llm.providers.other') },
                 ]}
               />

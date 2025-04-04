@@ -401,7 +401,8 @@
     "loadHistoryError": "Failed to load history",
     "systemError": "System error, please try again later",
     "connecting": "Connecting...",
-    "thinking": "Thinking...",
+    "thinking": "Thinking",
+    "thinkingCompleted": "Thinking Completed",
     "noKbSelected": "No knowledge base selected, using general Q&A mode",
     "selectModel": "Select LLM Model",
     "modelPlaceholder": "Please select a model",
@@ -418,12 +419,41 @@
     "lastThirtyDays": "Last 30 Days",
     "earlier": "Earlier",
     "copyMessage": "Copy Message",
-    "copySuccess": "Message copied to clipboard",
-    "copyError": "Copy failed, please try again",
+    "copySuccess": "Copied successfully",
+    "copyError": "Copy failed",
     "expandReasoning": "Expand Reasoning",
     "collapseReasoning": "Collapse Reasoning",
     "reasoningTitle": "Reasoning Process",
-    "finalAnswer": "Final Answer"
+    "finalAnswer": "Final Answer",
+    "reasoning": "Reasoning Process",
+    "markdown": {
+      "preprocessing": {
+        "title": "Markdown Preprocessing",
+        "description": "Process irregular Markdown formats",
+        "heading": "Heading Format",
+        "list": "List Format",
+        "quote": "Quote Format",
+        "code": "Code Block Format",
+        "bold": "Bold Format",
+        "italic": "Italic Format",
+        "link": "Link Format",
+        "image": "Image Format",
+        "table": "Table Format",
+        "lineBreak": "Line Break Format",
+        "html": "HTML Tags",
+        "math": "Math Formula",
+        "footnote": "Footnote",
+        "strikethrough": "Strikethrough",
+        "blockquote": "Blockquote",
+        "listNesting": "List Nesting",
+        "codeLanguage": "Code Language",
+        "tableAlignment": "Table Alignment",
+        "tableSeparator": "Table Separator",
+        "lineEnding": "Line Ending",
+        "multipleEmptyLines": "Multiple Empty Lines"
+      }
+    },
+    "regenerate": "Regenerate"
   },
   "systemConfig": {
     "title": "System Configuration",
@@ -483,9 +513,9 @@
     "modelType": "Model Type",
     "modelTypeRequired": "Please select model type",
     "types": {
-      "text-generation": "Generation Model",
-      "text-reasoning": "Reasoning Model",
-      "text-embedding": "Embedding Model"
+      "GENERAL": "Generation Model",
+      "REASONING": "Reasoning Model",
+      "EMBEDDING": "Embedding Model"
     },
     "apiUrl": "API URL",
     "apiKey": "API Key",
@@ -521,6 +551,7 @@
       "minimax": "MiniMax",
       "moonshot": "Moonshot AI",
       "deepseek": "DeepSeek",
+      "ollama": "Ollama",
       "other": "Other"
     }
   },

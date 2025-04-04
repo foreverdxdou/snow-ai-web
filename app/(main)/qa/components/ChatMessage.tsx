@@ -1,5 +1,5 @@
 import { Box, Paper, Typography, IconButton, Tooltip, Snackbar, Alert, Collapse } from '@mui/material';
-import { ContentCopy as ContentCopyIcon, ExpandMore as ExpandMoreIcon, ExpandLess as ExpandLessIcon, KeyboardArrowUp as KeyboardArrowUpIcon } from '@mui/icons-material';
+import { ContentCopy as ContentCopyIcon, ExpandMore as ExpandMoreIcon, ExpandLess as ExpandLessIcon, KeyboardArrowUp as KeyboardArrowUpIcon, Refresh as RefreshIcon } from '@mui/icons-material';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
@@ -11,6 +11,7 @@ import type { KbChatHistory } from '@/app/types/qa';
 import { Theme } from '@mui/material/styles';
 import { keyframes } from '@mui/system';
 import { useState } from 'react';
+import { preprocessMarkdown, convertToQuoteFormat } from './MarkdownPreprocessor';
 
 const markdownStyles = {
     '& .markdown-body': {
@@ -333,9 +334,10 @@ const ReasoningScroll = ({ content, isStreaming }: { content: string; isStreamin
 
 interface ChatMessageProps {
     chat: KbChatHistory;
+    onRegenerate?: () => void;
 }
 
-export const ChatMessage = ({ chat }: ChatMessageProps) => {
+export const ChatMessage = ({ chat, onRegenerate }: ChatMessageProps) => {
     const { t } = useTranslation();
     const [snackbar, setSnackbar] = useState({
         open: false,
@@ -344,52 +346,126 @@ export const ChatMessage = ({ chat }: ChatMessageProps) => {
     });
     const [isReasoningExpanded, setIsReasoningExpanded] = useState(true);
 
-    const handleCopyMessage = async (isQuestion: boolean) => {
-        try {
-            let messageText = '';
-            if (isQuestion) {
-                messageText = chat.question;
+    const handleCopyMessage = () => {
+        const hasEndThinkTag = chat.answer.includes('</think>');
+        const hasThinkTag = chat.answer.includes('<think>');
+        
+        let messageText = '';
+        
+        if (hasEndThinkTag) {
+            if (hasThinkTag) {
+                // 处理包含<think>和</think>的情况
+                const parts = chat.answer.split(/<think>|<\/think>/);
+                messageText = parts[2] || '';
             } else {
-                // 如果是回答，检查是否包含推理内容
-                if (chat.answer.includes('</think>')) {
-                    const parts = chat.answer.split(/<\/?think>/);
-                    // 只复制最终答案部分
-                    messageText = parts[2] || chat.answer;
-                } else {
-                    messageText = chat.answer;
-                }
+                // 处理只包含</think>的情况
+                const parts = chat.answer.split('</think>');
+                messageText = parts[0] || '';
             }
-            await navigator.clipboard.writeText(messageText);
+        } else {
+            messageText = chat.answer;
+        }
+        
+        // 预处理Markdown内容，移除Markdown语法
+        const plainText = preprocessMarkdown(messageText)
+            .replace(/#{1,6}\s/g, '') // 移除标题
+            .replace(/\*\*(.*?)\*\*/g, '$1') // 移除粗体
+            .replace(/\*(.*?)\*/g, '$1') // 移除斜体
+            .replace(/\[(.*?)\]\((.*?)\)/g, '$1') // 移除链接
+            .replace(/!\[(.*?)\]\((.*?)\)/g, '$1') // 移除图片
+            .replace(/`(.*?)`/g, '$1') // 移除行内代码
+            .replace(/```[\s\S]*?```/g, '') // 移除代码块
+            .replace(/>\s(.*)/g, '$1') // 移除引用
+            .replace(/^\s*[-*+]\s/gm, '') // 移除列表项
+            .replace(/^\s*\d+\.\s/gm, '') // 移除有序列表
+            .replace(/\|.*\|/g, '') // 移除表格
+            .replace(/\n{3,}/g, '\n\n') // 规范化换行
+            .trim();
+        
+        navigator.clipboard.writeText(plainText).then(() => {
             setSnackbar({
                 open: true,
                 message: t('qa.copySuccess'),
                 severity: 'success'
             });
-        } catch (error) {
-            console.error('复制失败:', error);
+        }).catch(err => {
+            console.error('Failed to copy text: ', err);
             setSnackbar({
                 open: true,
                 message: t('qa.copyError'),
                 severity: 'error'
             });
-        }
+        });
     };
 
     const handleToggleReasoning = () => {
         setIsReasoningExpanded(prev => !prev);
     };
 
-    const renderAnswer = () => {
-        // 检查是否包含 <think> 标签
-        const hasThinkTag = chat.answer.includes('<think>');
-        const hasEndThinkTag = chat.answer.includes('</think>');
+    const renderAnswer = (answer: string) => {
+        const hasEndThinkTag = answer.includes('</think>');
+        const hasThinkTag = answer.includes('<think>');
+        const isThinking = hasThinkTag && !hasEndThinkTag;
         
-        if (!hasThinkTag) {
-            return (
-                <Box className="final-answer">
+        let parts: string[] = [];
+        let reasoningContent = '';
+        let finalAnswer = '';
+        
+        if (hasEndThinkTag) {
+            if (hasThinkTag) {
+                parts = answer.split(/<think>|<\/think>/);
+                reasoningContent = parts[1] || '';
+                finalAnswer = parts[2] || '';
+            } else {
+                parts = answer.split('</think>');
+                reasoningContent = parts[0] || '';
+                finalAnswer = parts[1] || '';
+            }
+        } else if (hasThinkTag) {
+            parts = answer.split('<think>');
+            reasoningContent = parts[1] || '';
+        } else {
+            finalAnswer = answer;
+        }
+        
+        return (
+            <Box>
+                {reasoningContent && (
+                    <Collapse in={isReasoningExpanded}>
+                        <Box sx={{ 
+                            mb: 2,
+                            pl: 2,
+                            position: 'relative',
+                            '&::before': {
+                                content: '""',
+                                position: 'absolute',
+                                left: 0,
+                                top: 0,
+                                bottom: 0,
+                                width: '4px',
+                                backgroundColor: '#a0a1ae',
+                                borderRadius: '4px'
+                            }
+                        }}>
+                            <Typography 
+                                variant="body1" 
+                                sx={{ 
+                                    color: '#a0a1ae',
+                                    whiteSpace: 'pre-wrap',
+                                    wordBreak: 'break-word',
+                                    lineHeight: 1.6,
+                                    fontSize: '0.875rem'
+                                }}
+                            >
+                                {reasoningContent}
+                            </Typography>
+                        </Box>
+                    </Collapse>
+                )}
+                {finalAnswer && (
                     <ReactMarkdown
                         remarkPlugins={[remarkGfm]}
-                        rehypePlugins={[rehypeRaw, rehypeSanitize, [rehypeHighlight, { ignoreMissing: true }]]}
+                        rehypePlugins={[rehypeRaw, rehypeSanitize, rehypeHighlight]}
                         components={{
                             h1: ({ children }) => (
                                 <Typography variant="h1" sx={{ mt: 3, mb: 2, fontWeight: 600 }}>
@@ -465,121 +541,8 @@ export const ChatMessage = ({ chat }: ChatMessageProps) => {
                             }
                         }}
                     >
-                        {chat.answer}
+                        {preprocessMarkdown(finalAnswer)}
                     </ReactMarkdown>
-                </Box>
-            );
-        }
-
-        const parts = chat.answer.split(/<\/?think>/);
-
-        return (
-            <Box sx={reasoningStyles}>
-                {hasThinkTag && (
-                    <Box className={`reasoning-content ${isReasoningExpanded ? 'expanded' : ''}`}>
-                        <Paper
-                            elevation={0}
-                            sx={{
-                                p: 2,
-                                bgcolor: 'grey.100',
-                                borderRadius: 2,
-                                borderLeft: '4px solid',
-                                borderColor: 'grey.400',
-                            }}
-                        >
-                            {chat.isStreaming && !hasEndThinkTag ? (
-                                <ReasoningScroll content={parts[1]} isStreaming={chat.isStreaming} />
-                            ) : (
-                                <Typography variant="body2" className="reasoning-text">
-                                    {parts[1]}
-                                </Typography>
-                            )}
-                        </Paper>
-                    </Box>
-                )}
-                {hasEndThinkTag && (
-                    <Box className="final-answer">
-                        <ReactMarkdown
-                            remarkPlugins={[remarkGfm]}
-                            rehypePlugins={[rehypeRaw, rehypeSanitize, [rehypeHighlight, { ignoreMissing: true }]]}
-                            components={{
-                                h1: ({ children }) => (
-                                    <Typography variant="h1" sx={{ mt: 3, mb: 2, fontWeight: 600 }}>
-                                        {children}
-                                    </Typography>
-                                ),
-                                h2: ({ children }) => (
-                                    <Typography variant="h2" sx={{ mt: 3, mb: 2, fontWeight: 600 }}>
-                                        {children}
-                                    </Typography>
-                                ),
-                                h3: ({ children }) => (
-                                    <Typography variant="h3" sx={{ mt: 2, mb: 1.5, fontWeight: 600 }}>
-                                        {children}
-                                    </Typography>
-                                ),
-                                h4: ({ children }) => (
-                                    <Typography variant="h4" sx={{ mt: 2, mb: 1.5, fontWeight: 600 }}>
-                                        {children}
-                                    </Typography>
-                                ),
-                                h5: ({ children }) => (
-                                    <Typography variant="h5" sx={{ mt: 2, mb: 1.5, fontWeight: 600 }}>
-                                        {children}
-                                    </Typography>
-                                ),
-                                h6: ({ children }) => (
-                                    <Typography variant="h6" sx={{ mt: 2, mb: 1.5, fontWeight: 600 }}>
-                                        {children}
-                                    </Typography>
-                                ),
-                                p: ({ children }) => (
-                                    <Typography 
-                                        component="p" 
-                                        sx={{ 
-                                            whiteSpace: 'pre-wrap',
-                                            wordBreak: 'break-word',
-                                            mb: 2 
-                                        }}
-                                    >
-                                        {children}
-                                    </Typography>
-                                ),
-                                strong: ({ children }) => (
-                                    <Typography component="span" sx={{ fontWeight: 700 }}>
-                                        {children}
-                                    </Typography>
-                                ),
-                                code({ node, inline, className, children, ...props }: any) {
-                                    const match = /language-(\w+)/.exec(className || '');
-                                    return !inline && match ? (
-                                        <Box component="div" sx={{ position: 'relative' }}>
-                                            <IconButton
-                                                onClick={() => navigator.clipboard.writeText(String(children).replace(/\n$/, ''))}
-                                                sx={{
-                                                    position: 'absolute',
-                                                    right: 8,
-                                                    top: 8,
-                                                    bgcolor: 'background.paper',
-                                                    opacity: 0,
-                                                    transition: 'all 0.2s',
-                                                    '&:hover': { opacity: 1 },
-                                                }}
-                                                size="small"
-                                            >
-                                                <ContentCopyIcon fontSize="small" />
-                                            </IconButton>
-                                            <pre className={className}><code {...props}>{children}</code></pre>
-                                        </Box>
-                                    ) : (
-                                        <code className={className} {...props}>{children}</code>
-                                    );
-                                }
-                            }}
-                        >
-                            {parts[2]}
-                        </ReactMarkdown>
-                    </Box>
                 )}
             </Box>
         );
@@ -603,7 +566,7 @@ export const ChatMessage = ({ chat }: ChatMessageProps) => {
                     </Paper>
                     <Tooltip title={t('qa.copyMessage')}>
                         <IconButton
-                            onClick={() => handleCopyMessage(true)}
+                            onClick={() => handleCopyMessage()}
                             sx={{
                                 mt: 0.5,
                                 color: 'primary.main',
@@ -620,6 +583,55 @@ export const ChatMessage = ({ chat }: ChatMessageProps) => {
 
                 {/* AI 回答 */}
                 <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                    {(chat.answer.includes('</think>') || chat.answer.includes('<think>')) && (
+                        <Box sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 1,
+                            mb: 1,
+                            ml: 1
+                        }}>
+                            <Box
+                                component="span"
+                                sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    color: '#818cf8'
+                                }}
+                            >
+                                ❄️
+                            </Box>
+                            <Typography
+                                variant="body2"
+                                sx={{
+                                    color: '#6b7280',
+                                    fontSize: '0.875rem',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 1
+                                }}
+                            >
+                                {chat.answer.includes('</think>') ? t('qa.thinkingCompleted') : t('qa.thinking')}
+                                {!chat.answer.includes('</think>') && chat.answer.includes('<think>') && <ThinkingDots />}
+                            </Typography>
+                            {chat.answer.includes('</think>') && (
+                                <IconButton
+                                    onClick={handleToggleReasoning}
+                                    sx={{
+                                        color: '#6b7280',
+                                        padding: '2px',
+                                        '&:hover': {
+                                            color: '#818cf8',
+                                            bgcolor: 'transparent'
+                                        }
+                                    }}
+                                    size="small"
+                                >
+                                    {isReasoningExpanded ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
+                                </IconButton>
+                            )}
+                        </Box>
+                    )}
                     <Paper
                         elevation={2}
                         sx={{
@@ -632,14 +644,13 @@ export const ChatMessage = ({ chat }: ChatMessageProps) => {
                         }}
                     >
                         <Box className="markdown-body">
-                            {renderAnswer()}
-                            {chat.answer === t('qa.thinking') && <ThinkingDots />}
+                            {renderAnswer(chat.answer)}
                         </Box>
                     </Paper>
                     <Box sx={{ display: 'flex', gap: 1, mt: 0.5 }}>
                         <Tooltip title={t('qa.copyMessage')}>
                             <IconButton
-                                onClick={() => handleCopyMessage(false)}
+                                onClick={() => handleCopyMessage()}
                                 sx={{
                                     color: 'primary.main',
                                     opacity: 0.7,
@@ -651,22 +662,20 @@ export const ChatMessage = ({ chat }: ChatMessageProps) => {
                                 <ContentCopyIcon fontSize="small" />
                             </IconButton>
                         </Tooltip>
-                        {chat.answer.includes('</think>') && (
-                            <Tooltip title={isReasoningExpanded || chat.answer.includes('<think>') ? t('qa.collapseReasoning') : t('qa.expandReasoning')}>
-                                <IconButton
-                                    onClick={handleToggleReasoning}
-                                    sx={{
-                                        color: 'primary.main',
-                                        opacity: 0.7,
-                                        transition: 'all 0.2s',
-                                        '&:hover': { opacity: 1, transform: 'scale(1.1)' },
-                                    }}
-                                    size="small"
-                                >
-                                    {isReasoningExpanded || chat.answer.includes('<think>') ? <KeyboardArrowUpIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
-                                </IconButton>
-                            </Tooltip>
-                        )}
+                        {/* <Tooltip title={t('qa.regenerate')}>
+                            <IconButton
+                                onClick={onRegenerate}
+                                sx={{
+                                    color: 'primary.main',
+                                    opacity: 0.7,
+                                    transition: 'all 0.2s',
+                                    '&:hover': { opacity: 1, transform: 'scale(1.1)' },
+                                }}
+                                size="small"
+                            >
+                                <RefreshIcon fontSize="small" />
+                            </IconButton>
+                        </Tooltip> */}
                     </Box>
                 </Box>
             </Box>

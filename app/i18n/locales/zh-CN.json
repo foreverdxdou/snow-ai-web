@@ -414,7 +414,8 @@
     "loadHistoryError": "加载历史记录失败",
     "systemError": "系统错误，请稍后重试",
     "connecting": "正在连接...",
-    "thinking": "思考中...",
+    "thinking": "思考中",
+    "thinkingCompleted": "已完成思考",
     "noKbSelected": "未选择知识库，将使用通用问答模式",
     "selectModel": "选择大模型",
     "modelPlaceholder": "请选择大模型",
@@ -431,12 +432,41 @@
     "lastThirtyDays": "最近30天",
     "earlier": "更早",
     "copyMessage": "复制消息",
-    "copySuccess": "消息已复制到剪贴板",
-    "copyError": "复制失败，请重试",
-    "expandReasoning": "展开推理过程",
-    "collapseReasoning": "收起推理过程",
+    "copySuccess": "复制成功",
+    "copyError": "复制失败",
+    "expandReasoning": "展开推理",
+    "collapseReasoning": "收起推理",
+    "reasoning": "推理过程",
     "reasoningTitle": "推理过程",
-    "finalAnswer": "最终答案"
+    "finalAnswer": "最终答案",
+    "markdown": {
+      "preprocessing": {
+        "title": "Markdown预处理",
+        "description": "处理不规则的Markdown格式",
+        "heading": "标题格式",
+        "list": "列表格式",
+        "quote": "引用格式",
+        "code": "代码块格式",
+        "bold": "粗体格式",
+        "italic": "斜体格式",
+        "link": "链接格式",
+        "image": "图片格式",
+        "table": "表格格式",
+        "lineBreak": "换行格式",
+        "html": "HTML标签",
+        "math": "数学公式",
+        "footnote": "脚注",
+        "strikethrough": "删除线",
+        "blockquote": "引用块",
+        "listNesting": "列表嵌套",
+        "codeLanguage": "代码语言",
+        "tableAlignment": "表格对齐",
+        "tableSeparator": "表格分隔行",
+        "lineEnding": "换行符",
+        "multipleEmptyLines": "多个空行"
+      }
+    },
+    "regenerate": "重新生成"
   },
   "systemConfig": {
     "title": "系统配置管理",
@@ -496,9 +526,9 @@
     "modelType": "模型类型",
     "modelTypeRequired": "请选择模型类型",
     "types": {
-      "text-generation": "生成模型",
-      "text-reasoning": "推理模型",
-      "text-embedding": "向量化模型"
+      "GENERAL": "生成模型",
+      "REASONING": "推理模型",
+      "EMBEDDING": "向量化模型"
     },
     "apiUrl": "API地址",
     "apiKey": "API密钥",
@@ -534,6 +564,7 @@
       "minimax": "MiniMax",
       "moonshot": "月之暗面",
       "deepseek": "DeepSeek",
+      "ollama": "Ollama",
       "other": "其他"
     }
   },

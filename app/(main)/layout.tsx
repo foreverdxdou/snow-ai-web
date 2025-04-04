@@ -51,7 +51,7 @@ import type { User } from '@/app/types/userinfo';
 
 // 常量和类型定义
 const DRAWER_WIDTH = 260;
-const DRAWER_COLLAPSED_WIDTH = 100;
+const DRAWER_COLLAPSED_WIDTH = 90;
 const TOPBAR_HEIGHT = { xs: 56, sm: 64 };
 
 interface MenuItem {
@@ -136,8 +136,8 @@ const TopBar = React.memo(({
         position="fixed"
         elevation={0}
         sx={{
-            width: { sm: `calc(100% - ${open ? DRAWER_WIDTH : 0}px)` },
-            ml: { sm: `${open ? DRAWER_WIDTH : 0}px` },
+            width: { sm: `calc(100% - ${open ? DRAWER_WIDTH : DRAWER_COLLAPSED_WIDTH}px)` },
+            ml: { sm: `${open ? DRAWER_WIDTH : DRAWER_COLLAPSED_WIDTH}px` },
             transition: (theme) => theme.transitions.create(['margin', 'width'], {
                 easing: theme.transitions.easing.sharp,
                 duration: theme.transitions.duration.leavingScreen,
@@ -288,10 +288,10 @@ const SideBar = React.memo(({
                     borderBottom: 1,
                     borderColor: 'divider',
                     position: 'relative',
+                    overflow: 'visible',
                 }}>
                     <Typography 
                         variant="h6" 
-                        noWrap 
                         component="div" 
                         sx={{ 
                             fontWeight: 1000,
@@ -302,8 +302,13 @@ const SideBar = React.memo(({
                             WebkitBackgroundClip: 'text',
                             WebkitTextFillColor: 'transparent',
                             opacity: 1,
-                            fontSize: open ? '1.25rem' : '0.875rem',
-                            transition: (theme) => theme.transitions.create(['opacity', 'fontSize'], {
+                            fontSize: open ? '1.25rem' : '0.75rem',
+                            width: open ? 'auto' : '100%',
+                            textAlign: open ? 'left' : 'center',
+                            whiteSpace: 'nowrap',
+                            overflow: 'visible',
+                            textOverflow: 'clip',
+                            transition: (theme) => theme.transitions.create(['opacity', 'fontSize', 'width', 'textAlign'], {
                                 duration: theme.transitions.duration.enteringScreen,
                             }),
                         }}

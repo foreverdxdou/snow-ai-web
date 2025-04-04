@@ -1,4 +1,4 @@
-export type ModelType = 'text-generation' | 'text-embedding' | 'image-generation' | 'speech-to-text' | 'text-to-speech';
+export type ModelType = 'GENERAL' | 'REASONING' | 'EMBEDDING';
 
 export interface LlmConfig {
   id: string;

@@ -925,7 +925,24 @@ export default function QaPage() {
                         </Box>
                     ) : (
                         chatHistory.map((chat, index) => (
-                            <ChatMessage key={index} chat={chat} />
+                            <ChatMessage 
+                                key={index} 
+                                chat={chat} 
+                                onRegenerate={() => {
+                                    // 保存当前问题
+                                    const originalQuestion = question;
+                                    // 设置问题为原始问题
+                                    setQuestion(chat.question);
+                                    // 使用 setTimeout 确保问题已设置后再调用 handleSend
+                                    setTimeout(() => {
+                                        handleSend();
+                                        // 恢复原始问题
+                                        setTimeout(() => {
+                                            setQuestion(originalQuestion);
+                                        }, 100);
+                                    }, 0);
+                                }}
+                            />
                         ))
                     )}
                 </Box>
