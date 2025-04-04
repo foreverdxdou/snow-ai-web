@@ -24,11 +24,11 @@ export const ThemeLanguageSwitch: React.FC = () => {
                     sx={{
                         color: (theme) => themeMode === 'dark' 
                             ? theme.palette.text.primary
-                            : theme.palette.text.primary,
+                            : theme.palette.primary.main,
                         '&:hover': {
                             backgroundColor: (theme) => themeMode === 'dark'
                                 ? theme.palette.action.hover
-                                : theme.palette.action.hover,
+                                : theme.palette.primary.light,
                         },
                     }}
                 >
@@ -42,11 +42,11 @@ export const ThemeLanguageSwitch: React.FC = () => {
                     sx={{
                         color: (theme) => themeMode === 'dark'
                             ? theme.palette.text.primary
-                            : theme.palette.text.primary,
+                            : theme.palette.primary.main,
                         '&:hover': {
                             backgroundColor: (theme) => themeMode === 'dark'
                                 ? theme.palette.action.hover
-                                : theme.palette.action.hover,
+                                : theme.palette.primary.light,
                         },
                     }}
                 >

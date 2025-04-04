@@ -80,6 +80,7 @@ const MenuItemComponent = React.memo(({
         onClick={onClick}
         sx={{
             minHeight: 48,
+            height: 48,
             mx: 1,
             my: 0.5,
             px: 2,
@@ -300,8 +301,9 @@ const SideBar = React.memo(({
                                     : 'linear-gradient(45deg, #66B2FF 30%, #0059B2 90%)',
                             WebkitBackgroundClip: 'text',
                             WebkitTextFillColor: 'transparent',
-                            opacity: open ? 1 : 0,
-                            transition: (theme) => theme.transitions.create('opacity', {
+                            opacity: 1,
+                            fontSize: open ? '1.25rem' : '0.875rem',
+                            transition: (theme) => theme.transitions.create(['opacity', 'fontSize'], {
                                 duration: theme.transitions.duration.enteringScreen,
                             }),
                         }}
@@ -334,6 +336,8 @@ const SideBar = React.memo(({
                     '& .MuiListItemButton-root': {
                         px: open ? 2 : 1.5,
                         py: 1,
+                        minHeight: 48,
+                        height: 48,
                         justifyContent: open ? 'flex-start' : 'center',
                         '& .MuiListItemIcon-root': {
                             minWidth: open ? 36 : 'auto',
@@ -362,6 +366,7 @@ const SideBar = React.memo(({
                             onClick={onDrawerToggle}
                             sx={{
                                 minHeight: 48,
+                                height: 48,
                                 px: 2,
                                 borderRadius: 1,
                                 justifyContent: 'center',
