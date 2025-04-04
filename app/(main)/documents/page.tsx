@@ -55,10 +55,10 @@ export default function DocumentsPage() {
     // 使用 useEffect 处理 URL 参数
     useEffect(() => {
         if (kbId) {
-                setParams(prev => ({
-                    ...prev,
-                kbId: Number(kbId)
-                }));
+                setParams({
+                    ...params,
+                    kbId: kbId
+                });
         }
         return () => {
             setParams({

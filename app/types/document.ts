@@ -65,7 +65,7 @@ export interface PageDocumentVO {
 } 
 
 export interface DocumentSearchParams { 
-  kbId?: number | string; 
+  kbId?: string; 
   categoryId?: number;
   current: number; 
   size: number;

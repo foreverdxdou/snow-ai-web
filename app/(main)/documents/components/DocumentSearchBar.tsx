@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Box, Stack, Divider } from "@mui/material";
 import type { KbCategory } from "@/app/types/category";
@@ -8,7 +8,7 @@ import { SearchBar } from "@/app/components/common/SearchBar";
 import { CommonInput } from "@/app/components/common/CommonInput";
 import { CommonSelect } from "@/app/components/common/CommonSelect";
 import { CommonButton } from "@/app/components/common/CommonButton";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 interface DocumentSearchBarProps {
   params: DocumentSearchParams;
@@ -57,11 +57,11 @@ export const DocumentSearchBar: React.FC<DocumentSearchBarProps> = ({
 
   // 处理知识库变化
   const handleKbChange = useCallback(
-    (value: string | number) => {
+    (value: string) => {
       setParams({
         ...params,
         current: 1,
-        kbId: (value as number) || undefined,
+        kbId: value || undefined,
       });
     },
     [params, setParams]
@@ -81,6 +81,7 @@ export const DocumentSearchBar: React.FC<DocumentSearchBarProps> = ({
     // 清除 URL 参数
     router.push('/documents');
   }, [params.size, setParams, router]);
+  
 
   return (
     <Box sx={{ mb: 2 }}>
@@ -119,8 +120,8 @@ export const DocumentSearchBar: React.FC<DocumentSearchBarProps> = ({
 
             <CommonSelect
               label={t("documents.searchByKb")}
-              value={Number(params.kbId)}
-              onChange={(value) => handleKbChange(value as number)}
+              value={params.kbId}
+              onChange={(value) => handleKbChange(value as string)}
               options={knowledgeBases.map((kb) => ({
                 id: kb.id,
                 name: kb.name,

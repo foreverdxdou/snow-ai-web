@@ -8,18 +8,12 @@ import {
     Typography,
     styled,
     alpha,
-    SxProps,
-    Theme,
+
     FormHelperText
 } from '@mui/material';
 import type { SelectProps } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 
-interface Option {
-    id: number | string;
-    name: string;
-    description?: string;
-}
 
 // 基础选择器样式
 const BaseSelect = styled(Select)(({ theme }) => ({
@@ -127,7 +121,7 @@ export const CommonSelect: React.FC<CommonSelectProps> = ({
         >
             <InputLabel>{label}</InputLabel>
             <BaseSelect
-                value={value === null || value === undefined ? (multiple ? [] : '') : value}
+                value={value ?? (multiple ? [] : '')}
                 label={label}
                 onChange={handleChange}
                 multiple={multiple}
