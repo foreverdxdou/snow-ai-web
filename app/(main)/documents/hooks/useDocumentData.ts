@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSnackbar } from '@/app/hooks/useSnackbar';
-import { Document } from '@/app/types/document';
+import { Document, DocumentSearchParams } from '@/app/types/document';
 import { KbCategory } from '@/app/types/category';
 import { Tag } from '@/app/types/tag';
 import { KnowledgeBaseVO } from '@/app/types/knowledge';
@@ -11,14 +11,6 @@ import { categoryService } from '@/app/services/category';
 import debounce from 'lodash/debounce';
 import { documentService } from '@/app/services/document';
 
-interface SearchParams {
-    current: number;
-    size: number;
-    title?: string;
-    categoryId?: number;
-    kbId?: number;
-    status?: number;
-}
 
 export function useDocumentData() {
     const { t } = useTranslation();
@@ -29,7 +21,7 @@ export function useDocumentData() {
     const [categories, setCategories] = useState<KbCategory[]>([]);
     const [tags, setTags] = useState<Tag[]>([]);
     const [knowledgeBases, setKnowledgeBases] = useState<KnowledgeBaseVO[]>([]);
-    const [params, setParams] = useState<SearchParams>({
+    const [params, setParams] = useState<DocumentSearchParams>({
         current: 1,
         size: 10,
         title: undefined,
@@ -82,7 +74,7 @@ export function useDocumentData() {
     }, [t, showSnackbar]);
 
     // 获取文档列表
-    const fetchDocuments = useCallback(async (searchParams: SearchParams) => {
+    const fetchDocuments = useCallback(async (searchParams: DocumentSearchParams) => {
         // 如果存在之前的请求，先中止
         if (abortControllerRef.current) {
             abortControllerRef.current.abort();
@@ -108,7 +100,7 @@ export function useDocumentData() {
 
     // 使用 useCallback 和 debounce 优化搜索函数
     const debouncedSearch = useCallback(
-        debounce((searchParams: SearchParams) => {
+        debounce((searchParams: DocumentSearchParams) => {
             fetchDocuments(searchParams);
         }, 500),
         [fetchDocuments]

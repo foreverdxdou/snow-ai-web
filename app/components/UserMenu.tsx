@@ -16,7 +16,6 @@ import {
     AccountCircle as AccountCircleIcon,
     Logout as LogoutIcon,
 } from '@mui/icons-material';
-import { useTranslation } from 'react-i18next';
 
 interface UserMenuProps {
     anchorEl: HTMLElement | null;

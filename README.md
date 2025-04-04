@@ -43,8 +43,8 @@ Author: [@foreverdxdou](https://github.com/foreverdxdou)
 1. Clone the repository
 
 ```bash
-git clone https://github.com/foreverdxdou/snow-ai.git
-cd snow-ai
+git clone https://github.com/foreverdxdou/snow-ai-web.git
+cd snow-ai-web
 ```
 
 2. Install dependencies
@@ -63,7 +63,7 @@ npm run dev
 yarn dev
 ```
 
-Visit [http://localhost:3000](http://localhost:3000) to view the application.
+Visit [http://localhost:8000](http://localhost:8000) to view the application.
 
 ## 📦 Project Structure
 
@@ -83,7 +83,7 @@ snow-ai/
 
 ## 🔧 Configuration
 
-1. Environment variables (create `.env.local` file):
+1. Environment variables (create `.env.development` file):
 
 ```env
 NEXT_PUBLIC_API_URL=your_api_url
@@ -126,7 +126,7 @@ Contributions are welcome! Before submitting a Pull Request, please ensure:
 
 ## 📄 License
 
-[MIT License](LICENSE)
+This project is licensed under a modified MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 🙏 Acknowledgments
 

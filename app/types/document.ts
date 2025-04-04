@@ -63,3 +63,12 @@ export interface PageDocumentVO {
   current: number;
   pages: number;
 } 
+
+export interface DocumentSearchParams { 
+  kbId?: number | string; 
+  categoryId?: number;
+  current: number; 
+  size: number;
+  title?: string;
+  status?: number;
+} 

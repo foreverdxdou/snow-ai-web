@@ -15,13 +15,12 @@ import {
     FormControlLabel,
     Switch,
 } from '@mui/material';
-import { Category, CategoryQuery, KbCategoryCreateDTO } from '@/app/types/category';
+import { Category, KbCategoryCreateDTO } from '@/app/types/category';
 import { categoryService } from '@/app/services/category';
 import { useTranslation } from 'react-i18next';
 import { PerformanceLayout } from '@/app/components/common/PerformanceLayout';
 import { PerformanceTable } from '@/app/components/common/PerformanceTable';
 import { usePerformanceData } from '@/app/hooks/usePerformanceData';
-import { useDebouncedCallback } from '@/app/utils/performance';
 import { Pagination } from '@/app/components/common/Pagination';
 import { formatDate } from '@/app/utils/format';
 import { CommonButton } from '@/app/components/common/CommonButton';

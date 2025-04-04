@@ -3,17 +3,16 @@ import { useTranslation } from "react-i18next";
 import { Box, Stack, Divider } from "@mui/material";
 import type { KbCategory } from "@/app/types/category";
 import type { KnowledgeBaseVO } from "@/app/types/knowledge";
-import type { SearchParams } from "@/app/(main)/documents/types";
+import type { DocumentSearchParams } from "@/app/types/document";
 import { SearchBar } from "@/app/components/common/SearchBar";
-import { Upload as UploadIcon } from "@mui/icons-material";
 import { CommonInput } from "@/app/components/common/CommonInput";
 import { CommonSelect } from "@/app/components/common/CommonSelect";
 import { CommonButton } from "@/app/components/common/CommonButton";
 import { useRouter } from "next/navigation";
 
 interface DocumentSearchBarProps {
-  params: SearchParams;
-  setParams: (params: SearchParams) => void;
+  params: DocumentSearchParams;
+  setParams: (params: DocumentSearchParams) => void;
   refresh: () => void;
   onUploadClick: () => void;
   categories: KbCategory[];
@@ -103,7 +102,7 @@ export const DocumentSearchBar: React.FC<DocumentSearchBarProps> = ({
             <CommonInput
               label={t("documents.searchByName")}
               value={searchName}
-              onChange={handleSearchNameChange}
+              onChange={(value) => handleSearchNameChange(value as string)}
               sx={{ width: { xs: "100%", sm: 150 } }}
             />
 
@@ -120,7 +119,7 @@ export const DocumentSearchBar: React.FC<DocumentSearchBarProps> = ({
 
             <CommonSelect
               label={t("documents.searchByKb")}
-              value={params.kbId}
+              value={Number(params.kbId)}
               onChange={(value) => handleKbChange(value as number)}
               options={knowledgeBases.map((kb) => ({
                 id: kb.id,

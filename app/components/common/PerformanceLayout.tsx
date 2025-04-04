@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense } from 'react';
 import { Box, CircularProgress } from '@mui/material';
 
 interface PerformanceLayoutProps {

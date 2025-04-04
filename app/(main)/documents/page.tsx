@@ -29,16 +29,8 @@ import { useDocumentActions } from '@/app/(main)/documents/hooks/useDocumentActi
 import { useDocumentData } from '@/app/(main)/documents/hooks/useDocumentData';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { DocumentSearchBar } from '@/app/(main)/documents/components/DocumentSearchBar';
+import { DocumentSearchParams } from '@/app/types/document';
 
-// 定义搜索参数类型
-interface SearchParams { 
-    kbId?: number; 
-    categoryId?: number;
-    current: number; 
-    size: number;
-    title?: string;
-    status?: number;
-}
 
 export default function DocumentsPage() {
     const { t } = useTranslation();
@@ -63,10 +55,10 @@ export default function DocumentsPage() {
     // 使用 useEffect 处理 URL 参数
     useEffect(() => {
         if (kbId) {
-            setParams(prev => ({
-                ...prev,
+                setParams(prev => ({
+                    ...prev,
                 kbId: Number(kbId)
-            }));
+                }));
         }
         return () => {
             setParams({
@@ -286,7 +278,7 @@ export default function DocumentsPage() {
                 >
                      {/* 搜索栏组件 */}
                     <DocumentSearchBar 
-                        params={params as SearchParams}
+                        params={params as DocumentSearchParams}
                         setParams={setParams}
                         refresh={refresh}
                         onUploadClick={() => setUploadOpen(true)}

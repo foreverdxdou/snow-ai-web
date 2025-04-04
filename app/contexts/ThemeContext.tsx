@@ -3,8 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { ThemeProvider as MuiThemeProvider, createTheme } from '@mui/material/styles';
 import { getCookie, setCookie } from 'cookies-next';
-import { zhCN } from '@mui/material/locale';
-import { enUS } from '@mui/material/locale';
+import { zhCN, enUS } from '@mui/material/locale';
 
 interface ThemeContextType {
     themeMode: 'light' | 'dark';

@@ -17,7 +17,6 @@ import {
 } from "@mui/material";
 import type {
   EmbeddingConfig,
-  EmbeddingConfigQuery,
   EmbeddingConfigSaveRequest,
 } from "@/app/types/embedding-config";
 import { embeddingConfigService } from "@/app/services/embedding-config";
@@ -25,7 +24,6 @@ import { useTranslation } from "react-i18next";
 import { PerformanceLayout } from "@/app/components/common/PerformanceLayout";
 import { PerformanceTable } from "@/app/components/common/PerformanceTable";
 import { usePerformanceData } from "@/app/hooks/usePerformanceData";
-import { useDebouncedCallback } from "@/app/utils/performance";
 import { Pagination } from "@/app/components/common/Pagination";
 import { formatDate } from "@/app/utils/format";
 import { CommonButton } from "@/app/components/common/CommonButton";

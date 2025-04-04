@@ -43,8 +43,8 @@
 1. 克隆项目
 
 ```bash
-git clone https://github.com/foreverdxdou/snow-ai.git
-cd snow-ai
+git clone https://github.com/foreverdxdou/snow-ai-web.git
+cd snow-ai-web
 ```
 
 2. 安装依赖
@@ -63,7 +63,7 @@ npm run dev
 yarn dev
 ```
 
-访问 [http://localhost:3000](http://localhost:3000) 查看应用。
+访问 [http://localhost:8000](http://localhost:8000) 查看应用。
 
 ## 📦 项目结构
 
@@ -83,7 +83,7 @@ snow-ai/
 
 ## 🔧 配置说明
 
-1. 环境变量配置（创建 `.env.local` 文件）：
+1. 环境变量配置（创建 `.env.development` 文件）：
 
 ```env
 NEXT_PUBLIC_API_URL=你的API地址
@@ -126,7 +126,7 @@ NEXT_PUBLIC_API_URL=你的API地址
 
 ## 📄 许可证
 
-[MIT License](LICENSE)
+本项目采用修改版 MIT 许可证，详情请参见 [LICENSE](LICENSE) 文件。
 
 ## 🙏 致谢
 

@@ -6,6 +6,7 @@ import type {
   DocumentUpdateDTO, 
   DocumentVersion,
   DocumentTag,
+  DocumentSearchParams,
   PageDocumentVO 
 } from '@/app/types/document';
 
@@ -13,14 +14,7 @@ const BASE_URL = '/kb/document';
 
 export const documentService = {
   // 获取文档列表
-  getList: (params: { 
-    kbId?: number; 
-    categoryId?: number;
-    current: number; 
-    size: number;
-    title?: string;
-    status?: number;
-  }) => {
+  getList: (params: DocumentSearchParams)  => {
     return request.get<Result<PageDocumentVO>>(`${BASE_URL}/page`, { params });
   },
 

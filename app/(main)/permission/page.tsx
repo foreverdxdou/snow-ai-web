@@ -18,7 +18,6 @@ import {
     List,
     ListItem,
     ListItemButton,
-    ListItemText,
     ListItemIcon,
     Grid,
 } from '@mui/material';

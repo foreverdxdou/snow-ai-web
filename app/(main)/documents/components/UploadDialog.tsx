@@ -7,10 +7,8 @@ import {
     FormControl,
     Box,
     Typography,
-    IconButton,
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
-import { Close as CloseIcon } from '@mui/icons-material';
 import { CommonButton } from '@/app/components/common/CommonButton';
 import { CommonSelect } from '@/app/components/common/CommonSelect';
 import { CommonFileUpload } from '@/app/components/common/CommonFileUpload';

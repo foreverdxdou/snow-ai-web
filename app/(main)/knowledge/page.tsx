@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
   Box,
@@ -22,35 +22,29 @@ import {
   CircularProgress,
   FormControlLabel,
   Divider,
-  Grid,
   IconButton,
   TextField,
   Chip,
 } from "@mui/material";
 import {
   Edit as EditIcon,
-  Delete as DeleteIcon,
   MenuBook as MenuBookIcon,
   Add as AddIcon,
   ExpandMore as ExpandMoreIcon,
   ChevronRight as ChevronRightIcon,
-  DragIndicator as DragIndicatorIcon,
   Refresh as RefreshIcon,
 } from "@mui/icons-material";
 import { knowledgeService } from "@/app/services/knowledge";
 import type { KnowledgeBaseVO, KnowledgeBaseDTO } from "@/app/types/knowledge";
 import { Pagination } from "@/app/components/common/Pagination";
 import { categoryService } from "@/app/services/category";
-import type { KbCategory } from "@/app/types/category";
 import { TreeItem } from '@mui/x-tree-view/TreeItem';
-import type { TreeItemProps } from '@mui/x-tree-view/TreeItem';
 import { useTranslation } from "react-i18next";
 import { PerformanceLayout } from "@/app/components/common/PerformanceLayout";
 import { usePerformanceData } from "@/app/hooks/usePerformanceData";
 import { CommonButton } from "@/app/components/common/CommonButton";
 import { CommonInput } from "@/app/components/common/CommonInput";
 import { SimpleTreeView } from '@mui/x-tree-view';
-import type { TreeViewProps } from '@mui/x-tree-view/TreeView';
 
 interface TreeItemData {
   id: string;
