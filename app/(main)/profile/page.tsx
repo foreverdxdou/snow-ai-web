@@ -16,6 +16,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/app/hooks/useAuth';
 import type { User } from '@/app/types/userinfo';
+import { userService } from '@/app/services/user';
 import { PerformanceLayout } from '@/app/components/common/PerformanceLayout';
 import { alpha } from '@mui/material/styles';
 
@@ -28,16 +29,27 @@ export default function ProfilePage() {
     const [formData, setFormData] = useState<Partial<User>>({
         nickname: '',
         email: '',
+        phone: '',
     });
 
     useEffect(() => {
-        if (user) {
-            setFormData({
-                nickname: user.nickname || '',
-                email: user.email || '',
-            });
-        }
-    }, [user]);
+        const fetchUserDetails = async () => {
+            if (!user?.id) return;
+            try {
+                const response = await userService.getById(user.id);
+                if (response.data.code === 200) {
+                    setFormData({
+                        nickname: response.data.data.nickname || '',
+                        email: response.data.data.email || '',
+                        phone: response.data.data.phone || '',
+                    });
+                }
+            } catch (err) {
+                console.error('获取用户详情失败:', err);
+            }
+        };
+        fetchUserDetails();
+    }, [user?.id]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -54,11 +66,22 @@ export default function ProfilePage() {
         setSuccess(null);
 
         try {
-            // TODO: 调用更新用户信息的 API
-            // await userService.updateProfile(formData);
-            setSuccess(t('profile.updateSuccess'));
+            if (!user?.id) {
+                throw new Error('用户未登录');
+            }
+            await userService.updateInfo(user.id, {
+                nickname: formData.nickname || '',
+                email: formData.email,
+                phone: formData.phone
+            });
+            setSuccess(t('common.operateSuccess'));
+            
+            // 延迟一秒后刷新页面，让用户看到成功提示
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
         } catch (err) {
-            setError(t('profile.updateError'));
+            setError(t('common.operateError'));
             console.error('更新个人资料失败:', err);
         } finally {
             setLoading(false);
@@ -150,6 +173,15 @@ export default function ProfilePage() {
                                         value={formData.email}
                                         onChange={handleInputChange}
                                         type="email"
+                                    />
+                                </Grid>
+                                <Grid item xs={12}>
+                                    <TextField
+                                        fullWidth
+                                        name="phone"
+                                        label={t('common.user.phone')}
+                                        value={formData.phone}
+                                        onChange={handleInputChange}
                                     />
                                 </Grid>
                                 <Grid item xs={12}>

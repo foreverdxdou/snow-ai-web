@@ -64,5 +64,17 @@ export const userService = {
         return request.put<Result<void>>(`${BASE_URL}/${id}/status`, {
             status
         });
+    },
+
+    // 更新用户头像
+    updateAvatar: (id: number, avatar: string) => {
+        return request.put<Result<void>>(`${BASE_URL}/${id}/avatar`, {
+            avatar
+        });
+    },
+
+    // 更新用户基本信息
+    updateInfo: (id: number, data: { nickname: string; email?: string; phone?: string }) => {
+        return request.put<Result<void>>(`${BASE_URL}/${id}/info`, data);
     }
 }; 
