@@ -158,15 +158,19 @@ export const UserInfo: React.FC<UserInfoProps> = ({
             setError(t('common.user.passwordTooWeak'));
             return;
         }
+        if (!user?.id) {
+            setError(t('common.user.changePasswordError'));
+            return;
+        }
         setLoading(true);
         setError('');
         try {
-            await userService.changePassword(oldPassword, newPassword);
+            await userService.changePassword(user.id, oldPassword, newPassword);
             setChangePasswordOpen(false);
             setOldPassword('');
             setNewPassword('');
             setConfirmPassword('');
-            setPasswordStrength({ score: 0, label: '' });
+            setPasswordStrength({ score: 0, label: '', color: '' });
             setShowOldPassword(false);
             setShowNewPassword(false);
             setShowConfirmPassword(false);
