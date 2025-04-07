@@ -152,8 +152,16 @@
       "confirmPasswordRequired": "Please confirm password",
       "passwordNotMatch": "Passwords do not match",
       "oldPasswordRequired": "Please enter old password",
-      "newPasswordRequired": "Please enter new password"
-    }
+      "newPasswordRequired": "Please enter new password",
+      "oldPassword": "Old Password",
+      "newPassword": "New Password",
+      "passwordStrength": "Password Strength",
+      "passwordRequirements": "Password must contain uppercase, lowercase, numbers and special characters, at least 8 characters",
+      "weak": "Weak",
+      "medium": "Medium",
+      "strong": "Strong"
+    },
+    "changePassword": "Change Password"
   },
   "auth": {
     "appName": "Snow AI",

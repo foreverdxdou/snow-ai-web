@@ -164,8 +164,17 @@
       "confirmPasswordRequired": "请确认密码",
       "passwordNotMatch": "两次输入的密码不一致",
       "oldPasswordRequired": "请输入原密码",
-      "newPasswordRequired": "请输入新密码"
-    }
+      "newPasswordRequired": "请输入新密码",
+      "oldPassword": "原密码",
+      "newPassword": "新密码",
+      "passwordStrength": "密码强度",
+      "passwordRequirements": "密码必须包含大小写字母、数字和特殊字符，长度至少8位",
+      "weak": "弱",
+      "medium": "中",
+      "strong": "强",
+      "passwordTooWeak": "密码强度不足"
+    },
+    "changePassword": "修改密码"
   },
   "auth": {
     "appName": "Snow AI",
