@@ -301,7 +301,7 @@ export const UserInfo: React.FC<UserInfoProps> = ({
                                 <AccountCircleIcon fontSize="small" />
                             </ListItemIcon>
                             <ListItemText 
-                                primary={t('common.user.profile')}
+                                primary={t('common.profile')}
                                 primaryTypographyProps={{
                                     fontSize: '0.875rem',
                                     fontWeight: 500,
@@ -344,7 +344,7 @@ export const UserInfo: React.FC<UserInfoProps> = ({
                                 <LogoutIcon fontSize="small" color="error" />
                             </ListItemIcon>
                             <ListItemText 
-                                primary={t('common.user.logout')}
+                                primary={t('common.logout')}
                                 primaryTypographyProps={{
                                     fontSize: '0.875rem',
                                     fontWeight: 500,
