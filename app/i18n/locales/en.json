@@ -57,6 +57,8 @@
     "detail": "View Details",
     "nickname": "Nickname",
     "email": "Email",
+    "operateSuccess": "Operate successfully",
+    "operateError": "Operate failed",
     "permission": {
       "title": "Permission Management",
       "name": "Permission Name",
@@ -341,6 +343,9 @@
     "disabled": "Disabled",
     "all": "All status",
     "resetButton": "Reset",
+    "parse": "Parse",
+    "parseConfirm": "Parse Confirm",
+    "parseConfirmMessage": "Are you sure you want to parse this document?",
     "maxFileSize": "Maximum file size: {{size}}",
     "fileTooLarge": "File too large",
     "uploading": "Uploading...",

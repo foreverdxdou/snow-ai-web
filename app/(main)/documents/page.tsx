@@ -16,6 +16,7 @@ import {
     DialogActions,
     Typography,
 } from '@mui/material';
+import PsychologyIcon from '@mui/icons-material/Psychology';
 import type { Document } from '@/app/types/document';
 import { Pagination } from '@/app/components/common/Pagination';
 import { useTranslation } from 'react-i18next';
@@ -74,6 +75,7 @@ export default function DocumentsPage() {
     // 使用自定义 Hook 管理文档操作
     const {
         handleDelete,
+        handleParse,
         handleOpen,
         handleClose,
         handleSubmit,
@@ -89,6 +91,9 @@ export default function DocumentsPage() {
         deleteDialogOpen,
         setDeleteDialogOpen,
         handleDeleteConfirm,
+        parseDialogOpen,
+        setParseDialogOpen,
+        handleParseConfirm,     
     } = useDocumentActions(refresh);
 
     // 使用 useMemo 优化表格配置
@@ -232,6 +237,13 @@ export default function DocumentsPage() {
                             onClick={() => router.push(`/documents/${record.id}`)}
                         />
                     </Tooltip>
+                    <Tooltip title={t('documents.parse')}>
+                        <CommonButton
+                            buttonVariant="delete"
+                            startIcon={<PsychologyIcon />}
+                            onClick={() => handleParse(record.id)}
+                        />
+                    </Tooltip>
                     <Tooltip title={t('common.edit')}>
                         <CommonButton
                             buttonVariant="edit"
@@ -357,6 +369,35 @@ export default function DocumentsPage() {
                         <CommonButton
                             buttonVariant="confirm"
                             onClick={handleDeleteConfirm}
+                        >
+                            {t('common.confirm')}
+                        </CommonButton>
+                    </DialogActions>
+                </Dialog>
+
+                {/* 解析确认对话框 */}
+                <Dialog 
+                    open={parseDialogOpen} 
+                    onClose={() => setParseDialogOpen(false)}
+                    maxWidth="xs"
+                    fullWidth
+                >
+                    <DialogTitle>{t('documents.parseConfirm')}</DialogTitle>
+                    <DialogContent>
+                        <Typography>
+                            {t('documents.parseConfirmMessage')}
+                        </Typography>
+                    </DialogContent>
+                    <DialogActions>
+                        <CommonButton
+                            buttonVariant="cancel"
+                            onClick={() => setParseDialogOpen(false)}
+                        >
+                            {t('common.cancel')}
+                        </CommonButton>
+                        <CommonButton
+                            buttonVariant="confirm"
+                            onClick={handleParseConfirm}
                         >
                             {t('common.confirm')}
                         </CommonButton>

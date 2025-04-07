@@ -69,6 +69,8 @@
     "saveError": "保存失败",
     "nickname": "昵称",
     "email": "邮箱",
+    "operateSuccess": "操作成功",
+    "operateError": "操作失败",
     "permission": {
       "title": "权限管理",
       "name": "权限名称",
@@ -308,6 +310,9 @@
     "disabled": "已禁用",
     "all": "全部状态",
     "resetButton": "重置",
+    "parse": "解析",
+    "parseConfirm": "解析确认",
+    "parseConfirmMessage": "确定要解析该文档吗？",
     "parseStatus": {
       "title": "解析状态",
       "unparsed": "未解析",

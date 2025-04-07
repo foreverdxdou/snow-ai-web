@@ -2,13 +2,6 @@ import { useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { documentService } from '@/app/services/document';
 import type { Document, DocumentCreateDTO } from '@/app/types/document';
-import {
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-} from '@mui/material';
-import { CommonButton } from '@/app/components/common/CommonButton';
 
 interface SnackbarState {
     open: boolean;
@@ -20,7 +13,9 @@ export const useDocumentActions = (refresh: () => void) => {
     const { t } = useTranslation();
     const [open, setOpen] = useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [parseDialogOpen, setParseDialogOpen] = useState(false);
     const [deletingId, setDeletingId] = useState<number | null>(null);
+    const [parsingId, setParsingId] = useState<number | null>(null);
     const [editingDocument, setEditingDocument] = useState<Document | null>(null);
     const [uploadOpen, setUploadOpen] = useState(false);
     const [file, setFile] = useState<File | null>(null);
@@ -46,6 +41,35 @@ export const useDocumentActions = (refresh: () => void) => {
         setDeletingId(id);
         setDeleteDialogOpen(true);
     }, []);
+
+    // 使用 useCallback 优化事件处理函数
+    const handleParse = useCallback(async (id: number) => {
+        setParsingId(id);
+        setParseDialogOpen(true);
+    }, []);
+
+    const handleParseConfirm = useCallback(async () => {
+        if (!parsingId) return;
+        try {
+            await documentService.parse(parsingId);
+            setSnackbar({
+                open: true,
+                message: t('common.operateSuccess'),
+                severity: 'success',
+            });
+            refresh();
+        } catch (error) {
+            console.error(t('common.operateError'), error);
+            setSnackbar({
+                open: true,
+                message: t('common.operateError'),
+                severity: 'error',
+            });
+        } finally {
+            setParseDialogOpen(false);
+            setParsingId(null);
+        }
+    }, [parsingId, t, refresh]);
 
     const handleDeleteConfirm = useCallback(async () => {
         if (!deletingId) return;
@@ -265,5 +289,9 @@ export const useDocumentActions = (refresh: () => void) => {
         deleteDialogOpen,
         setDeleteDialogOpen,
         handleDeleteConfirm,
+        parseDialogOpen,
+        setParseDialogOpen,
+        handleParseConfirm,
+        handleParse
     };
 }; 

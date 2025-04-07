@@ -38,6 +38,11 @@ export const documentService = {
     return request.delete<Result<void>>(`${BASE_URL}/${id}`);
   },
 
+  // 解析文档
+  parse: (id: number) => {
+    return request.post<Result<void>>(`${BASE_URL}/${id}/parse`);
+  },
+
   // 更新文档状态
   updateStatus: (id: number, status: number) => {
     return request.put<Result<void>>(`${BASE_URL}/${id}/status?status=${status}`);
