@@ -137,11 +137,29 @@ export const CommonInput: React.FC<CommonInputProps> = ({
             // 允许的按键：数字、小数点、负号、退格键、删除键、方向键
             const allowedKeys = [
                 '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-                '.', '-', 'Backspace', 'Delete', 'ArrowLeft', 'ArrowRight'
+                '.', '-', 'Backspace', 'Delete', 'ArrowLeft', 'ArrowRight',
+                'ArrowUp', 'ArrowDown'
             ];
             
             if (!allowedKeys.includes(event.key)) {
                 event.preventDefault();
+            }
+            
+            // 处理上下键
+            if (event.key === 'ArrowUp') {
+                event.preventDefault();
+                const currentValue = Number(localValue) || 0;
+                const newValue = Math.min(currentValue + 1, max ?? Infinity);
+                setLocalValue(newValue.toString());
+                onChange?.(newValue);
+            }
+            
+            if (event.key === 'ArrowDown') {
+                event.preventDefault();
+                const currentValue = Number(localValue) || 0;
+                const newValue = Math.max(currentValue - 1, min ?? -Infinity);
+                setLocalValue(newValue.toString());
+                onChange?.(newValue);
             }
         }
     };

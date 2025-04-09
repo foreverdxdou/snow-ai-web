@@ -243,15 +243,15 @@ export default function LlmPage() {
         }}>
 
           <Box sx={{ marginLeft: 'auto' }}>
-            <Tooltip title={t('common.refresh')}>
+            {/* <Tooltip title={t('common.refresh')}>
               <CommonButton
-                buttonVariant="add"
+                buttonVariant="refresh"
                 onClick={fetchConfigs}
                 sx={{ mr: 1 }}
               >
-                <RefreshIcon />
+                {t('common.refresh')}
               </CommonButton>
-            </Tooltip>
+            </Tooltip> */}
             <CommonButton
               buttonVariant="add"
               onClick={() => handleOpen()}

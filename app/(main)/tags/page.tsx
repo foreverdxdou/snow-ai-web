@@ -263,7 +263,7 @@ export default function TagsPage() {
                             onClick={handleSubmit}
                             disabled={!formData.name}
                         >
-                            {t('common.save')}
+                            {t('common.submit')}
                         </CommonButton>
                     </DialogActions>
                 </Dialog>

@@ -209,7 +209,7 @@ export const UploadDialog: React.FC<UploadDialogProps> = ({
                 </CommonButton>
                 <CommonButton
                     onClick={clickUpload}
-                    buttonVariant="submit"
+                    buttonVariant="upload"
                     disabled={!file || !selectedKbId || uploadLoading || isFileTooLarge}
                 >
                     {getUploadButtonText()}

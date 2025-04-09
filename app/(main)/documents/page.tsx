@@ -239,14 +239,12 @@ export default function DocumentsPage() {
                     <Tooltip title={t('common.detail')}>
                         <CommonButton
                             buttonVariant="detail"
-                            icon
                             onClick={() => router.push(`/documents/${record.id}`)}
                         />
                     </Tooltip>
                     <Tooltip title={t('documents.parse')}>
                         <CommonButton
-                            buttonVariant="delete"
-                            startIcon={<PsychologyIcon />}
+                            buttonVariant="parse"
                             onClick={() => handleParse(record.id)}
                         />
                     </Tooltip>

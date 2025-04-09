@@ -118,6 +118,7 @@ export const CommonSelect: React.FC<CommonSelectProps> = ({
         <FormControl 
             size="small"
             error={!!helperText}
+            sx={{ ...props.sx }}
         >
             <InputLabel>{label}</InputLabel>
             <BaseSelect
@@ -135,7 +136,7 @@ export const CommonSelect: React.FC<CommonSelectProps> = ({
                     const selectedOption = options.find(option => option.id === selected);
                     return selectedOption?.name || '';
                 }}
-                {...props}
+          
             >
                 {showAll && (
                     <StyledMenu value={allValue}>

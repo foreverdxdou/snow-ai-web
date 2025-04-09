@@ -20,7 +20,8 @@ import {
     Close as CloseIcon,
     Check as CheckIcon,
     ArrowBack as ArrowBackIcon,
-    Restore as RestoreIcon
+    Restore as RestoreIcon,
+    Psychology as PsychologyIcon
 } from '@mui/icons-material';
 
 // 基础按钮样式
@@ -211,34 +212,53 @@ export const ConfirmButton = styled(BaseButton)(({ theme }) => ({
     }
 }));
 
-// 默认按钮 - 主题色
-export const DefaultButton = styled(BaseButton)(({ theme }) => ({
-    backgroundColor: theme.palette.primary.main,
+// 解析按钮 - 主题色
+export const ParseButton = styled(IconButton)(({ theme }) => ({
+    color: theme.palette.primary.main,
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    '&:hover': {
+        backgroundColor: alpha(theme.palette.primary.main, 0.08),
+        transform: 'translateY(-1px)',
+    }
+}));
+
+// 刷新按钮 - 主题色
+export const RefreshButton = styled(BaseButton)(({ theme }) => ({
+    background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.primary.light} 90%)`,
     color: theme.palette.primary.contrastText,
     border: 'none',
     '&:hover': {
-        backgroundColor: theme.palette.primary.dark,
+        background: `linear-gradient(45deg, ${theme.palette.primary.dark} 30%, ${theme.palette.primary.main} 90%)`,
+    }
+}));
+
+
+
+// 默认按钮 - 主题色
+export const DefaultButton = styled(IconButton)(({ theme }) => ({
+    color: theme.palette.primary.main,
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    '&:hover': {
+        backgroundColor: alpha(theme.palette.primary.main, 0.08),
+        transform: 'translateY(-1px)',
     }
 }));
 
 // 按钮组件
 interface CommonButtonProps extends Omit<ButtonProps, 'variant'> {
-    buttonVariant?: 'default' | 'detail' | 'add' | 'edit' | 'delete' | 'upload' | 'search' | 'reset' | 'login' | 'expand' | 'cancel' | 'submit' | 'close' | 'back' | 'rollback' | 'confirm';
+    buttonVariant?: 'default' | 'detail' | 'add' | 'edit' | 'delete' | 'upload' | 'search' | 'reset' | 'login' | 'expand' | 'cancel' | 'submit' | 'close' | 'back' | 'rollback' | 'confirm' | 'parse' | 'refresh';
     icon?: boolean;
     expanded?: boolean;
 }
 
 export const CommonButton = React.forwardRef<HTMLButtonElement, CommonButtonProps>(({
     buttonVariant = 'default',
-    icon = false,
     expanded = false,
     children,
     ...props
 }, ref) => {
     const getIcon = () => {
         switch (buttonVariant) {
-            case 'default':
-                return null;
             case 'detail':
                 return <VisibilityIcon sx={{ fontSize: 20 }} />;
             case 'add':
@@ -269,6 +289,10 @@ export const CommonButton = React.forwardRef<HTMLButtonElement, CommonButtonProp
                 return <RestoreIcon sx={{ fontSize: 20 }} />;
             case 'confirm':
                 return <CheckIcon sx={{ fontSize: 20 }} />;
+            case 'parse':
+                return <PsychologyIcon sx={{ fontSize: 20 }} />;
+            case 'refresh':
+                return <RefreshIcon sx={{ fontSize: 20 }} />;
             default:
                 return null;
         }
@@ -279,13 +303,13 @@ export const CommonButton = React.forwardRef<HTMLButtonElement, CommonButtonProp
             case 'default':
                 return DefaultButton;
             case 'detail':
-                return icon ? DetailButton : BaseButton;
+                return DetailButton;
             case 'add':
                 return AddButton;
             case 'edit':
-                return icon ? EditButton : BaseButton;
+                return EditButton;
             case 'delete':
-                return icon ? DeleteButton : BaseButton;
+                return DeleteButton;
             case 'upload':
                 return UploadButton;
             case 'search':
@@ -301,43 +325,31 @@ export const CommonButton = React.forwardRef<HTMLButtonElement, CommonButtonProp
             case 'submit':
                 return SubmitButton;
             case 'close':
-                return icon ? CloseButton : BaseButton;
+                return CloseButton;
             case 'back':
-                return icon ? BackButton : BaseButton;
+                return BackButton;
             case 'rollback':
                 return RollbackButton;
             case 'confirm':
                 return ConfirmButton;
+            case 'parse':
+                return ParseButton;
+            case 'refresh':
+                return RefreshButton;
             default:
                 return DefaultButton;
         }
     };
 
     const ButtonComponent = getButtonComponent();
-    const buttonIcon = getIcon();
-
-    if (icon && buttonIcon) {
-        return (
-            <ButtonComponent
-                ref={ref}
-                {...props}
-                sx={{
-                    p: 1,
-                    minWidth: 'auto',
-                    ...props.sx
-                }}
-            >
-                {buttonIcon}
-            </ButtonComponent>
-        );
-    }
-
+   
     return (
         <ButtonComponent
             ref={ref}
+            startIcon={getIcon()}
             {...props}
         >
-            {children}
+            {children? children : getIcon()}
         </ButtonComponent>
     );
 });

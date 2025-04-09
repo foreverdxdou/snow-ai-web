@@ -16,7 +16,6 @@ import {
 } from "@mui/material";
 import {
   SystemConfig,
-  SystemConfigQuery,
   SystemConfigSaveRequest,
 } from "@/app/types/system-config";
 import { systemConfigService } from "@/app/services/system-config";
@@ -24,7 +23,6 @@ import { useTranslation } from "react-i18next";
 import { PerformanceLayout } from "@/app/components/common/PerformanceLayout";
 import { PerformanceTable } from "@/app/components/common/PerformanceTable";
 import { usePerformanceData } from "@/app/hooks/usePerformanceData";
-import { useDebouncedCallback } from "@/app/utils/performance";
 import { Pagination } from "@/app/components/common/Pagination";
 import { formatDate } from "@/app/utils/format";
 import { CommonButton } from "@/app/components/common/CommonButton";
@@ -168,13 +166,16 @@ export default function SystemConfigPage() {
   }, [deletingId, refresh, t]);
 
   // 使用 useDebouncedCallback 优化分页处理
-  const handlePageChange = useCallback((page: number, size: number) => {
-    setParams({
+  const handlePageChange = useCallback(
+    (page: number, size: number) => {
+      setParams({
         ...params,
         current: page,
         size: size,
-    });
-}, [params, setParams]);
+      });
+    },
+    [params, setParams]
+  );
 
   // 使用 useMemo 优化表格配置
   const columns = useMemo(
@@ -257,6 +258,7 @@ export default function SystemConfigPage() {
               onChange={(value) =>
                 setParams({ ...params, configKey: value as string })
               }
+              sx={{ width: "10%" }}
             />
             <CommonInput
               label={t("systemConfig.configType")}
@@ -264,8 +266,25 @@ export default function SystemConfigPage() {
               onChange={(value) =>
                 setParams({ ...params, configType: value as string })
               }
+              sx={{ width: "10%" }}
             />
 
+            <CommonButton
+              buttonVariant="search"
+              onClick={() => {
+                setParams({
+                  ...params,
+                  current: 1,
+                  size: params.size,
+                });
+              }}
+              sx={{
+                flex: { xs: 1, sm: "0 0 auto" },
+                minWidth: { sm: 50 },
+              }}
+            >
+              {t("common.search")}
+            </CommonButton>
             <CommonButton
               buttonVariant="reset"
               onClick={() => {
@@ -359,7 +378,7 @@ export default function SystemConfigPage() {
                     : ""
                 }
               />
-                            <CommonInput
+              <CommonInput
                 label={t("systemConfig.description")}
                 value={formData.description || ""}
                 onChange={(value) =>
@@ -384,7 +403,7 @@ export default function SystemConfigPage() {
                 !formData.configValue
               }
             >
-              {t("common.save")}
+              {t("common.submit")}
             </CommonButton>
           </DialogActions>
         </Dialog>

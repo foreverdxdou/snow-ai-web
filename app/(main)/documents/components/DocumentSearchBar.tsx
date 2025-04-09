@@ -82,6 +82,14 @@ export const DocumentSearchBar: React.FC<DocumentSearchBarProps> = ({
     router.push('/documents');
   }, [params.size, setParams, router]);
   
+  // 处理搜索
+  const handleSearch = useCallback(() => {
+    // 使用当前的搜索参数触发搜索
+    setParams({
+      ...params,
+      current: 1, // 重置到第一页
+    });
+  }, [params, setParams]);
 
   return (
     <Box sx={{ mb: 2 }}>
@@ -139,6 +147,16 @@ export const DocumentSearchBar: React.FC<DocumentSearchBarProps> = ({
               ]}
               sx={{ width: { xs: "100%", sm: 150 } }}
             />
+             <CommonButton
+              buttonVariant="search"
+              onClick={handleSearch}
+              sx={{
+                flex: { xs: 1, sm: "0 0 auto" },
+                minWidth: { sm: 50 },
+              }}
+            >
+              {t("common.search")}
+            </CommonButton>
             <CommonButton
               buttonVariant="reset"
               onClick={handleReset}
@@ -172,6 +190,7 @@ export const DocumentSearchBar: React.FC<DocumentSearchBarProps> = ({
             <CommonButton
               buttonVariant="upload"
               onClick={onUploadClick}
+              icon
               sx={{
                 flex: { xs: 1, sm: "0 0 auto" },
                 minWidth: { sm: 100 },

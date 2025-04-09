@@ -315,7 +315,7 @@ export default function EmbeddingConfigPage() {
               onChange={(value) =>
                 setParams({ ...params, name: value as string })
               }
-              sx={{ width: 200 }}
+              sx={{ width: "10%" }}
             />
             <CommonSelect
               label={t("common.status")}
@@ -327,7 +327,7 @@ export default function EmbeddingConfigPage() {
                 { id: 1, name: t("common.enable") },
                 { id: 0, name: t("common.disable") },
               ]}
-              sx={{ width: 200 }}
+              sx={{ width: "10%" }}
             />
             <CommonButton
               buttonVariant="search"

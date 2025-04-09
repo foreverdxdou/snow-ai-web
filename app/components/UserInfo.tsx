@@ -186,55 +186,55 @@ export const UserInfo: React.FC<UserInfoProps> = ({
 
     return (
         <>
-            <Box 
+        <Box 
+            sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: 1.5,
+                cursor: 'pointer',
+                py: 0.75,
+                px: 1.5,
+                borderRadius: 1.5,
+                transition: 'all 0.2s ease-in-out',
+                '&:hover': {
+                    backgroundColor: (theme) => 
+                        theme.palette.mode === 'light'
+                            ? alpha(theme.palette.primary.main, 0.08)
+                            : alpha(theme.palette.primary.main, 0.15),
+                },
+            }} 
+            onClick={handleMenuClick}
+        >
+            <Avatar 
                 sx={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: 1.5,
-                    cursor: 'pointer',
-                    py: 0.75,
-                    px: 1.5,
-                    borderRadius: 1.5,
-                    transition: 'all 0.2s ease-in-out',
-                    '&:hover': {
-                        backgroundColor: (theme) => 
-                            theme.palette.mode === 'light'
-                                ? alpha(theme.palette.primary.main, 0.08)
-                                : alpha(theme.palette.primary.main, 0.15),
-                    },
-                }} 
-                onClick={handleMenuClick}
+                    width: 32, 
+                    height: 32,
+                    fontSize: '0.875rem',
+                    fontWeight: 600,
+                    background: (theme) => theme.palette.mode === 'dark'
+                        ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%)'
+                        : 'linear-gradient(135deg, #66B2FF 0%, #007FFF 100%)',
+                    color: (theme) => theme.palette.mode === 'dark'
+                        ? theme.palette.background.default
+                        : '#fff',
+                }}
             >
-                <Avatar 
-                    sx={{ 
-                        width: 32, 
-                        height: 32,
-                        fontSize: '0.875rem',
-                        fontWeight: 600,
-                        background: (theme) => theme.palette.mode === 'dark'
-                            ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%)'
-                            : 'linear-gradient(135deg, #66B2FF 0%, #007FFF 100%)',
-                        color: (theme) => theme.palette.mode === 'dark'
-                            ? theme.palette.background.default
-                            : '#fff',
+                {avatarText}
+            </Avatar>
+            {mounted && (
+                <Typography 
+                    variant="body2" 
+                    noWrap
+                    sx={{
+                        fontWeight: 500,
+                        color: 'text.primary',
+                        maxWidth: 120,
+                        letterSpacing: '0.15px',
                     }}
                 >
-                    {avatarText}
-                </Avatar>
-                {mounted && (
-                    <Typography 
-                        variant="body2" 
-                        noWrap
-                        sx={{
-                            fontWeight: 500,
-                            color: 'text.primary',
-                            maxWidth: 120,
-                            letterSpacing: '0.15px',
-                        }}
-                    >
-                        {displayName}
-                    </Typography>
-                )}
+                    {displayName}
+                </Typography>
+            )}
             </Box>
 
             {mounted && (
@@ -461,7 +461,7 @@ export const UserInfo: React.FC<UserInfoProps> = ({
                                 ),
                             }}
                         />
-                    </Box>
+        </Box>
                 </DialogContent>
                 <DialogActions>
                     <Button 

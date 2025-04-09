@@ -720,8 +720,9 @@ export default function KnowledgePage() {
           >
             <Box sx={{ display: "flex", gap: 2 }}>
               <Tooltip title={t("common.refresh")}>
-                <CommonButton buttonVariant="add" onClick={refresh}>
-                  <RefreshIcon />
+                <CommonButton buttonVariant="add" startIcon={<RefreshIcon />} onClick={refresh}>
+                  
+                  {t("common.refresh")}
                 </CommonButton>
               </Tooltip>
               <CommonButton buttonVariant="add" onClick={() => handleOpen()}>
@@ -869,7 +870,7 @@ export default function KnowledgePage() {
               onClick={handleSubmit}
               disabled={!formData.name}
             >
-              {t("common.save")}
+              {t("common.submit")}
             </CommonButton>
           </DialogActions>
         </Dialog>

@@ -259,13 +259,16 @@ export default function RolePage() {
   }, [deletingId, refresh, t]);
 
   // 使用 useDebouncedCallback 优化分页处理
-  const handlePageChange = useCallback((page: number, size: number) => {
-    setParams({
-      ...params,
-      current: page,
-      size: size,
-    });
-  }, [params, setParams]);
+  const handlePageChange = useCallback(
+    (page: number, size: number) => {
+      setParams({
+        ...params,
+        current: page,
+        size: size,
+      });
+    },
+    [params, setParams]
+  );
 
   // 表格列定义
   const columns = useMemo(
@@ -341,6 +344,7 @@ export default function RolePage() {
               onChange={(value) =>
                 setParams({ ...params, roleName: value as string })
               }
+              sx={{ width: "10%" }}
             />
             <CommonInput
               label={t("common.role.roleCode")}
@@ -348,7 +352,23 @@ export default function RolePage() {
               onChange={(value) =>
                 setParams({ ...params, roleCode: value as string })
               }
+              sx={{ width: "10%" }}
             />
+            <CommonButton
+              buttonVariant="search"
+              onClick={() => {
+                setParams({
+                  ...params,
+                  current: 1,
+                  size: params.size,
+                });
+              }}
+              sx={{
+                flex: { xs: 1, sm: "0 0 auto" },
+              }}
+            >
+              {t("common.search")}
+            </CommonButton>
             <CommonButton
               buttonVariant="reset"
               onClick={() => {
@@ -474,7 +494,7 @@ export default function RolePage() {
               onClick={handleSubmit}
               disabled={!formData.roleName || !formData.roleCode}
             >
-              {t("common.save")}
+              {t("common.submit")}
             </CommonButton>
           </DialogActions>
         </Dialog>

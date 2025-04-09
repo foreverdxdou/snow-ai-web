@@ -268,169 +268,202 @@ export default function CategoryPage() {
     ], [t, handleOpen, handleDelete, categories]);
 
     return (
-        <PerformanceLayout>
-            <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                <Box sx={{
-                    p: 3,
-                    borderBottom: '1px solid',
-                    borderColor: 'divider',
-                    bgcolor: 'background.paper',
-                }}>
-                    <Box sx={{ display: 'flex', gap: 2 }}>
-                        <CommonInput
-                            label={t('category.searchByName')}
-                            value={params.name || ''}
-                            onChange={(value) => setParams({ ...params, name: value as string })}
-                            sx={{ width: { xs: "100%", sm: 150 } }}
-                        />
-                        <CommonSelect
-                            label={t('category.searchByStatus')}
-                            value={params.status}
-                            onChange={(value) => setParams({ ...params, status: value as number })}
-                            options={[
-                                { id: 1, name: t("category.enabled") },
-                                { id: 0, name: t("category.disabled") },
-                            ]}
-                            sx={{ width: { xs: "100%", sm: 150 } }}
-                        />
-                        <CommonButton
-                            buttonVariant="reset"
-                            onClick={() => {
-                                setParams({
-                                    ...defaultParams,
-                                    current: 1,
-                                    size: 10,
-                                });
-                            }}
-                        >
-                            {t('category.resetButton')}
-                        </CommonButton>
+      <PerformanceLayout>
+        <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
+          <Box
+            sx={{
+              p: 3,
+              borderBottom: "1px solid",
+              borderColor: "divider",
+              bgcolor: "background.paper",
+            }}
+          >
+            <Box sx={{ display: "flex", gap: 2 }}>
+              <CommonInput
+                label={t("category.searchByName")}
+                value={params.name || ""}
+                onChange={(value) =>
+                  setParams({ ...params, name: value as string })
+                }
+                sx={{ width: "10%" }}
+              />
+              <CommonSelect
+                label={t("category.searchByStatus")}
+                value={params.status}
+                onChange={(value) =>
+                  setParams({ ...params, status: value as number })
+                }
+                options={[
+                  { id: 1, name: t("category.enabled") },
+                  { id: 0, name: t("category.disabled") },
+                ]}
+                sx={{ width: "10%" }}
+              />
+              <CommonButton
+                buttonVariant="search"
+                onClick={() => {
+                  setParams({
+                    ...params,
+                    current: 1,
+                    size: params.size,
+                  });
+                }}
+                sx={{
+                  flex: { xs: 1, sm: "0 0 auto" },
+                  minWidth: { sm: 50 },
+                }}
+              >
+                {t("common.search")}
+              </CommonButton>
 
-                        {/* 添加按钮 */}
-                        <CommonButton
-                            buttonVariant="add"
-                            onClick={() => handleOpen()}
-                            sx={{ marginLeft: 'auto' }}
-                        >
-                            {t('category.createCategory')}
-                        </CommonButton>
-                    </Box>
-                </Box>
+              <CommonButton
+                buttonVariant="reset"
+                onClick={() => {
+                  setParams({
+                    ...defaultParams,
+                    current: 1,
+                    size: 10,
+                  });
+                }}
+              >
+                {t("common.reset")}
+              </CommonButton>
 
-                <Box sx={{ p: 3, flex: 1, overflow: 'auto' }}>
-                    <PerformanceTable
-                        loading={loading}
-                        data={categories}
-                        columns={columns}
-                        emptyMessage={t('common.noData')}
-                    />
-
-                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
-                        <Pagination
-                            total={total}
-                            current={Number(params.current)}
-                            pageSize={Number(params.size)}
-                            onChange={handlePageChange}
-                        />
-                    </Box>
-                </Box>
-
-                <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-                    <DialogTitle>
-                        {editingCategory ? t('category.editCategory') : t('category.createCategory')}
-                    </DialogTitle>
-                    <DialogContent>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
-                            <CommonInput
-                                label={t('common.name')}
-                                value={formData.name || ''}
-                                onChange={(value) => setFormData({ ...formData, name: value as string })}
-                                fullWidth
-                                required
-                                error={!formData.name}
-                                helperText={!formData.name ? t('category.nameRequired') : ''}
-                            />
-                            <CommonInput
-                                label={t('common.description')}
-                                value={formData.description || ''}
-                                onChange={(value) => setFormData({ ...formData, description: value as string })}
-                                fullWidth
-                                multiline
-                                rows={3}
-                            />
-                            <CommonSelect
-                                label={t('category.selectParentCategory')}
-                                value={formData.parentId || null as unknown as number}
-                                onChange={(value) => setFormData({ ...formData, parentId: value as number })}
-                                options={categories?.map(c => ({ id: c.id, name: c.name }))}
-                            />
-                            <CommonInput
-                                label={t('common.sort')}
-                                value={formData.sort?.toString() || ''}
-                                onChange={(value) => setFormData({ ...formData, sort: Number(value) || null as unknown as number })}
-                            />
-                        </Box>
-                    </DialogContent>
-                    <DialogActions>
-                        <CommonButton
-                            buttonVariant="cancel"
-                            onClick={handleClose}
-                        >
-                            {t('common.cancel')}
-                        </CommonButton>
-                        <CommonButton
-                            buttonVariant="submit"
-                            onClick={handleSubmit}
-                            disabled={!formData.name}
-                        >
-                            {t('common.save')}
-                        </CommonButton>
-                    </DialogActions>
-                </Dialog>
-
-                {/* 删除确认对话框 */}
-                <Dialog 
-                    open={deleteDialogOpen} 
-                    onClose={() => setDeleteDialogOpen(false)}
-                    maxWidth="xs"
-                    fullWidth
-                >
-                    <DialogTitle>{t('category.deleteConfirm')}</DialogTitle>
-                    <DialogContent>
-                        <Typography>
-                            {t('category.deleteConfirmMessage')}
-                        </Typography>
-                    </DialogContent>
-                    <DialogActions>
-                        <CommonButton
-                            buttonVariant="cancel"
-                            onClick={() => setDeleteDialogOpen(false)}
-                        >
-                            {t('common.cancel')}
-                        </CommonButton>
-                        <CommonButton
-                            buttonVariant="confirm"
-                            onClick={handleDeleteConfirm}
-                        >
-                            {t('common.confirm')}
-                        </CommonButton>
-                    </DialogActions>
-                </Dialog>
-
-                <Snackbar
-                    open={snackbar.open}
-                    autoHideDuration={3000}
-                    onClose={() => setSnackbar({ ...snackbar, open: false })}
-                >
-                    <Alert
-                        onClose={() => setSnackbar({ ...snackbar, open: false })}
-                        severity={snackbar.severity}
-                        sx={{ width: '100%' }}
-                    >
-                        {snackbar.message}
-                    </Alert>
-                </Snackbar>
+              {/* 添加按钮 */}
+              <CommonButton
+                buttonVariant="add"
+                onClick={() => handleOpen()}
+                sx={{ marginLeft: "auto" }}
+              >
+                {t("category.createCategory")}
+              </CommonButton>
             </Box>
-        </PerformanceLayout>
+          </Box>
+
+          <Box sx={{ p: 3, flex: 1, overflow: "auto" }}>
+            <PerformanceTable
+              loading={loading}
+              data={categories}
+              columns={columns}
+              emptyMessage={t("common.noData")}
+            />
+
+            <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
+              <Pagination
+                total={total}
+                current={Number(params.current)}
+                pageSize={Number(params.size)}
+                onChange={handlePageChange}
+              />
+            </Box>
+          </Box>
+
+          <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+            <DialogTitle>
+              {editingCategory
+                ? t("category.editCategory")
+                : t("category.createCategory")}
+            </DialogTitle>
+            <DialogContent>
+              <Box
+                sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 2 }}
+              >
+                <CommonInput
+                  label={t("common.name")}
+                  value={formData.name || ""}
+                  onChange={(value) =>
+                    setFormData({ ...formData, name: value as string })
+                  }
+                  fullWidth
+                  required
+                  error={!formData.name}
+                  helperText={!formData.name ? t("category.nameRequired") : ""}
+                />
+                <CommonInput
+                  label={t("common.description")}
+                  value={formData.description || ""}
+                  onChange={(value) =>
+                    setFormData({ ...formData, description: value as string })
+                  }
+                  fullWidth
+                  multiline
+                  rows={3}
+                />
+                <CommonSelect
+                  label={t("category.selectParentCategory")}
+                  value={formData.parentId || (null as unknown as number)}
+                  onChange={(value) =>
+                    setFormData({ ...formData, parentId: value as number })
+                  }
+                  options={categories?.map((c) => ({ id: c.id, name: c.name }))}
+                />
+                <CommonInput
+                  label={t("common.sort")}
+                  value={formData.sort?.toString() || ""}
+                  onChange={(value) =>
+                    setFormData({
+                      ...formData,
+                      sort: Number(value) || (null as unknown as number),
+                    })
+                  }
+                />
+              </Box>
+            </DialogContent>
+            <DialogActions>
+              <CommonButton buttonVariant="cancel" onClick={handleClose}>
+                {t("common.cancel")}
+              </CommonButton>
+              <CommonButton
+                buttonVariant="submit"
+                onClick={handleSubmit}
+                disabled={!formData.name}
+              >
+                {t("common.submit")}
+              </CommonButton>
+            </DialogActions>
+          </Dialog>
+
+          {/* 删除确认对话框 */}
+          <Dialog
+            open={deleteDialogOpen}
+            onClose={() => setDeleteDialogOpen(false)}
+            maxWidth="xs"
+            fullWidth
+          >
+            <DialogTitle>{t("category.deleteConfirm")}</DialogTitle>
+            <DialogContent>
+              <Typography>{t("category.deleteConfirmMessage")}</Typography>
+            </DialogContent>
+            <DialogActions>
+              <CommonButton
+                buttonVariant="cancel"
+                onClick={() => setDeleteDialogOpen(false)}
+              >
+                {t("common.cancel")}
+              </CommonButton>
+              <CommonButton
+                buttonVariant="confirm"
+                onClick={handleDeleteConfirm}
+              >
+                {t("common.confirm")}
+              </CommonButton>
+            </DialogActions>
+          </Dialog>
+
+          <Snackbar
+            open={snackbar.open}
+            autoHideDuration={3000}
+            onClose={() => setSnackbar({ ...snackbar, open: false })}
+          >
+            <Alert
+              onClose={() => setSnackbar({ ...snackbar, open: false })}
+              severity={snackbar.severity}
+              sx={{ width: "100%" }}
+            >
+              {snackbar.message}
+            </Alert>
+          </Snackbar>
+        </Box>
+      </PerformanceLayout>
     );
 } 

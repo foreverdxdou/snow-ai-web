@@ -17,7 +17,6 @@ import { useTranslation } from "react-i18next";
 import { PerformanceLayout } from "@/app/components/common/PerformanceLayout";
 import { PerformanceTable } from "@/app/components/common/PerformanceTable";
 import { usePerformanceData } from "@/app/hooks/usePerformanceData";
-import { useDebouncedCallback } from "@/app/utils/performance";
 import { Pagination } from "@/app/components/common/Pagination";
 import { formatDate } from "@/app/utils/format";
 import { CommonButton } from "@/app/components/common/CommonButton";
@@ -364,7 +363,8 @@ export default function UserPage() {
             top: 0,
             zIndex: 1,
             backdropFilter: "blur(8px)",
-            backgroundColor: (theme) => alpha(theme.palette.background.paper, 0.8),
+            backgroundColor: (theme) =>
+              alpha(theme.palette.background.paper, 0.8),
           }}
         >
           <SearchBar>
@@ -374,7 +374,7 @@ export default function UserPage() {
               onChange={(value) =>
                 setParams({ ...params, username: value as string })
               }
-              sx={{ minWidth: 200 }}
+              sx={{ width: "10%" }}
             />
             <CommonInput
               label={t("common.user.nickname")}
@@ -382,7 +382,7 @@ export default function UserPage() {
               onChange={(value) =>
                 setParams({ ...params, nickname: value as string })
               }
-              sx={{ minWidth: 200 }}
+              sx={{ width: "10%" }}
             />
             <CommonInput
               label={t("common.user.email")}
@@ -390,7 +390,7 @@ export default function UserPage() {
               onChange={(value) =>
                 setParams({ ...params, email: value as string })
               }
-              sx={{ minWidth: 200 }}
+              sx={{ width: "10%" }}
             />
             <CommonInput
               label={t("common.user.phone")}
@@ -398,7 +398,7 @@ export default function UserPage() {
               onChange={(value) =>
                 setParams({ ...params, phone: value as string })
               }
-              sx={{ minWidth: 200 }}
+              sx={{ width: "10%" }}
             />
             <CommonSelect
               label={t("common.user.status")}
@@ -413,8 +413,23 @@ export default function UserPage() {
               showAll
               allValue={undefined}
               showAllLabel={t("common.all")}
-              sx={{ minWidth: 200 }}
+              sx={{ width: "10%" }}
             />
+            <CommonButton
+              buttonVariant="search"
+              onClick={() => {
+                setParams({
+                  ...params,
+                  current: 1,
+                  size: params.size,
+                });
+              }}
+              sx={{
+                flex: { xs: 1, sm: "0 0 auto" },
+              }}
+            >
+              {t("common.search")}
+            </CommonButton>
             <CommonButton
               buttonVariant="reset"
               onClick={() => {
@@ -441,17 +456,19 @@ export default function UserPage() {
             columns={columns}
             emptyMessage={t("common.noData")}
             sx={{
-              '& .MuiTableCell-root': {
+              "& .MuiTableCell-root": {
                 py: 2,
                 px: 3,
-                fontSize: '0.875rem',
+                fontSize: "0.875rem",
               },
-              '& .MuiTableHead-root .MuiTableCell-root': {
+              "& .MuiTableHead-root .MuiTableCell-root": {
                 fontWeight: 600,
-                backgroundColor: (theme: Theme) => alpha(theme.palette.primary.main, 0.04),
+                backgroundColor: (theme: Theme) =>
+                  alpha(theme.palette.primary.main, 0.04),
               },
-              '& .MuiTableRow-root:hover': {
-                backgroundColor: (theme: Theme) => alpha(theme.palette.primary.main, 0.04),
+              "& .MuiTableRow-root:hover": {
+                backgroundColor: (theme: Theme) =>
+                  alpha(theme.palette.primary.main, 0.04),
               },
             }}
           />
@@ -466,38 +483,42 @@ export default function UserPage() {
           </Box>
         </Box>
 
-        <Dialog 
-          open={open} 
-          onClose={handleClose} 
-          maxWidth="sm" 
+        <Dialog
+          open={open}
+          onClose={handleClose}
+          maxWidth="sm"
           fullWidth
           PaperProps={{
             sx: {
               borderRadius: 2,
-              boxShadow: (theme) => `0 8px 32px ${alpha(theme.palette.common.black, 0.1)}`,
-            }
+              boxShadow: (theme) =>
+                `0 8px 32px ${alpha(theme.palette.common.black, 0.1)}`,
+            },
           }}
         >
-          <DialogTitle sx={{ 
-            pb: 2,
-            borderBottom: '1px solid',
-            borderColor: 'divider',
-            backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.04),
-          }}>
+          <DialogTitle
+            sx={{
+              pb: 2,
+              borderBottom: "1px solid",
+              borderColor: "divider",
+              backgroundColor: (theme) =>
+                alpha(theme.palette.primary.main, 0.04),
+            }}
+          >
             {editingUser ? t("common.user.edit") : t("common.user.add")}
           </DialogTitle>
           <DialogContent sx={{ pt: 3 }}>
             <Box
-              sx={{ 
-                display: "flex", 
-                flexDirection: "column", 
+              sx={{
+                display: "flex",
+                flexDirection: "column",
                 gap: 2.5,
-                '& .MuiFormControl-root': {
-                  transition: 'all 0.2s ease-in-out',
-                  '&:hover': {
-                    transform: 'translateY(-1px)',
-                  }
-                }
+                "& .MuiFormControl-root": {
+                  transition: "all 0.2s ease-in-out",
+                  "&:hover": {
+                    transform: "translateY(-1px)",
+                  },
+                },
               }}
             >
               <CommonInput
@@ -568,7 +589,7 @@ export default function UserPage() {
                     autoComplete="new-password"
                     error={!formData.password || !passwordStrength.isValid}
                     helperText={
-                      !formData.password 
+                      !formData.password
                         ? t("common.user.passwordRequired")
                         : !passwordStrength.isValid
                         ? t("register.passwordRequirements")
@@ -642,11 +663,17 @@ export default function UserPage() {
                     InputProps={{
                       endAdornment: (
                         <IconButton
-                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          onClick={() =>
+                            setShowConfirmPassword(!showConfirmPassword)
+                          }
                           edge="end"
                           size="small"
                         >
-                          {showConfirmPassword ? <Visibility /> : <VisibilityOff />}
+                          {showConfirmPassword ? (
+                            <Visibility />
+                          ) : (
+                            <VisibilityOff />
+                          )}
                         </IconButton>
                       ),
                     }}
@@ -663,6 +690,7 @@ export default function UserPage() {
                   { id: 1, name: t("common.enable") },
                   { id: 0, name: t("common.disable") },
                 ]}
+                fullWidth
               />
               <CommonSelect
                 label={t("common.user.roles")}
@@ -675,16 +703,20 @@ export default function UserPage() {
                   name: role.roleName,
                 }))}
                 multiple
+                fullWidth
               />
             </Box>
           </DialogContent>
-          <DialogActions sx={{ 
-            px: 3, 
-            py: 2,
-            borderTop: '1px solid',
-            borderColor: 'divider',
-            backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.02),
-          }}>
+          <DialogActions
+            sx={{
+              px: 3,
+              py: 2,
+              borderTop: "1px solid",
+              borderColor: "divider",
+              backgroundColor: (theme) =>
+                alpha(theme.palette.primary.main, 0.02),
+            }}
+          >
             <CommonButton buttonVariant="cancel" onClick={handleClose}>
               {t("common.cancel")}
             </CommonButton>
@@ -696,10 +728,13 @@ export default function UserPage() {
                 !formData.nickname ||
                 !formData.email ||
                 !formData.phone ||
-                (!editingUser && (!formData.password || !formData.confirmPassword || !passwordStrength.isValid))
+                (!editingUser &&
+                  (!formData.password ||
+                    !formData.confirmPassword ||
+                    !passwordStrength.isValid))
               }
             >
-              {t("common.save")}
+              {t("common.submit")}
             </CommonButton>
           </DialogActions>
         </Dialog>
@@ -712,16 +747,19 @@ export default function UserPage() {
           PaperProps={{
             sx: {
               borderRadius: 2,
-              boxShadow: (theme) => `0 8px 32px ${alpha(theme.palette.common.black, 0.1)}`,
-            }
+              boxShadow: (theme) =>
+                `0 8px 32px ${alpha(theme.palette.common.black, 0.1)}`,
+            },
           }}
         >
-          <DialogTitle sx={{ 
-            pb: 2,
-            borderBottom: '1px solid',
-            borderColor: 'divider',
-            backgroundColor: (theme) => alpha(theme.palette.error.main, 0.04),
-          }}>
+          <DialogTitle
+            sx={{
+              pb: 2,
+              borderBottom: "1px solid",
+              borderColor: "divider",
+              backgroundColor: (theme) => alpha(theme.palette.error.main, 0.04),
+            }}
+          >
             {t("common.user.deleteConfirm")}
           </DialogTitle>
           <DialogContent sx={{ pt: 3 }}>
@@ -729,21 +767,23 @@ export default function UserPage() {
               {t("common.user.deleteConfirmMessage")}
             </Typography>
           </DialogContent>
-          <DialogActions sx={{ 
-            px: 3, 
-            py: 2,
-            borderTop: '1px solid',
-            borderColor: 'divider',
-            backgroundColor: (theme) => alpha(theme.palette.error.main, 0.02),
-          }}>
+          <DialogActions
+            sx={{
+              px: 3,
+              py: 2,
+              borderTop: "1px solid",
+              borderColor: "divider",
+              backgroundColor: (theme) => alpha(theme.palette.error.main, 0.02),
+            }}
+          >
             <CommonButton
               buttonVariant="cancel"
               onClick={() => setDeleteDialogOpen(false)}
             >
               {t("common.cancel")}
             </CommonButton>
-            <CommonButton 
-              buttonVariant="confirm" 
+            <CommonButton
+              buttonVariant="confirm"
               onClick={handleDeleteConfirm}
               color="error"
             >
@@ -756,23 +796,24 @@ export default function UserPage() {
           open={snackbar.open}
           autoHideDuration={3000}
           onClose={() => setSnackbar({ ...snackbar, open: false })}
-          anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+          anchorOrigin={{ vertical: "top", horizontal: "right" }}
           sx={{
-            '& .MuiSnackbarContent-root': {
+            "& .MuiSnackbarContent-root": {
               borderRadius: 2,
-              boxShadow: (theme) => `0 8px 32px ${alpha(theme.palette.common.black, 0.1)}`,
-            }
+              boxShadow: (theme) =>
+                `0 8px 32px ${alpha(theme.palette.common.black, 0.1)}`,
+            },
           }}
         >
           <Alert
             onClose={() => setSnackbar({ ...snackbar, open: false })}
             severity={snackbar.severity}
-            sx={{ 
+            sx={{
               width: "100%",
               borderRadius: 2,
-              '& .MuiAlert-icon': {
-                fontSize: '1.5rem',
-              }
+              "& .MuiAlert-icon": {
+                fontSize: "1.5rem",
+              },
             }}
           >
             {snackbar.message}
