@@ -1,54 +1,206 @@
 import { createTheme, alpha, Theme, ThemeOptions } from '@mui/material/styles';
 import { zhCN, enUS } from '@mui/material/locale';
 
+// 主题颜色常量
+const themeColors = {
+  light: {
+    primary: '#007FFF',
+    primaryLight: '#66B2FF',
+    primaryDark: '#0059B2',
+    secondary: '#9c27b0',
+    secondaryLight: '#ba68c8',
+    secondaryDark: '#7b1fa2',
+    background: '#fff',
+    paperBackground: '#fff',
+    textPrimary: '#1A2027',
+    textSecondary: '#3E5060',
+    divider: 'rgba(194, 224, 255, 0.08)',
+    antdPrimary: '#1890FF',
+    error: '#ef4444',
+    errorHover: '#dc2626',
+    success: '#3b82f6',
+    successHover: '#2563eb',
+    warning: '#ff9800',
+    warningLight: '#ffb74d',
+    warningDark: '#f57c00',
+    info: '#0288d1',
+    infoLight: '#03a9f4',
+    infoDark: '#01579b',
+    action: {
+      hover: 'rgba(0, 127, 255, 0.08)',
+      selected: 'rgba(0, 127, 255, 0.12)',
+      disabled: 'rgba(0, 0, 0, 0.26)',
+      disabledBackground: 'rgba(0, 0, 0, 0.12)',
+    },
+    backdrop: {
+      background: 'rgba(255, 255, 255, 0.9)',
+      blur: 'blur(6px)',
+    },
+    border: {
+      light: 'rgba(0, 0, 0, 0.12)',
+      main: 'rgba(0, 0, 0, 0.23)',
+      dark: 'rgba(0, 0, 0, 0.87)',
+    },
+    shadow: {
+      light: 'rgba(0, 0, 0, 0.05)',
+      main: 'rgba(0, 0, 0, 0.1)',
+      dark: 'rgba(0, 0, 0, 0.2)',
+    }
+  },
+  dark: {
+    primary: '#66B2FF',
+    primaryLight: '#99CCF3',
+    primaryDark: '#0059B2',
+    secondary: '#ce93d8',
+    secondaryLight: '#f3e5f5',
+    secondaryDark: '#ab47bc',
+    background: '#0A1929',
+    paperBackground: '#0A1929',
+    textPrimary: '#fff',
+    textSecondary: '#B2BAC2',
+    divider: 'rgba(194, 224, 255, 0.12)',
+    antdPrimary: '#1890FF',
+    error: '#ef4444',
+    errorHover: '#dc2626',
+    success: '#3b82f6',
+    successHover: '#2563eb',
+    warning: '#ffa726',
+    warningLight: '#ffb74d',
+    warningDark: '#f57c00',
+    info: '#29b6f6',
+    infoLight: '#4fc3f7',
+    infoDark: '#0288d1',
+    action: {
+      hover: 'rgba(102, 178, 255, 0.12)',
+      selected: 'rgba(102, 178, 255, 0.16)',
+      disabled: 'rgba(255, 255, 255, 0.3)',
+      disabledBackground: 'rgba(255, 255, 255, 0.12)',
+    },
+    backdrop: {
+      background: 'rgba(10, 25, 41, 0.95)',
+      blur: 'blur(6px)',
+    },
+    border: {
+      light: 'rgba(255, 255, 255, 0.12)',
+      main: 'rgba(255, 255, 255, 0.23)',
+      dark: 'rgba(255, 255, 255, 0.87)',
+    },
+    shadow: {
+      light: 'rgba(0, 0, 0, 0.2)',
+      main: 'rgba(0, 0, 0, 0.3)',
+      dark: 'rgba(0, 0, 0, 0.4)',
+    }
+  }
+};
+
 // 亮色主题调色板
 const lightPalette = {
   primary: {
-    main: '#007FFF',
-    light: '#66B2FF',
-    dark: '#0059B2',
+    main: themeColors.light.primary,
+    light: themeColors.light.primaryLight,
+    dark: themeColors.light.primaryDark,
     contrastText: '#fff',
   },
   secondary: {
-    main: '#9c27b0',
-    light: '#ba68c8',
-    dark: '#7b1fa2',
+    main: themeColors.light.secondary,
+    light: themeColors.light.secondaryLight,
+    dark: themeColors.light.secondaryDark,
     contrastText: '#fff',
   },
   background: {
-    default: '#fff',
-    paper: '#fff',
+    default: themeColors.light.background,
+    paper: themeColors.light.paperBackground,
   },
   text: {
-    primary: '#1A2027',
-    secondary: '#3E5060',
+    primary: themeColors.light.textPrimary,
+    secondary: themeColors.light.textSecondary,
   },
-  divider: 'rgba(194, 224, 255, 0.08)',
+  divider: themeColors.light.divider,
+  error: {
+    main: themeColors.light.error,
+    dark: themeColors.light.errorHover,
+    light: alpha(themeColors.light.error, 0.5),
+    contrastText: '#fff',
+  },
+  success: {
+    main: themeColors.light.success,
+    dark: themeColors.light.successHover,
+    light: alpha(themeColors.light.success, 0.5),
+    contrastText: '#fff',
+  },
+  warning: {
+    main: themeColors.light.warning,
+    light: themeColors.light.warningLight,
+    dark: themeColors.light.warningDark,
+    contrastText: 'rgba(0, 0, 0, 0.87)',
+  },
+  info: {
+    main: themeColors.light.info,
+    light: themeColors.light.infoLight,
+    dark: themeColors.light.infoDark,
+    contrastText: '#fff',
+  },
+  action: {
+    hover: themeColors.light.action.hover,
+    selected: themeColors.light.action.selected,
+    disabled: themeColors.light.action.disabled,
+    disabledBackground: themeColors.light.action.disabledBackground,
+  },
 };
 
 // 暗色主题调色板
 const darkPalette = {
   primary: {
-    main: '#66B2FF',
-    light: '#99CCF3',
-    dark: '#0059B2',
+    main: themeColors.dark.primary,
+    light: themeColors.dark.primaryLight,
+    dark: themeColors.dark.primaryDark,
     contrastText: '#fff',
   },
   secondary: {
-    main: '#ce93d8',
-    light: '#f3e5f5',
-    dark: '#ab47bc',
+    main: themeColors.dark.secondary,
+    light: themeColors.dark.secondaryLight,
+    dark: themeColors.dark.secondaryDark,
     contrastText: '#fff',
   },
   background: {
-    default: '#001E3C',
-    paper: '#0A1929',
+    default: themeColors.dark.background,
+    paper: themeColors.dark.paperBackground,
   },
   text: {
-    primary: '#fff',
-    secondary: '#B2BAC2',
+    primary: themeColors.dark.textPrimary,
+    secondary: themeColors.dark.textSecondary,
   },
-  divider: 'rgba(194, 224, 255, 0.12)',
+  divider: themeColors.dark.divider,
+  error: {
+    main: themeColors.dark.error,
+    dark: themeColors.dark.errorHover,
+    light: alpha(themeColors.dark.error, 0.5),
+    contrastText: '#fff',
+  },
+  success: {
+    main: themeColors.dark.success,
+    dark: themeColors.dark.successHover,
+    light: alpha(themeColors.dark.success, 0.5),
+    contrastText: '#fff',
+  },
+  warning: {
+    main: themeColors.dark.warning,
+    light: themeColors.dark.warningLight,
+    dark: themeColors.dark.warningDark,
+    contrastText: 'rgba(0, 0, 0, 0.87)',
+  },
+  info: {
+    main: themeColors.dark.info,
+    light: themeColors.dark.infoLight,
+    dark: themeColors.dark.infoDark,
+    contrastText: '#fff',
+  },
+  action: {
+    hover: themeColors.dark.action.hover,
+    selected: themeColors.dark.action.selected,
+    disabled: themeColors.dark.action.disabled,
+    disabledBackground: themeColors.dark.action.disabledBackground,
+  },
 };
 
 // 共享组件样式

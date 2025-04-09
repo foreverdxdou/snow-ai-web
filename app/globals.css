@@ -10,6 +10,26 @@
   --text-secondary: #3E5060;
   --divider-color: rgba(194, 224, 255, 0.08);
   --paper-background: #fff;
+  --primary-color: #007FFF;
+  --primary-light: #66B2FF;
+  --primary-dark: #0059B2;
+  --secondary-color: #9c27b0;
+  --error-color: #ef4444;
+  --success-color: #3b82f6;
+  --warning-color: #ff9800;
+  --info-color: #0288d1;
+  --action-hover: rgba(0, 127, 255, 0.08);
+  --action-selected: rgba(0, 127, 255, 0.12);
+  --action-disabled: rgba(0, 0, 0, 0.26);
+  --action-disabled-background: rgba(0, 0, 0, 0.12);
+  --backdrop-background: rgba(255, 255, 255, 0.9);
+  --backdrop-blur: blur(6px);
+  --border-light: rgba(0, 0, 0, 0.12);
+  --border-main: rgba(0, 0, 0, 0.23);
+  --border-dark: rgba(0, 0, 0, 0.87);
+  --shadow-light: rgba(0, 0, 0, 0.05);
+  --shadow-main: rgba(0, 0, 0, 0.1);
+  --shadow-dark: rgba(0, 0, 0, 0.2);
   --transition-duration: 0.3s;
 }
 
@@ -21,11 +41,31 @@
   --text-secondary: #B2BAC2;
   --divider-color: rgba(194, 224, 255, 0.12);
   --paper-background: #0A1929;
+  --primary-color: #66B2FF;
+  --primary-light: #99CCF3;
+  --primary-dark: #0059B2;
+  --secondary-color: #ce93d8;
+  --error-color: #ef4444;
+  --success-color: #3b82f6;
+  --warning-color: #ffa726;
+  --info-color: #29b6f6;
+  --action-hover: rgba(102, 178, 255, 0.12);
+  --action-selected: rgba(102, 178, 255, 0.16);
+  --action-disabled: rgba(255, 255, 255, 0.3);
+  --action-disabled-background: rgba(255, 255, 255, 0.12);
+  --backdrop-background: rgba(10, 25, 41, 0.95);
+  --backdrop-blur: blur(6px);
+  --border-light: rgba(255, 255, 255, 0.12);
+  --border-main: rgba(255, 255, 255, 0.23);
+  --border-dark: rgba(255, 255, 255, 0.87);
+  --shadow-light: rgba(0, 0, 0, 0.2);
+  --shadow-main: rgba(0, 0, 0, 0.3);
+  --shadow-dark: rgba(0, 0, 0, 0.4);
 }
 
 body {
   color: var(--text-primary);
-  background: var(--background-start-rgb);
+  background: rgb(var(--background-start-rgb));
   min-height: 100vh;
   transition: background-color var(--transition-duration) ease,
               color var(--transition-duration) ease;
@@ -42,6 +82,9 @@ body {
 .MuiSnackbar-root {
   background-color: var(--paper-background) !important;
   transition: background-color var(--transition-duration) ease !important;
+  backdrop-filter: var(--backdrop-blur);
+  border: 1px solid var(--border-light);
+  box-shadow: 0 4px 12px var(--shadow-light);
 }
 
 /* 只设置文本组件的颜色 */
@@ -64,7 +107,7 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--background-start-rgb);
+  background: rgb(var(--background-start-rgb));
   border-radius: 3px;
   transition: background-color var(--transition-duration) ease;
 }
@@ -88,73 +131,89 @@ body {
 [data-theme='dark'] .MuiMenu-paper,
 [data-theme='dark'] .MuiPopover-paper,
 [data-theme='dark'] .MuiSnackbar-root {
-  background-color: #0A1929 !important;
+  background-color: var(--paper-background) !important;
+  border-color: var(--border-light);
+  box-shadow: 0 4px 12px var(--shadow-dark);
 }
 
 /* 确保所有 Material-UI 组件在暗色主题下都有正确的文本颜色 */
 [data-theme='dark'] .MuiTypography-root,
 [data-theme='dark'] .MuiListItemText-root {
-  color: #fff !important;
+  color: var(--text-primary) !important;
 }
 
 /* 确保所有 Material-UI 组件在暗色主题下都有正确的分割线颜色 */
 [data-theme='dark'] .MuiDivider-root {
-  border-color: rgba(194, 224, 255, 0.12) !important;
+  border-color: var(--divider-color) !important;
 }
 
 /* 自定义输入框样式 */
 .custom-input .ant-input {
   box-shadow: none !important;
+  border-color: var(--border-main) !important;
+  background-color: var(--paper-background) !important;
+  color: var(--text-primary) !important;
 }
 
 .custom-input .ant-input:focus,
 .custom-input .ant-input-focused {
-  box-shadow: none !important;
+  box-shadow: 0 0 0 2px var(--primary-light) !important;
+  border-color: var(--primary-color) !important;
 }
 
 .custom-input .ant-input:hover {
-  border-color: #1890FF !important;
+  border-color: var(--primary-color) !important;
 }
 
 .custom-input .ant-input-affix-wrapper {
   box-shadow: none !important;
+  border-color: var(--border-main) !important;
+  background-color: var(--paper-background) !important;
 }
 
 .custom-input .ant-input-affix-wrapper:focus,
 .custom-input .ant-input-affix-wrapper-focused {
-  box-shadow: none !important;
+  box-shadow: 0 0 0 2px var(--primary-light) !important;
+  border-color: var(--primary-color) !important;
 }
 
 .custom-input .ant-input-affix-wrapper:hover {
-  border-color: #1890FF !important;
+  border-color: var(--primary-color) !important;
 }
 
 /* 自定义卡片样式 */
 .ant-card {
+  background-color: var(--paper-background) !important;
+  border-color: var(--border-light) !important;
   transition: all 0.3s ease;
 }
 
 .ant-card:hover {
   transform: translateY(-2px);
+  box-shadow: 0 8px 24px var(--shadow-main);
 }
 
 /* 自定义列表样式 */
 .ant-list-item {
   padding: 0 !important;
+  border-color: var(--divider-color) !important;
 }
 
 /* 自定义卡片操作区域样式 */
 .ant-card-actions {
-  border-top: 1px solid #f0f0f0;
+  background-color: var(--paper-background) !important;
+  border-top: 1px solid var(--divider-color);
   padding: 8px 16px;
 }
 
 /* 自定义卡片 Meta 样式 */
 .ant-card-meta-title {
+  color: var(--text-primary) !important;
   margin-bottom: 8px !important;
 }
 
 .ant-card-meta-description {
+  color: var(--text-secondary) !important;
   margin-bottom: 0 !important;
 }
 
@@ -164,21 +223,26 @@ body {
   line-height: 1;
   cursor: pointer;
   transition: color 0.3s ease;
+  color: var(--text-secondary);
+}
+
+.anticon:hover {
+  color: var(--primary-color);
 }
 
 /* 确保图标颜色样式生效 */
 .text-blue-500 {
-  color: #3b82f6 !important;
+  color: var(--success-color) !important;
 }
 
 .text-blue-500:hover {
-  color: #2563eb !important;
+  color: var(--primary-dark) !important;
 }
 
 .text-red-500 {
-  color: #ef4444 !important;
+  color: var(--error-color) !important;
 }
 
 .text-red-500:hover {
-  color: #dc2626 !important;
+  color: var(--error-color) !important;
 }

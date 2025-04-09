@@ -1,8 +1,9 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
-import { ThemeProvider as MuiThemeProvider, createTheme } from '@mui/material/styles';
+import { ThemeProvider as MuiThemeProvider } from '@mui/material/styles';
 import { getCookie, setCookie } from 'cookies-next';
+import { getTheme } from '../theme';
 import { zhCN, enUS } from '@mui/material/locale';
 
 interface ThemeContextType {
@@ -51,32 +52,6 @@ const getInitialLanguage = () => {
     return 'zh';
 };
 
-// 创建主题
-const createAppTheme = (mode: 'light' | 'dark', lang: 'zh' | 'en') => {
-    return createTheme({
-        palette: {
-            mode,
-            primary: {
-                main: '#007FFF',
-            },
-            background: {
-                default: mode === 'light' ? '#fff' : '#0A1929',
-                paper: mode === 'light' ? '#fff' : '#0A1929',
-            },
-        },
-        components: {
-            MuiCssBaseline: {
-                styleOverrides: {
-                    body: {
-                        backgroundColor: mode === 'light' ? '#fff' : '#0A1929',
-                        color: mode === 'light' ? '#1A2027' : '#fff',
-                        transition: 'background-color 0.3s ease, color 0.3s ease',
-                    },
-                },
-            },
-        },
-    }, lang === 'zh' ? zhCN : enUS);
-};
 
 export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
     const [themeMode, setThemeMode] = useState<'light' | 'dark'>(getInitialTheme);
@@ -89,7 +64,6 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
         
         // 设置 document 主题
         document.documentElement.setAttribute('data-theme', mode);
-        document.body.style.backgroundColor = mode === 'light' ? '#fff' : '#0A1929';
         
         // 保存到 localStorage 和 cookie
         localStorage.setItem('themeMode', mode);
@@ -103,7 +77,6 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
         syncThemeToDocument(themeMode);
         setMounted(true);
 
-        // 清理函数
         return () => {
             setMounted(false);
         };
@@ -119,7 +92,7 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
     }, [language]);
 
     // 使用 useMemo 缓存主题对象
-    const theme = useMemo(() => createAppTheme(themeMode, language), [themeMode, language]);
+    const theme = useMemo(() => getTheme(themeMode, language), [themeMode, language]);
 
     const toggleTheme = useCallback(() => {
         setThemeMode(prev => {
