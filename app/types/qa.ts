@@ -33,6 +33,7 @@ export interface KbChatHistory {
     createTime: string;
     updateTime: string;
     isStreaming?: boolean;
+    isStop:number;
 }
 
 // 分页对话历史记录

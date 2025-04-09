@@ -1,5 +1,5 @@
 import { Box, TextField, IconButton, CircularProgress } from '@mui/material';
-import { Send as SendIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import { Send as SendIcon, Stop as StopIcon } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 
 interface ChatInputProps {
@@ -92,7 +92,7 @@ export const ChatInput = ({
                                 marginTop: '-12px',
                             }}
                         />
-                        <DeleteIcon
+                        <StopIcon
                             sx={{
                                 position: 'absolute',
                                 left: '50%',

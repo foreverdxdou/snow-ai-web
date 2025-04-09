@@ -50,7 +50,7 @@ import 'highlight.js/styles/github-dark.css';
 import { Theme } from '@mui/material/styles';
 import { fetchEventSource } from '@microsoft/fetch-event-source';
 import { KnowledgeBaseSelector } from './components/KnowledgeBaseSelector';
-import { ChatMessage } from './components/ChatMessage';
+import { ChatMessage, ThinkingDots } from './components/ChatMessage';
 import { ChatInput } from './components/ChatInput';
 import { llmService } from '@/app/services/llm';
 import type { LlmConfig } from '@/app/types/llm';
@@ -299,12 +299,39 @@ export default function QaPage() {
             // 使用 signal 中断连接
             abortControllerRef.current.abort();
             // 等待连接完全中断后再清理
-            setTimeout(() => {
+            setTimeout(async () => {
                 abortControllerRef.current = null;
                 setLoading(false);
+                
+                // 重新获取聊天历史
+                try {
+                    const sid = selectedSessionId || sessionId;
+                    const response = await qaService.getChatHistory(sid);
+                    if (isMountedRef.current) {
+                        setChatHistory(response.data.data.records);
+                        // 使用setTimeout确保在状态更新后滚动
+                        setTimeout(() => {
+                            if (chatBoxRef.current) {
+                                chatBoxRef.current.scrollTo({
+                                    top: chatBoxRef.current.scrollHeight,
+                                    behavior: 'smooth'
+                                });
+                            }
+                        }, 100);
+                    }
+                } catch (error) {
+                    console.error('获取聊天历史失败:', error);
+                    if (isMountedRef.current) {
+                        setSnackbar({
+                            open: true,
+                            message: t('qa.loadHistoryError'),
+                            severity: 'error',
+                        });
+                    }
+                }
             }, 100);
         }
-    }, []);
+    }, [selectedSessionId, sessionId, t]);
 
     // 使用 useCallback 优化聊天历史更新
     const updateChatHistory = useCallback((answer: string, isStreaming: boolean) => {
@@ -359,11 +386,12 @@ export default function QaPage() {
             kbIds: selectedKbs.join(','),
             userId: 0,
             question: questionText,
-            answer: t('qa.thinking'),
+            answer: 'THINKING_DOTS',
             tokensUsed: 0,
             processTime: 0,
             createTime: new Date().toISOString(),
             updateTime: new Date().toISOString(),
+            isStop: 0,
         };
 
         if (isMountedRef.current) {

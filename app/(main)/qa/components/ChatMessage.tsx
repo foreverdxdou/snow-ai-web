@@ -403,6 +403,11 @@ export const ChatMessage = ({ chat, onRegenerate }: ChatMessageProps) => {
     };
 
     const renderAnswer = (answer: string) => {
+        // 检查是否是ThinkingDots标记
+        if (answer === 'THINKING_DOTS') {
+            return <ThinkingDots />;
+        }
+        
         const hasEndThinkTag = answer.includes('</think>');
         const hasThinkTag = answer.includes('<think>');
         const isThinking = hasThinkTag && !hasEndThinkTag;
@@ -611,8 +616,8 @@ export const ChatMessage = ({ chat, onRegenerate }: ChatMessageProps) => {
                                     gap: 1
                                 }}
                             >
-                                {chat.answer.includes('</think>') ? t('qa.thinkingCompleted') : t('qa.thinking')}
-                                {!chat.answer.includes('</think>') && chat.answer.includes('<think>') && <ThinkingDots />}
+                                {chat.answer.includes('</think>') && chat.isStop === 0 ? t('qa.thinkingCompleted') : chat.isStop === 1 ? t('qa.thinkingAborted') : t('qa.thinking')}
+                                {!chat.answer.includes('</think>') && chat.answer.includes('<think>') && chat.isStop === 0 && <ThinkingDots />}
                             </Typography>
                             {chat.answer.includes('</think>') && (
                                 <IconButton
@@ -697,4 +702,6 @@ export const ChatMessage = ({ chat, onRegenerate }: ChatMessageProps) => {
             </Snackbar>
         </>
     );
-}; 
+};
+
+export { ThinkingDots }; 
