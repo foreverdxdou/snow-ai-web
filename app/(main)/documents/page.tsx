@@ -184,18 +184,24 @@ export default function DocumentsPage() {
                 };
 
                 return (
-                    <Chip
-                        label={getStatusText()}
-                        color={getStatusColor() as any}
-                        size="small"
-                        sx={{
-                            minWidth: 90,
-                            '& .MuiChip-label': {
-                                px: 1,
-                                fontSize: '0.875rem'
-                            }
-                        }}
-                    />
+                    <Tooltip 
+                        title={record.parseStatus === 3 ? (record as any).parseError || '' : ''} 
+                        arrow 
+                        placement="top"
+                    >
+                        <Chip
+                            label={getStatusText()}
+                            color={getStatusColor() as any}
+                            size="small"
+                            sx={{
+                                minWidth: 90,
+                                '& .MuiChip-label': {
+                                    px: 1,
+                                    fontSize: '0.875rem'
+                                }
+                            }}
+                        />
+                    </Tooltip>
                 );
             }
         },
