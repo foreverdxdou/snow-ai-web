@@ -2,6 +2,7 @@
 export interface QaRequest {
     question: string;
     sessionId: string;
+    requestId: string;
     context?: string[];
     temperature?: number;
     maxTokens?: number;
@@ -11,6 +12,7 @@ export interface QaRequest {
 export interface QaResponse {
     answer: string;
     sessionId: string;
+    requestId: string;
     tokensUsed: number;
     processTime: number;
     success: boolean;
@@ -21,6 +23,7 @@ export interface QaResponse {
 export interface KbChatHistory {
     id: number;
     sessionId: string;
+    requestId: string;
     kbIds: string;
     userId: number;
     question: string;

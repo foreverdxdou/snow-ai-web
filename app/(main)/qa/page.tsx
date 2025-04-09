@@ -295,9 +295,14 @@ export default function QaPage() {
     // 使用 useCallback 优化中断会话处理
     const handleAbort = useCallback(() => {
         if (abortControllerRef.current) {
+            console.log('正在中断连接...');
+            // 使用 signal 中断连接
             abortControllerRef.current.abort();
-            abortControllerRef.current = null;
-            setLoading(false);
+            // 等待连接完全中断后再清理
+            setTimeout(() => {
+                abortControllerRef.current = null;
+                setLoading(false);
+            }, 100);
         }
     }, []);
 
@@ -332,17 +337,25 @@ export default function QaPage() {
     const handleSend = useCallback(async () => {
         if (!question.trim() || loading) return;
 
-        handleAbort();
+        // 只有在已经有连接的情况下才中断
+        if (abortControllerRef.current) {
+            handleAbort();
+            // 等待之前的连接完全中断
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
 
         setLoading(true);
         const questionText = question;
         setQuestion('');
 
-        abortControllerRef.current = new AbortController();
+        // 创建新的 AbortController
+        const controller = new AbortController();
+        abortControllerRef.current = controller;
 
         const newQuestion: KbChatHistory = {
             id: Date.now(),
             sessionId: selectedSessionId || sessionId,
+            requestId: uuidv4(),
             kbIds: selectedKbs.join(','),
             userId: 0,
             question: questionText,
@@ -362,6 +375,7 @@ export default function QaPage() {
             const requestData: QaRequest = {
                 question: questionText,
                 sessionId: selectedSessionId || sessionId,
+                requestId: uuidv4(),
                 temperature: 0.7,
                 maxTokens: 2000,
                 ...(selectedModel && { llmId: selectedModel })
@@ -373,127 +387,97 @@ export default function QaPage() {
             const url = `${baseUrl}/${endpoint}${queryParams}`;
 
             let answer = '';
-            let retryCount = 0;
-            const maxRetries = 1;
-            let isRetrying = false;
 
-            const connect = async () => {
-                if (isRetrying) return;
-                isRetrying = true;
-
-                try {
-                    await fetchEventSource(url, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${Cookies.get('token')}`,
-                            'Accept-Encoding': 'identity',
-                            'X-Accept-Encoding-Override': 'identity'
-                        },
-                        body: JSON.stringify(requestData),
-                        signal: abortControllerRef.current?.signal,
-                        onmessage(ev) {
-                            if (!isMountedRef.current) return;
-                            
-                            if (ev.event === 'done' || ev.event === 'complete') {
-                                setLoading(false);
-                                abortControllerRef.current = null;
-                                isRetrying = false;
-                                return;
-                            }
+            console.log('准备建立连接:', url);
+            try {
+                await fetchEventSource(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${Cookies.get('token')}`,
+                        'Accept-Encoding': 'identity',
+                        'X-Accept-Encoding-Override': 'identity',
+                        'Cache-Control': 'no-cache',
+                        'Connection': 'keep-alive'
+                    },
+                    body: JSON.stringify(requestData),
+                    signal: controller.signal,
+                    openWhenHidden: true,
+                    async onopen(response: Response) {
+                        console.log('连接已打开，状态:', response.status);
+                        if (response.ok && response.status === 200) {
+                            console.log('连接成功建立');
+                        } else {
+                            console.error('连接打开但状态异常:', response.status);
+                            throw new Error(`Failed to open connection: ${response.status}`);
+                        }
+                    },
+                    onmessage(ev) {
+                        if (!isMountedRef.current) return;
+                        
+                        if (ev.event === 'done' || ev.event === 'complete') {
+                            console.log('收到完成消息');
+                            setLoading(false);
+                            return;
+                        }
+                        
+                        try {
                             const data = ev.data;
-                            answer += data;
-                            updateChatHistory(answer, true);
-                            scrollToBottom();
-                        },
-                        onclose() {
-                            if (!isMountedRef.current) return;
-                            
-                            // 只有在非正常完成且未中断的情况下才重试
-                            if (!answer && retryCount < maxRetries) {
-                                retryCount++;
-                                console.log(`Connection closed, retrying (${retryCount}/${maxRetries})...`);
-                                setTimeout(() => {
-                                    isRetrying = false;
-                                    connect();
-                                }, 1000);
-                            } else {
-                                setLoading(false);
-                                abortControllerRef.current = null;
-                                isRetrying = false;
+                            if (data) {
+                                answer += data;
+                                updateChatHistory(answer, true);
+                                scrollToBottom();
                             }
-                        },
-                        onerror(err) {
-                            if (!isMountedRef.current) return;
-                            
-                            if (err.name === 'AbortError') {
-                                isRetrying = false;
-                                return;
-                            }
-                            
-                            // 只有在非正常完成且未中断的情况下才重试
-                            if (!answer && retryCount < maxRetries) {
-                                retryCount++;
-                                console.log(`Error occurred, retrying (${retryCount}/${maxRetries})...`);
-                                setTimeout(() => {
-                                    isRetrying = false;
-                                    connect();
-                                }, 1000);
-                            } else {
-                                setSnackbar({
-                                    open: true,
-                                    message: t('qa.systemError'),
-                                    severity: 'error',
-                                });
-                                setLoading(false);
-                                abortControllerRef.current = null;
-                                isRetrying = false;
-                            }
-                        },
-                    });
-                } catch (error) {
-                    if (!isMountedRef.current) return;
-                    
-                    if (error instanceof Error && error.name === 'AbortError') {
-                        isRetrying = false;
-                        return;
-                    }
-                    
-                    // 只有在非正常完成且未中断的情况下才重试
-                    if (!answer && retryCount < maxRetries) {
-                        retryCount++;
-                        console.log(`Connection error, retrying (${retryCount}/${maxRetries})...`);
-                        setTimeout(() => {
-                            isRetrying = false;
-                            connect();
-                        }, 1000);
-                    } else {
+                        } catch (error) {
+                            console.error('处理消息数据时出错:', error);
+                        }
+                    },
+                    onclose() {
+                        console.log('连接关闭，当前answer长度:', answer.length);
+                        if (!isMountedRef.current) return;
+                        
+                        setLoading(false);
+                    },
+                    onerror(err) {
+                        console.error('连接错误:', err);
+                        if (!isMountedRef.current) return;
+                        
+                        if (err.name === 'AbortError') {
+                            console.log('连接被手动中断');
+                            return;
+                        }
+                        
                         setSnackbar({
                             open: true,
-                            message: t('qa.connectionError'),
+                            message: t('qa.systemError'),
                             severity: 'error',
                         });
                         setLoading(false);
-                        abortControllerRef.current = null;
-                        isRetrying = false;
                     }
-                }
-            };
-
-            await connect();
+                });
+            } catch (error) {
+                console.error('fetchEventSource 执行出错:', error);
+                throw error;
+            }
         } catch (error) {
+            console.error('整体请求异常:', error);
             if (!isMountedRef.current) return;
             
             if (error instanceof Error && error.name === 'AbortError') {
+                console.log('请求被中断');
                 return;
             }
+            
             setSnackbar({
                 open: true,
                 message: t('qa.systemError'),
                 severity: 'error',
             });
             setLoading(false);
-            abortControllerRef.current = null;
+        } finally {
+            if (abortControllerRef.current === controller) {
+                abortControllerRef.current = null;
+            }
         }
     }, [question, loading, sessionId, selectedKbs, selectedModel, t, handleAbort, scrollToBottom, updateChatHistory, selectedSessionId]);
 
