@@ -29,6 +29,7 @@ import {
     DialogContent,
     DialogContentText,
     DialogActions,
+    Fab,
 } from '@mui/material';
 import {
     Send as SendIcon,
@@ -38,6 +39,10 @@ import {
     ContentCopy as ContentCopyIcon,
     Add as AddIcon,
     DeleteOutline as DeleteOutlineIcon,
+    ExpandMore as ExpandMoreIcon,
+    ExpandLess as ExpandLessIcon,
+    KeyboardArrowDown as KeyboardArrowDownIcon,
+    Refresh as RefreshIcon,
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { v4 as uuidv4 } from 'uuid';
@@ -196,6 +201,7 @@ export default function QaPage() {
     const chatBoxRef = useRef<HTMLDivElement>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
     const isMountedRef = useRef(true);
+    const [showScrollButton, setShowScrollButton] = useState(false);
 
     const [snackbar, setSnackbar] = useState({
         open: false,
@@ -351,6 +357,22 @@ export default function QaPage() {
         }
     }, []);
 
+    // 监听滚动事件
+    useEffect(() => {
+        const handleScroll = () => {
+            if (chatBoxRef.current) {
+                const { scrollTop, scrollHeight, clientHeight } = chatBoxRef.current;
+                setShowScrollButton(scrollHeight - scrollTop - clientHeight > 100);
+            }
+        };
+
+        const chatBox = chatBoxRef.current;
+        if (chatBox) {
+            chatBox.addEventListener('scroll', handleScroll);
+            return () => chatBox.removeEventListener('scroll', handleScroll);
+        }
+    }, []);
+
     // 使用 useCallback 优化滚动处理
     const scrollToBottom = useCallback(() => {
         if (chatBoxRef.current) {
@@ -365,6 +387,16 @@ export default function QaPage() {
             return () => clearTimeout(timeoutId);
         }
     }, []);
+    
+    // 滚动到底部
+    const onClickScrollToBottom = () => {
+        if (chatBoxRef.current) {
+            chatBoxRef.current.scrollTo({
+                top: chatBoxRef.current.scrollHeight,
+                behavior: 'smooth'
+            });
+        }
+    };
 
     // 发送消息
     const handleSend = useCallback(async () => {
@@ -950,6 +982,7 @@ export default function QaPage() {
                         display: 'flex',
                         flexDirection: 'column',
                         gap: 2,
+                        position: 'relative',
                     }}
                 >
                     {initialLoading ? (
@@ -980,6 +1013,33 @@ export default function QaPage() {
                         ))
                     )}
                 </Box>
+
+                {/* 滚动到底部按钮 - 固定在ChatInput上方 */}
+                {showScrollButton && (
+                    <Box sx={{ 
+                        display: 'flex', 
+                        justifyContent: 'center', 
+                        py: 1,
+                        bgcolor: 'background.paper',
+                    }}>
+                        <IconButton
+                            size="small"
+                            onClick={onClickScrollToBottom}
+                            sx={{
+                                borderRadius: 2,
+                                opacity: 0.8,
+                                transition: 'all 0.2s ease',
+                                '&:hover': {
+                                    opacity: 1,
+                                    bgcolor: 'primary.main',
+                                    color: 'white',
+                                },
+                            }}
+                        >
+                            <KeyboardArrowDownIcon sx={{ fontSize: 24 }} />
+                        </IconButton>
+                    </Box>
+                )}
 
                 <Box sx={{
                     p: 3,
