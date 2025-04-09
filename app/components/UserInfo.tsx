@@ -20,6 +20,7 @@ import {
     InputAdornment,
     IconButton,
     Alert,
+    Snackbar
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/app/hooks/useAuth';
@@ -35,6 +36,7 @@ import {
     VisibilityOff,
 } from '@mui/icons-material';
 import { userService } from '@/app/services/user';
+import { useTheme } from '@mui/material/styles';
 
 // 密码强度检查函数
 const checkPasswordStrength = (password: string): { score: number; label: string; color: string } => {
@@ -69,8 +71,6 @@ export const UserInfo: React.FC<UserInfoProps> = ({
     const { showSnackbar } = useSnackbar();
     const [mounted, setMounted] = useState(false);
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-
-    // 修改密码相关状态
     const [changePasswordOpen, setChangePasswordOpen] = useState(false);
     const [oldPassword, setOldPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
@@ -81,6 +81,9 @@ export const UserInfo: React.FC<UserInfoProps> = ({
     const [passwordStrength, setPasswordStrength] = useState<{ score: number; label: string; color: string }>({ score: 0, label: '', color: '' });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState('');
+    const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
 
     useEffect(() => {
         setMounted(true);
@@ -113,9 +116,15 @@ export const UserInfo: React.FC<UserInfoProps> = ({
         handleMenuClose();
         try {
             await logout();
+            setSnackbarMessage(t('common.user.logoutSuccess'));
+            setSnackbarSeverity('success');
+            setSnackbarOpen(true);
             router.push('/login');
         } catch (error) {
             console.error('退出登录失败:', error);
+            setSnackbarMessage(t('common.user.logoutError'));
+            setSnackbarSeverity('error');
+            setSnackbarOpen(true);
         }
     };
 
@@ -182,6 +191,10 @@ export const UserInfo: React.FC<UserInfoProps> = ({
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleCloseSnackbar = () => {
+        setSnackbarOpen(false);
     };
 
     return (
@@ -461,7 +474,7 @@ export const UserInfo: React.FC<UserInfoProps> = ({
                                 ),
                             }}
                         />
-        </Box>
+                    </Box>
                 </DialogContent>
                 <DialogActions>
                     <Button 
@@ -479,6 +492,29 @@ export const UserInfo: React.FC<UserInfoProps> = ({
                     </Button>
                 </DialogActions>
             </Dialog>
+
+            {/* 提示消息 */}
+            <Snackbar
+                open={snackbarOpen}
+                autoHideDuration={3000}
+                onClose={handleCloseSnackbar}
+                anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+            >
+                <Alert 
+                    onClose={handleCloseSnackbar} 
+                    severity={snackbarSeverity} 
+                    sx={{ 
+                        width: '100%',
+                        backgroundColor: snackbarSeverity === 'success' ? 'success.light' : 'error.light',
+                        color: snackbarSeverity === 'success' ? 'green' : 'red',
+                        '& .MuiAlert-icon': {
+                            color: snackbarSeverity === 'success' ? 'green' : 'red'
+                        }
+                    }}
+                >
+                    {snackbarMessage}
+                </Alert>
+            </Snackbar>
         </>
     );
 };

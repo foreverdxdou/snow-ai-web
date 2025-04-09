@@ -159,7 +159,10 @@
       "passwordRequirements": "Password must contain uppercase, lowercase, numbers and special characters, at least 8 characters",
       "weak": "Weak",
       "medium": "Medium",
-      "strong": "Strong"
+      "strong": "Strong",
+      "logout": "Logout",
+      "logoutSuccess": "Logout successful",
+      "logoutError": "Logout failed, please try again"
     },
     "changePassword": "Change Password"
   },

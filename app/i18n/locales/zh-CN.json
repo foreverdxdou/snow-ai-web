@@ -172,7 +172,10 @@
       "weak": "弱",
       "medium": "中",
       "strong": "强",
-      "passwordTooWeak": "密码强度不足"
+      "passwordTooWeak": "密码强度不足",
+      "logout": "退出登录",
+      "logoutSuccess": "退出登录成功",
+      "logoutError": "退出登录失败，请重试"
     },
     "changePassword": "修改密码"
   },
