@@ -248,7 +248,7 @@ export default function DocumentsPage() {
                         <CommonButton
                             buttonVariant="edit"
                             icon
-                            onClick={() => handleOpen(record)}
+                            onClick={() => handleOpen(Number(record.id))}
                         />
                     </Tooltip>
                     <Tooltip title={t('common.delete')}>

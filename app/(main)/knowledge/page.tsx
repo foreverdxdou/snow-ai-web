@@ -44,7 +44,10 @@ import { PerformanceLayout } from "@/app/components/common/PerformanceLayout";
 import { usePerformanceData } from "@/app/hooks/usePerformanceData";
 import { CommonButton } from "@/app/components/common/CommonButton";
 import { CommonInput } from "@/app/components/common/CommonInput";
+import { CommonSelect } from "@/app/components/common/CommonSelect";
 import { SimpleTreeView } from '@mui/x-tree-view';
+import { KbCategory } from '@/app/types/category'
+import { formatDate, formatFileSize } from "@/app/utils/format";
 
 interface TreeItemData {
   id: string;
@@ -74,15 +77,6 @@ const KnowledgeCard = React.memo(
         return;
       }
       router.push(`/documents?kbId=${knowledge.id}`);
-    };
-
-    // 生成模拟数据
-    const stats = {
-      totalDocuments: Math.floor(Math.random() * 1000) + 100,
-      totalSize: (Math.random() * 1000).toFixed(2) + ' MB',
-      lastUpdate: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toLocaleDateString(),
-      documentTypes: ['PDF', 'Word', 'Excel', 'Markdown'].slice(0, Math.floor(Math.random() * 4) + 1),
-      tags: ['AI', '机器学习', '深度学习', '自然语言处理', '计算机视觉'].slice(0, Math.floor(Math.random() * 3) + 1)
     };
 
     return (
@@ -136,13 +130,13 @@ const KnowledgeCard = React.memo(
         <CardContent sx={{ flexGrow: 1 }}>
           <Box sx={{ mb: 2 }}>
             <Typography variant="body2" color="text.secondary" gutterBottom>
-              {t("knowledge.documentCount")}: {stats.totalDocuments}
+              {t("knowledge.documentCount")}: {knowledge.documentCount}
             </Typography>
             <Typography variant="body2" color="text.secondary" gutterBottom>
-              {t("knowledge.totalSize")}: {stats.totalSize}
+              {t("knowledge.totalSize")}: {formatFileSize(knowledge.documentTotalSize)}
             </Typography>
             <Typography variant="body2" color="text.secondary" gutterBottom>
-              {t("knowledge.lastUpdate")}: {stats.lastUpdate}
+              {t("knowledge.lastUpdate")}: {formatDate(knowledge.updateTime)}
             </Typography>
           </Box>
 
@@ -153,7 +147,7 @@ const KnowledgeCard = React.memo(
               {t("knowledge.documentTypes")}:
             </Typography>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-              {stats.documentTypes.map((type, index) => (
+              {knowledge.documentTypes.map((type, index) => (
                 <Chip
                   key={index}
                   label={type}
@@ -177,10 +171,10 @@ const KnowledgeCard = React.memo(
               {t("knowledge.tags")}:
             </Typography>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-              {stats.tags.map((tag, index) => (
+              {knowledge.tags.map((tag, index) => (
                 <Chip
                   key={index}
-                  label={tag}
+                  label={tag.name}
                   size="small"
                   sx={{ 
                     bgcolor: 'secondary.light',
@@ -446,6 +440,7 @@ export default function KnowledgePage() {
   const [formData, setFormData] = useState<KnowledgeBaseDTO>({
     name: "",
     description: "",
+    categoryId: null as unknown as string,
   });
   const [snackbar, setSnackbar] = useState({
     open: false,
@@ -454,6 +449,7 @@ export default function KnowledgePage() {
   });
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [categoryTree, setCategoryTree] = useState<TreeItemData[]>([]);
+  const [categories, setCategories] = useState<KbCategory[]>([]);
 
   // 使用 usePerformanceData 优化数据获取
   const {
@@ -528,25 +524,41 @@ export default function KnowledgePage() {
       setFormData({
         name: knowledge.name,
         description: knowledge.description,
+        categoryId: knowledge.categoryId ? String(knowledge.categoryId) : "",
       });
     } else {
       setEditingKnowledge(null);
       setFormData({
         name: "",
         description: "",
+        categoryId: selectedCategory ? String(selectedCategory) : "",
       });
     }
     setOpen(true);
-  }, []);
+    handleCategories();
+  }, [selectedCategory]);
 
   const handleClose = useCallback(() => {
     setOpen(false);
     setEditingKnowledge(null);
+    setCategories([]);
     setFormData({
       name: "",
       description: "",
+      categoryId: null as unknown as string,
     });
   }, []);
+
+  const handleCategories = useCallback(async () => {
+    const response = await categoryService.getList({ current: 1, size: 1000 });
+    const categories = response.data.data.records;
+    setCategories(categories);
+    
+    // 如果正在编辑知识库，并且知识库有categoryId，则设置formData.categoryId
+    if (editingKnowledge && editingKnowledge.categoryId) {
+      setFormData(prev => ({ ...prev, categoryId: String(editingKnowledge.categoryId) }));
+    }
+  }, [editingKnowledge]);
 
   const handleSubmit = useCallback(async () => {
     try {
@@ -829,6 +841,13 @@ export default function KnowledgePage() {
                 error={!formData.name}
                 helperText={!formData.name ? t("knowledge.nameRequired") : ""}
                 required
+              />
+              <CommonSelect
+                  fullWidth
+                  label={t("documents.category")}
+                  value={formData.categoryId || ''}
+                  onChange={(value) =>setFormData({ ...formData, categoryId: value as string })}
+                  options={categories.map((cat) => ({ id: cat.id, name: cat.name }))}
               />
               <CommonInput
                 label={t("common.description")}

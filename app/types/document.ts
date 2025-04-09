@@ -23,7 +23,6 @@ export interface Document {
 export interface DocumentCreateDTO {
   title: string;
   content: string;
-  categoryId: number;
   kbId: number;
   tagIds?: string[];
 }
@@ -31,9 +30,8 @@ export interface DocumentCreateDTO {
 export interface DocumentUpdateDTO {
   title: string;
   content: string;
-  categoryId: number;
   kbId: number;
-  tags?: string[];
+  tagIds?: string[];
   status?: number;  // 0: 禁用, 1: 启用
 }
 

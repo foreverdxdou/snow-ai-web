@@ -1,12 +1,15 @@
+import { Tag } from "./tag";
 export interface KnowledgeBaseDTO {
   name: string;
   description: string;
+  categoryId: string;
 }
 
 export interface KnowledgeBaseVO {
   id: number;
   name: string;
   description: string;
+  categoryId: string;
   creatorId: number;
   creatorName: string;
   deptId: number;
@@ -19,6 +22,9 @@ export interface KnowledgeBaseVO {
   tagCount: number;
   userPermissions: KnowledgeBasePermissionVO[];
   rolePermissions: KnowledgeBasePermissionVO[];
+  tags: Tag[];
+  documentTypes: string[];
+  documentTotalSize: number;
 }
 
 export interface KnowledgeBasePermissionVO {

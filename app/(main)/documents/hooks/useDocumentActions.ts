@@ -30,7 +30,6 @@ export const useDocumentActions = (refresh: () => void) => {
 
     const [formData, setFormData] = useState<DocumentCreateDTO>({
         title: '',
-        categoryId: 0,
         kbId: 0,
         content: '',
         tagIds: [],
@@ -94,12 +93,13 @@ export const useDocumentActions = (refresh: () => void) => {
         }
     }, [deletingId, t, refresh]);
 
-    const handleOpen = useCallback((document?: Document) => {
-        if (document) {
+    const handleOpen = useCallback(async (id:number) => {
+        const response = await documentService.getById(id);
+        const document = response.data.data as Document;
+        if (response.data.code === 200) {
             setEditingDocument(document);
             setFormData({
                 title: document.title,
-                categoryId: document.categoryId,
                 kbId: document.kbId,
                 content: document.content || '',
                 tagIds: document.tags?.map(tag => tag.id.toString()) || [],
@@ -108,7 +108,6 @@ export const useDocumentActions = (refresh: () => void) => {
             setEditingDocument(null);
             setFormData({
                 title: '',
-                categoryId: 0,
                 kbId: 0,
                 content: '',
                 tagIds: [],
@@ -122,7 +121,6 @@ export const useDocumentActions = (refresh: () => void) => {
         setEditingDocument(null);
         setFormData({
             title: '',
-            categoryId: 0,
             kbId: 0,
             content: '',
             tagIds: [],
@@ -143,9 +141,8 @@ export const useDocumentActions = (refresh: () => void) => {
             if (editingDocument) {
                 await documentService.update(editingDocument.id, {
                     title: formData.title,
-                    categoryId: formData.categoryId,
                     content: formData.content,
-                    tags: formData.tagIds?.map(String),
+                    tagIds: formData.tagIds?.map(String),
                     kbId: formData.kbId,
                 });
                 setSnackbar({
@@ -156,7 +153,6 @@ export const useDocumentActions = (refresh: () => void) => {
             } else {
                 await documentService.create({
                     title: formData.title,
-                    categoryId: formData.categoryId,
                     kbId: formData.kbId,
                     content: formData.content,
                     tagIds: formData.tagIds?.map(String),
