@@ -12,7 +12,8 @@ import {
     styled,
     alpha,
     useTheme,
-    Button
+    Button,
+    Snackbar
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/app/hooks/useAuth';
@@ -173,6 +174,8 @@ export default function LoginPage() {
     const { login } = useAuth();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState('');
 
     // 使用 useCallback 优化登录处理函数
     const handleLogin = useCallback(async (username: string, password: string) => {
@@ -180,14 +183,23 @@ export default function LoginPage() {
             setLoading(true);
             setError(null);
             await login(username, password);
-            router.push('/');
+            setSnackbarMessage(t('auth.loginSuccess'));
+            setSnackbarOpen(true);
+            // 延迟跳转，让用户看到成功提示
+            setTimeout(() => {
+                router.push('/');
+            }, 1000); // 增加到3秒，与 Snackbar 的 autoHideDuration 一致
         } catch (err) {
-            setError(t('login.error'));
+            setError(t('auth.error'));
             console.error('登录失败:', err);
         } finally {
             setLoading(false);
         }
     }, [login, router, t]);
+
+    const handleCloseSnackbar = () => {
+        setSnackbarOpen(false);
+    };
 
     return (
         <Box sx={{ width: '100%', maxWidth: 400, mx: 'auto' }}>
@@ -214,6 +226,30 @@ export default function LoginPage() {
                     error={error}
                 />
             </Paper>
+            
+            
+            {/* 登录成功提示 */}
+            <Snackbar
+                open={snackbarOpen}
+                autoHideDuration={3000}
+                onClose={handleCloseSnackbar}
+                anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+            >
+                <Alert 
+                    onClose={handleCloseSnackbar} 
+                    severity="success" 
+                    sx={{ 
+                        width: '100%',
+                        backgroundColor: 'success.light',
+                        color: 'green',
+                        '& .MuiAlert-icon': {
+                            color: 'green'
+                        }
+                    }}
+                >
+                    {snackbarMessage}
+                </Alert>
+            </Snackbar>
         </Box>
     );
 } 
