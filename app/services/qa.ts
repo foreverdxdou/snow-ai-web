@@ -41,4 +41,14 @@ export const qaService = {
     clearChatHistory: (sessionId: string) => {
         return request.delete<Result<void>>(`${BASE_URL}/history/${sessionId}`);
     },
+
+    // 清除用户对话历史
+    clearChatHistoryByUser: () => {
+        return request.delete<Result<void>>(`${BASE_URL}/clearChatHistoryByUser`);
+    },
+
+    // 清除单个对话历史
+    clearChatHistoryByRequestId: (requestId: string) => {
+        return request.delete<Result<void>>(`${BASE_URL}/clearChatHistoryByRequestId/${requestId}`);
+    },
 }; 

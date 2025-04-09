@@ -1,5 +1,5 @@
-import { Box, Paper, Typography, IconButton, Tooltip, Snackbar, Alert, Collapse } from '@mui/material';
-import { ContentCopy as ContentCopyIcon, ExpandMore as ExpandMoreIcon, ExpandLess as ExpandLessIcon, KeyboardArrowUp as KeyboardArrowUpIcon, Refresh as RefreshIcon } from '@mui/icons-material';
+import { Box, Paper, Typography, IconButton, Tooltip, Snackbar, Alert, Collapse, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button } from '@mui/material';
+import { ContentCopy as ContentCopyIcon, ExpandMore as ExpandMoreIcon, ExpandLess as ExpandLessIcon, KeyboardArrowUp as KeyboardArrowUpIcon, Refresh as RefreshIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
@@ -12,6 +12,7 @@ import { Theme } from '@mui/material/styles';
 import { keyframes } from '@mui/system';
 import { useState } from 'react';
 import { preprocessMarkdown, convertToQuoteFormat } from './MarkdownPreprocessor';
+import { qaService } from '@/app/services/qa';
 
 const markdownStyles = {
     '& .markdown-body': {
@@ -335,16 +336,26 @@ const ReasoningScroll = ({ content, isStreaming }: { content: string; isStreamin
 interface ChatMessageProps {
     chat: KbChatHistory;
     onRegenerate?: () => void;
+    onDelete?: () => void;
 }
 
-export const ChatMessage = ({ chat, onRegenerate }: ChatMessageProps) => {
+export const ChatMessage = ({ chat, onRegenerate, onDelete }: ChatMessageProps) => {
     const { t } = useTranslation();
-    const [snackbar, setSnackbar] = useState({
+    const [snackbar, setSnackbar] = useState<{
+        open: boolean;
+        message: string;
+        severity: 'success' | 'error' | 'info' | 'warning';
+    }>({
         open: false,
         message: '',
-        severity: 'success' as 'success' | 'error',
+        severity: 'success',
     });
     const [isReasoningExpanded, setIsReasoningExpanded] = useState(true);
+    const [deleteDialog, setDeleteDialog] = useState<{
+        open: boolean;
+    }>({
+        open: false,
+    });
 
     const handleCopyMessage = () => {
         const hasEndThinkTag = chat.answer.includes('</think>');
@@ -396,6 +407,36 @@ export const ChatMessage = ({ chat, onRegenerate }: ChatMessageProps) => {
                 severity: 'error'
             });
         });
+    };
+
+    const handleDeleteMessage = () => {
+        setDeleteDialog({ open: true });
+    };
+
+    const handleConfirmDelete = async () => {
+        try {
+            await qaService.clearChatHistoryByRequestId(chat.requestId);
+            setSnackbar({
+                open: true,
+                message: t('qa.deleteMessageSuccess'),
+                severity: 'success',
+            });
+            setDeleteDialog({ open: false });
+            // 通知父组件刷新聊天历史
+            if (onDelete) {
+                onDelete();
+            }
+        } catch (error) {
+            setSnackbar({
+                open: true,
+                message: t('qa.deleteMessageError'),
+                severity: 'error',
+            });
+        }
+    };
+
+    const handleCancelDelete = () => {
+        setDeleteDialog({ open: false });
     };
 
     const handleToggleReasoning = () => {
@@ -569,21 +610,36 @@ export const ChatMessage = ({ chat, onRegenerate }: ChatMessageProps) => {
                     >
                         <Typography>{chat.question}</Typography>
                     </Paper>
-                    <Tooltip title={t('qa.copyMessage')}>
-                        <IconButton
-                            onClick={() => handleCopyMessage()}
-                            sx={{
-                                mt: 0.5,
-                                color: 'primary.main',
-                                opacity: 0.7,
-                                transition: 'all 0.2s',
-                                '&:hover': { opacity: 1, transform: 'scale(1.1)' },
-                            }}
-                            size="small"
-                        >
-                            <ContentCopyIcon fontSize="small" />
-                        </IconButton>
-                    </Tooltip>
+                    <Box sx={{ display: 'flex', gap: 1, mt: 0.5 }}>
+                        <Tooltip title={t('qa.copyMessage')}>
+                            <IconButton
+                                onClick={() => handleCopyMessage()}
+                                sx={{
+                                    color: 'primary.main',
+                                    opacity: 0.7,
+                                    transition: 'all 0.2s',
+                                    '&:hover': { opacity: 1, transform: 'scale(1.1)' },
+                                }}
+                                size="small"
+                            >
+                                <ContentCopyIcon fontSize="small" />
+                            </IconButton>
+                        </Tooltip>
+                        <Tooltip title={t('qa.deleteMessage')}>
+                            <IconButton
+                                onClick={handleDeleteMessage}
+                                sx={{
+                                    color: 'error.main',
+                                    opacity: 0.7,
+                                    transition: 'all 0.2s',
+                                    '&:hover': { opacity: 1, transform: 'scale(1.1)' },
+                                }}
+                                size="small"
+                            >
+                                <DeleteIcon fontSize="small" />
+                            </IconButton>
+                        </Tooltip>
+                    </Box>
                 </Box>
 
                 {/* AI 回答 */}
@@ -700,6 +756,57 @@ export const ChatMessage = ({ chat, onRegenerate }: ChatMessageProps) => {
                     {snackbar.message}
                 </Alert>
             </Snackbar>
+
+            {/* 删除确认对话框 */}
+            <Dialog
+                open={deleteDialog.open}
+                onClose={handleCancelDelete}
+                PaperProps={{
+                    sx: {
+                        width: '100%',
+                        maxWidth: 400,
+                        borderRadius: 2,
+                    }
+                }}
+            >
+                <DialogTitle sx={{ 
+                    pb: 1,
+                    fontWeight: 600,
+                }}>
+                    {t('qa.deleteMessageConfirm')}
+                </DialogTitle>
+                <DialogContent>
+                    <DialogContentText sx={{ 
+                        color: 'text.secondary',
+                        fontSize: '0.875rem',
+                    }}>
+                        此操作将永久删除该消息，是否继续？
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions sx={{ px: 3, pb: 3 }}>
+                    <Button
+                        onClick={handleCancelDelete}
+                        variant="outlined"
+                        sx={{
+                            minWidth: 80,
+                            fontWeight: 500,
+                        }}
+                    >
+                        取消
+                    </Button>
+                    <Button
+                        onClick={handleConfirmDelete}
+                        variant="contained"
+                        color="error"
+                        sx={{
+                            minWidth: 80,
+                            fontWeight: 500,
+                        }}
+                    >
+                        删除
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </>
     );
 };

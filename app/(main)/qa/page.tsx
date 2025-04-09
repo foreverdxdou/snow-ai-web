@@ -211,6 +211,12 @@ export default function QaPage() {
         sessionId: '',
     });
 
+    const [clearHistoryDialog, setClearHistoryDialog] = useState<{
+        open: boolean;
+    }>({
+        open: false,
+    });
+
     // 获取知识库列表
     const fetchKnowledgeBases = useCallback(async () => {
         try {
@@ -518,10 +524,16 @@ export default function QaPage() {
     }, [handleSend]);
 
     // 使用 useCallback 优化清空历史记录处理
-    const handleClearHistory = useCallback(async () => {
-        if (!window.confirm(t('qa.clearHistoryConfirm'))) return;
+    const handleClearHistory = useCallback(() => {
+        setClearHistoryDialog({
+            open: true,
+        });
+    }, []);
+
+    // 确认清空历史记录
+    const handleConfirmClearHistory = useCallback(async () => {
         try {
-            await qaService.clearChatHistory(sessionId);
+            await qaService.clearChatHistoryByUser();
             if (isMountedRef.current) {
                 setChatHistory([]);
                 setSnackbar({
@@ -529,6 +541,8 @@ export default function QaPage() {
                     message: t('qa.clearHistorySuccess'),
                     severity: 'success',
                 });
+                // 重新获取会话列表
+                fetchUserChatHistory();
             }
         } catch (error) {
             console.error('清空历史记录失败:', error);
@@ -539,8 +553,15 @@ export default function QaPage() {
                     severity: 'error',
                 });
             }
+        } finally {
+            setClearHistoryDialog({ open: false });
         }
-    }, [sessionId, t]);
+    }, [t, fetchUserChatHistory]);
+
+    // 取消清空历史记录
+    const handleCancelClearHistory = useCallback(() => {
+        setClearHistoryDialog({ open: false });
+    }, []);
 
     // 使用 useCallback 优化 Snackbar 关闭处理
     const handleSnackbarClose = useCallback(() => {
@@ -954,6 +975,7 @@ export default function QaPage() {
                                         }, 100);
                                     }, 0);
                                 }}
+                                onDelete={() => handleSelectSession(chat.sessionId)}
                             />
                         ))
                     )}
@@ -1058,6 +1080,57 @@ export default function QaPage() {
                     </Button>
                     <Button
                         onClick={handleConfirmDelete}
+                        variant="contained"
+                        color="error"
+                        sx={{
+                            minWidth: 80,
+                            fontWeight: 500,
+                        }}
+                    >
+                        删除
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* 清空历史记录确认对话框 */}
+            <Dialog
+                open={clearHistoryDialog.open}
+                onClose={handleCancelClearHistory}
+                PaperProps={{
+                    sx: {
+                        width: '100%',
+                        maxWidth: 400,
+                        borderRadius: 2,
+                    }
+                }}
+            >
+                <DialogTitle sx={{ 
+                    pb: 1,
+                    fontWeight: 600,
+                }}>
+                    {t('qa.clearHistoryConfirm')}
+                </DialogTitle>
+                <DialogContent>
+                    <DialogContentText sx={{ 
+                        color: 'text.secondary',
+                        fontSize: '0.875rem',
+                    }}>
+                        此操作将永久删除所有对话，是否继续？
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions sx={{ px: 3, pb: 3 }}>
+                    <Button
+                        onClick={handleCancelClearHistory}
+                        variant="outlined"
+                        sx={{
+                            minWidth: 80,
+                            fontWeight: 500,
+                        }}
+                    >
+                        取消
+                    </Button>
+                    <Button
+                        onClick={handleConfirmClearHistory}
                         variant="contained"
                         color="error"
                         sx={{

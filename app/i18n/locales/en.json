@@ -415,6 +415,7 @@
     "systemError": "System error, please try again later",
     "connecting": "Connecting...",
     "thinking": "Thinking",
+    "thinkingAborted": "Thinking Aborted",
     "thinkingCompleted": "Thinking Completed",
     "noKbSelected": "No knowledge base selected, using general Q&A mode",
     "selectModel": "Select LLM Model",
@@ -466,7 +467,11 @@
         "multipleEmptyLines": "Multiple Empty Lines"
       }
     },
-    "regenerate": "Regenerate"
+    "regenerate": "Regenerate",
+    "deleteMessage": "Delete Message",
+    "deleteMessageConfirm": "Are you sure you want to delete this message?",
+    "deleteMessageSuccess": "Message deleted successfully",
+    "deleteMessageError": "Failed to delete message"
   },
   "systemConfig": {
     "title": "System Configuration",

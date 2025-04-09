@@ -481,7 +481,11 @@
         "multipleEmptyLines": "多个空行"
       }
     },
-    "regenerate": "重新生成"
+    "regenerate": "重新生成",
+    "deleteMessage": "删除消息",
+    "deleteMessageConfirm": "确定要删除这条消息吗？",
+    "deleteMessageSuccess": "消息删除成功",
+    "deleteMessageError": "消息删除失败"
   },
   "systemConfig": {
     "title": "系统配置管理",
