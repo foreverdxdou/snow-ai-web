@@ -28,4 +28,9 @@ export const tagService = {
   delete: (id: number) => {
     return request.delete<Result<void>>(`${BASE_URL}/${id}`);
   },
+
+  // 批量删除标签
+  batchDelete: (ids: number[]) => {
+    return request.delete<Result<void>>(`${BASE_URL}/batch`, { data: { ids } });
+  },
 }; 

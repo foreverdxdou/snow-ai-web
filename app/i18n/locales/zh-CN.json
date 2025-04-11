@@ -129,6 +129,11 @@
     },
     "selectAll": "全选",
     "unselectAll": "取消全选",
+    "batchDelete": "批量删除",
+    "batchDeleteConfirm": "批量删除确认",
+    "batchDeleteConfirmMessage": "确定要删除选中的项目吗？此操作不可恢复。",
+    "batchDeleteSuccess": "批量删除成功",
+    "batchDeleteError": "批量删除失败",
     "user": {
       "title": "用户管理",
       "add": "新增用户",

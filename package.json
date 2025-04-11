@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev -p 8000",
     "build": "next build",
-    "start": "next start",
+    "start": "next start -p 8000",
     "lint": "next lint"
   },
   "dependencies": {
@@ -16,7 +16,7 @@
     "@microsoft/fetch-event-source": "^2.0.1",
     "@mui/icons-material": "^5.15.11",
     "@mui/lab": "^5.0.0-alpha.165",
-    "@mui/material": "^5.15.11",
+    "@mui/material": "^5.16.14",
     "@mui/x-tree-view": "^7.28.1",
     "@reduxjs/toolkit": "^2.2.1",
     "@tanstack/react-virtual": "^3.13.5",

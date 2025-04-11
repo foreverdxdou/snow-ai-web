@@ -11,7 +11,7 @@ export const categoryService = {
   },
 
   // 获取分类详情
-  getById: (id: number) => {
+  getById: (id: string) => {
     return request.get<Result<KbCategory>>(`${BASE_URL}/${id}`);
   },
 
@@ -21,22 +21,29 @@ export const categoryService = {
   },
 
   // 更新分类
-  update: (id: number, data: KbCategoryCreateDTO) => {
+  update: (id: string, data: KbCategoryCreateDTO) => {
     return request.put<Result<KbCategory>>(`${BASE_URL}/${id}`, data);
   },
 
   // 删除分类
-  delete: (id: number) => {
+  delete: (id: string) => {
     return request.delete<Result<void>>(`${BASE_URL}/${id}`);
   },
 
+  // 批量删除分类
+  batchDelete: (ids: string[]) => {
+    return request.delete<Result<void>>(`${BASE_URL}/batch`, {
+      data: ids
+    });
+  },
+
   // 更新分类状态
-  updateStatus: (id: number, status: number) => {
+  updateStatus: (id: string, status: number) => {
     return request.put<Result<void>>(`${BASE_URL}/${id}/status?status=${status}`);
   },
 
   // 移动分类
-  moveCategory: (id: number, parentId: number | null, sort: number) => {
+  moveCategory: (id: string, parentId: string | null, sort: number) => {
     return request.put<Result<void>>(`${BASE_URL}/${id}/move`, null, {
       params: { parentId, sort }
     });

@@ -26,14 +26,12 @@ export const UploadDialog: React.FC<UploadDialogProps> = ({
     open,
     onClose,
 }) => {
-    if(!open) return null;
     const {
         refresh,
         tags,
         knowledgeBases,
     } = useDocumentData();
 
-    // 使用自定义 Hook 管理文档操作
     const {
         file,
         setFile,
@@ -82,7 +80,7 @@ export const UploadDialog: React.FC<UploadDialogProps> = ({
         }
         setUploadLoading(true);
         try {
-            handleUpload();
+            await handleUpload();
             handleClose();
         } finally {
             setUploadLoading(false);
@@ -97,7 +95,7 @@ export const UploadDialog: React.FC<UploadDialogProps> = ({
 
     return (
         <Dialog 
-            open={open} 
+            open={open}
             onClose={handleClose}
             maxWidth="sm" 
             fullWidth
@@ -125,7 +123,6 @@ export const UploadDialog: React.FC<UploadDialogProps> = ({
             </DialogTitle>
             <DialogContent>
                 <Box sx={{ pt: 2 }}>
-                    {/* 文件上传区域 */}
                     <CommonFileUpload
                         file={file}
                         maxFileSize={MAX_FILE_SIZE}
@@ -134,11 +131,10 @@ export const UploadDialog: React.FC<UploadDialogProps> = ({
                         onDrop={handleDrop}
                         error={isFileTooLarge}
                         errorMessage={t('documents.fileTooLarge')}
-                        accept= {t('documents.accept')}
-                        supportedFormats= {t('documents.supportedFormats', { accept: t('documents.accept') })}
+                        accept={t('documents.accept')}
+                        supportedFormats={t('documents.supportedFormats', { accept: t('documents.accept') })}
                     />
 
-                    {/* 知识库选择 */}
                     <FormControl 
                         fullWidth 
                         sx={{ 
@@ -149,12 +145,6 @@ export const UploadDialog: React.FC<UploadDialogProps> = ({
                                     '& .MuiOutlinedInput-notchedOutline': {
                                         borderColor: 'primary.main'
                                     }
-                                }
-                            },
-                            '& .MuiInputLabel-root': {
-                                color: 'text.secondary',
-                                '&.Mui-focused': {
-                                    color: 'primary.main'
                                 }
                             }
                         }}
@@ -178,16 +168,9 @@ export const UploadDialog: React.FC<UploadDialogProps> = ({
                                         borderColor: 'primary.main'
                                     }
                                 }
-                            },
-                            '& .MuiInputLabel-root': {
-                                color: 'text.secondary',
-                                '&.Mui-focused': {
-                                    color: 'primary.main'
-                                }
                             }
                         }}
                     >
-
                         <CommonSelect
                             fullWidth
                             multiple
@@ -196,7 +179,6 @@ export const UploadDialog: React.FC<UploadDialogProps> = ({
                             options={tags.map((tag) => ({ id: tag.id, name: tag.name }))}
                             onChange={(value) => setSelectedTagId(value as number[])}
                         />
-  
                     </FormControl>
                 </Box>
             </DialogContent>

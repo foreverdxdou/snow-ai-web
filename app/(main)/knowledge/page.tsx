@@ -38,15 +38,15 @@ import { knowledgeService } from "@/app/services/knowledge";
 import type { KnowledgeBaseVO, KnowledgeBaseDTO } from "@/app/types/knowledge";
 import { Pagination } from "@/app/components/common/Pagination";
 import { categoryService } from "@/app/services/category";
-import { TreeItem } from '@mui/x-tree-view/TreeItem';
+import { TreeItem } from "@mui/x-tree-view/TreeItem";
 import { useTranslation } from "react-i18next";
 import { PerformanceLayout } from "@/app/components/common/PerformanceLayout";
 import { usePerformanceData } from "@/app/hooks/usePerformanceData";
 import { CommonButton } from "@/app/components/common/CommonButton";
 import { CommonInput } from "@/app/components/common/CommonInput";
 import { CommonSelect } from "@/app/components/common/CommonSelect";
-import { SimpleTreeView } from '@mui/x-tree-view';
-import { KbCategory } from '@/app/types/category'
+import { SimpleTreeView } from "@mui/x-tree-view";
+import { KbCategory } from "@/app/types/category";
 import { formatDate, formatFileSize } from "@/app/utils/format";
 
 interface TreeItemData {
@@ -133,7 +133,8 @@ const KnowledgeCard = React.memo(
               {t("knowledge.documentCount")}: {knowledge.documentCount}
             </Typography>
             <Typography variant="body2" color="text.secondary" gutterBottom>
-              {t("knowledge.totalSize")}: {formatFileSize(knowledge.documentTotalSize)}
+              {t("knowledge.totalSize")}:{" "}
+              {formatFileSize(knowledge.documentTotalSize)}
             </Typography>
             <Typography variant="body2" color="text.secondary" gutterBottom>
               {t("knowledge.lastUpdate")}: {formatDate(knowledge.updateTime)}
@@ -146,18 +147,18 @@ const KnowledgeCard = React.memo(
             <Typography variant="body2" color="text.secondary" gutterBottom>
               {t("knowledge.documentTypes")}:
             </Typography>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
               {knowledge.documentTypes.map((type, index) => (
                 <Chip
                   key={index}
                   label={type}
                   size="small"
-                  sx={{ 
-                    bgcolor: 'primary.light',
-                    color: 'primary.contrastText',
-                    '&:hover': {
-                      bgcolor: 'primary.main',
-                    }
+                  sx={{
+                    bgcolor: "primary.light",
+                    color: "primary.contrastText",
+                    "&:hover": {
+                      bgcolor: "primary.main",
+                    },
                   }}
                 />
               ))}
@@ -170,18 +171,18 @@ const KnowledgeCard = React.memo(
             <Typography variant="body2" color="text.secondary" gutterBottom>
               {t("knowledge.tags")}:
             </Typography>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
               {knowledge.tags.map((tag, index) => (
                 <Chip
                   key={index}
                   label={tag.name}
                   size="small"
-                  sx={{ 
-                    bgcolor: 'secondary.light',
-                    color: 'secondary.contrastText',
-                    '&:hover': {
-                      bgcolor: 'secondary.main',
-                    }
+                  sx={{
+                    bgcolor: "secondary.light",
+                    color: "secondary.contrastText",
+                    "&:hover": {
+                      bgcolor: "secondary.main",
+                    },
                   }}
                 />
               ))}
@@ -216,146 +217,179 @@ const KnowledgeCard = React.memo(
 KnowledgeCard.displayName = "KnowledgeCard";
 
 // 修改 CustomTreeItem 组件
-const CustomTreeItem = React.memo(({ 
-  item, 
-  onEdit, 
-  onAddChild 
-}: { 
-  item: TreeItemData; 
-  onEdit: (id: number, name: string) => void;
-  onAddChild: (parentId: number, name: string) => void;
-}) => {
-  const [isEditing, setIsEditing] = useState(false);
-  const [isAddingChild, setIsAddingChild] = useState(false);
-  const [editName, setEditName] = useState(item?.label || '');
-  const [newChildName, setNewChildName] = useState('');
+const CustomTreeItem = React.memo(
+  ({
+    item,
+    onEdit,
+    onAddChild,
+  }: {
+    item: TreeItemData;
+    onEdit: (id: string, name: string) => void;
+    onAddChild: (parentId: string, name: string) => void;
+  }) => {
+    const [isEditing, setIsEditing] = useState(false);
+    const [isAddingChild, setIsAddingChild] = useState(false);
+    const [editName, setEditName] = useState(item?.label || "");
+    const [newChildName, setNewChildName] = useState("");
 
-  const handleEdit = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    setEditName(item?.label || '');
-    setIsEditing(true);
-  }, [item?.label]);
+    const handleEdit = useCallback(
+      (e: React.MouseEvent) => {
+        e.stopPropagation();
+        setEditName(item?.label || "");
+        setIsEditing(true);
+      },
+      [item?.label]
+    );
 
-  const handleAddChild = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    setNewChildName('');
-    setIsAddingChild(true);
-  }, []);
+    const handleAddChild = useCallback((e: React.MouseEvent) => {
+      e.stopPropagation();
+      setNewChildName("");
+      setIsAddingChild(true);
+    }, []);
 
-  const handleSave = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!item?.id) return;
-    if (isEditing) {
-      onEdit(Number(item.id), editName);
-    } else if (isAddingChild) {
-      onAddChild(Number(item.id), newChildName);
-    }
-    setIsEditing(false);
-    setIsAddingChild(false);
-    setEditName(item?.label || '');
-    setNewChildName('');
-  }, [item?.id, item?.label, isEditing, isAddingChild, editName, newChildName, onEdit, onAddChild]);
-
-  const handleCancel = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsEditing(false);
-    setIsAddingChild(false);
-    setEditName(item?.label || '');
-    setNewChildName('');
-  }, [item?.label]);
-
-  const handleEditNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    e.stopPropagation();
-    setEditName(e.target.value);
-  }, []);
-
-  const handleNewChildNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    e.stopPropagation();
-    setNewChildName(e.target.value);
-  }, []);
-
-  const handleKeyPress = useCallback((e: React.KeyboardEvent) => {
-    e.stopPropagation();
-    if (e.key === 'Enter') {
-      handleSave(e as any);
-    }
-  }, [handleSave]);
-
-  if (!item) return null;
-
-  return (
-    <Box sx={{ 
-      display: 'flex', 
-      alignItems: 'center', 
-      gap: 1,
-      width: '100%',
-      minHeight: '32px',
-      '& .MuiIconButton-root': {
-        padding: '4px',
-        '&:hover': {
-          backgroundColor: 'rgba(0, 0, 0, 0.04)',
+    const handleSave = useCallback(
+      (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (!item?.id) return;
+        if (isEditing) {
+          onEdit(item.id, editName);
+        } else if (isAddingChild) {
+          onAddChild(item.id, newChildName);
         }
-      }
-    }}>
-      {isEditing ? (
-        <TextField
-          size="small"
-          value={editName}
-          onChange={handleEditNameChange}
-          autoFocus
-          onKeyPress={handleKeyPress}
-          onClick={(e) => e.stopPropagation()}
-          sx={{ flex: 1 }}
-        />
-      ) : (
-        <>
-          <Typography sx={{ flex: 1, fontSize: '14px' }}>{item.label}</Typography>
-          <Box sx={{ display: 'flex', gap: 0.5 }}>
-            <IconButton size="small" onClick={handleEdit}>
-              <EditIcon fontSize="small" />
-            </IconButton>
-            <IconButton size="small" onClick={handleAddChild}>
-              <AddIcon fontSize="small" />
-            </IconButton>
-          </Box>
-        </>
-      )}
-      {(isEditing || isAddingChild) && (
-        <Dialog open={true} onClose={handleCancel}>
-          <DialogTitle>
-            {isEditing ? '编辑分类' : '新增子分类'}
-          </DialogTitle>
-          <DialogContent>
-            <TextField
-              fullWidth
-              value={isEditing ? editName : newChildName}
-              onChange={isEditing ? handleEditNameChange : handleNewChildNameChange}
-              label="分类名称"
-              onClick={(e) => e.stopPropagation()}
-            />
-          </DialogContent>
-          <DialogActions>
-            <CommonButton buttonVariant="cancel" onClick={handleCancel}>
-              取消
-            </CommonButton>
-            <CommonButton buttonVariant="submit" onClick={handleSave}>
-              确定
-            </CommonButton>
-          </DialogActions>
-        </Dialog>
-      )}
-    </Box>
-  );
-});
+        setIsEditing(false);
+        setIsAddingChild(false);
+        setEditName(item?.label || "");
+        setNewChildName("");
+      },
+      [
+        item?.id,
+        item?.label,
+        isEditing,
+        isAddingChild,
+        editName,
+        newChildName,
+        onEdit,
+        onAddChild,
+      ]
+    );
 
-CustomTreeItem.displayName = 'CustomTreeItem';
+    const handleCancel = useCallback(
+      (e: React.MouseEvent) => {
+        e.stopPropagation();
+        setIsEditing(false);
+        setIsAddingChild(false);
+        setEditName(item?.label || "");
+        setNewChildName("");
+      },
+      [item?.label]
+    );
+
+    const handleEditNameChange = useCallback(
+      (e: React.ChangeEvent<HTMLInputElement>) => {
+        e.stopPropagation();
+        setEditName(e.target.value);
+      },
+      []
+    );
+
+    const handleNewChildNameChange = useCallback(
+      (e: React.ChangeEvent<HTMLInputElement>) => {
+        e.stopPropagation();
+        setNewChildName(e.target.value);
+      },
+      []
+    );
+
+    const handleKeyPress = useCallback(
+      (e: React.KeyboardEvent) => {
+        e.stopPropagation();
+        if (e.key === "Enter") {
+          handleSave(e as any);
+        }
+      },
+      [handleSave]
+    );
+
+    if (!item) return null;
+
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 1,
+          width: "100%",
+          minHeight: "32px",
+          "& .MuiIconButton-root": {
+            padding: "4px",
+            "&:hover": {
+              backgroundColor: "rgba(0, 0, 0, 0.04)",
+            },
+          },
+        }}
+      >
+        {isEditing ? (
+          <TextField
+            size="small"
+            value={editName}
+            onChange={handleEditNameChange}
+            autoFocus
+            onKeyPress={handleKeyPress}
+            onClick={(e) => e.stopPropagation()}
+            sx={{ flex: 1 }}
+          />
+        ) : (
+          <>
+            <Typography sx={{ flex: 1, fontSize: "14px" }}>
+              {item.label}
+            </Typography>
+            <Box sx={{ display: "flex", gap: 0.5 }}>
+              <IconButton size="small" onClick={handleEdit}>
+                <EditIcon fontSize="small" />
+              </IconButton>
+              <IconButton size="small" onClick={handleAddChild}>
+                <AddIcon fontSize="small" />
+              </IconButton>
+            </Box>
+          </>
+        )}
+        {(isEditing || isAddingChild) && (
+          <Dialog open={true} onClose={handleCancel}>
+            <DialogTitle>{isEditing ? "编辑分类" : "新增子分类"}</DialogTitle>
+            <DialogContent>
+              <TextField
+                fullWidth
+                value={isEditing ? editName : newChildName}
+                onChange={
+                  isEditing ? handleEditNameChange : handleNewChildNameChange
+                }
+                label="分类名称"
+                onClick={(e) => e.stopPropagation()}
+              />
+            </DialogContent>
+            <DialogActions>
+              <CommonButton buttonVariant="cancel" onClick={handleCancel}>
+                取消
+              </CommonButton>
+              <CommonButton buttonVariant="submit" onClick={handleSave}>
+                确定
+              </CommonButton>
+            </DialogActions>
+          </Dialog>
+        )}
+      </Box>
+    );
+  }
+);
+
+CustomTreeItem.displayName = "CustomTreeItem";
 
 // 修改数据转换函数
 const convertToTreeItem = (item: any): TreeItemData => {
   const result = {
-    id: String(item.id || ''),
-    label: item.name || '',
-    children: item.children?.length ? item.children.map(convertToTreeItem) : []
+    id: String(item.id || ""),
+    label: item.name || "",
+    children: item.children?.length ? item.children.map(convertToTreeItem) : [],
   };
   return result;
 };
@@ -372,8 +406,8 @@ const CategoryTree = React.memo(
     items: TreeItemData[];
     onSelect: (id: number | undefined) => void;
     selectedId: number | null;
-    onEdit: (id: number, name: string) => void;
-    onAddChild: (parentId: number, name: string) => void;
+    onEdit: (id: string, name: string) => void;
+    onAddChild: (parentId: string, name: string) => void;
   }) => {
     const renderTree = (node: TreeItemData) => (
       <TreeItem
@@ -381,11 +415,7 @@ const CategoryTree = React.memo(
         itemId={node.id}
         data-node-id={node.id}
         label={
-          <CustomTreeItem
-            item={node}
-            onEdit={onEdit}
-            onAddChild={onAddChild}
-          />
+          <CustomTreeItem item={node} onEdit={onEdit} onAddChild={onAddChild} />
         }
       >
         {Array.isArray(node.children)
@@ -400,28 +430,31 @@ const CategoryTree = React.memo(
           collapseIcon: ExpandMoreIcon,
           expandIcon: ChevronRightIcon,
         }}
-        selectedItems={selectedId ? selectedId.toString() : ''}
+        selectedItems={selectedId ? selectedId.toString() : ""}
         multiSelect={false}
-        onSelectedItemsChange={(event: React.SyntheticEvent, itemIds: string | null) => {
+        onSelectedItemsChange={(
+          event: React.SyntheticEvent,
+          itemIds: string | null
+        ) => {
           if (!itemIds) {
             onSelect(undefined);
           } else {
             onSelect(Number(itemIds));
           }
         }}
-        sx={{ 
-          height: '100%',
+        sx={{
+          height: "100%",
           flexGrow: 1,
-          maxWidth: '100%',
-          overflowY: 'auto',
-          minHeight: '400px',
-          maxHeight: '800px',
-          '& .MuiTreeItem-content': {
-            padding: '4px 8px',
+          maxWidth: "100%",
+          overflowY: "auto",
+          minHeight: "400px",
+          maxHeight: "800px",
+          "& .MuiTreeItem-content": {
+            padding: "4px 8px",
           },
-          '& .MuiTreeItem-group': {
-            marginLeft: '16px',
-          }
+          "& .MuiTreeItem-group": {
+            marginLeft: "16px",
+          },
         }}
       >
         {items.map((node) => renderTree(node))}
@@ -518,25 +551,28 @@ export default function KnowledgePage() {
     [refresh, t]
   );
 
-  const handleOpen = useCallback((knowledge?: KnowledgeBaseVO) => {
-    if (knowledge) {
-      setEditingKnowledge(knowledge);
-      setFormData({
-        name: knowledge.name,
-        description: knowledge.description,
-        categoryId: knowledge.categoryId ? String(knowledge.categoryId) : "",
-      });
-    } else {
-      setEditingKnowledge(null);
-      setFormData({
-        name: "",
-        description: "",
-        categoryId: selectedCategory ? String(selectedCategory) : "",
-      });
-    }
-    setOpen(true);
-    handleCategories();
-  }, [selectedCategory]);
+  const handleOpen = useCallback(
+    (knowledge?: KnowledgeBaseVO) => {
+      if (knowledge) {
+        setEditingKnowledge(knowledge);
+        setFormData({
+          name: knowledge.name,
+          description: knowledge.description,
+          categoryId: knowledge.categoryId ? String(knowledge.categoryId) : "",
+        });
+      } else {
+        setEditingKnowledge(null);
+        setFormData({
+          name: "",
+          description: "",
+          categoryId: selectedCategory ? String(selectedCategory) : "",
+        });
+      }
+      setOpen(true);
+      handleCategories();
+    },
+    [selectedCategory]
+  );
 
   const handleClose = useCallback(() => {
     setOpen(false);
@@ -553,10 +589,13 @@ export default function KnowledgePage() {
     const response = await categoryService.getList({ current: 1, size: 1000 });
     const categories = response.data.data.records;
     setCategories(categories);
-    
+
     // 如果正在编辑知识库，并且知识库有categoryId，则设置formData.categoryId
     if (editingKnowledge && editingKnowledge.categoryId) {
-      setFormData(prev => ({ ...prev, categoryId: String(editingKnowledge.categoryId) }));
+      setFormData((prev) => ({
+        ...prev,
+        categoryId: String(editingKnowledge.categoryId),
+      }));
     }
   }, [editingKnowledge]);
 
@@ -630,7 +669,7 @@ export default function KnowledgePage() {
         setParams({
           current: params.current,
           size: params.size,
-          categoryId: undefined
+          categoryId: undefined,
         });
       } else {
         // 否则选中新的分类
@@ -638,7 +677,7 @@ export default function KnowledgePage() {
         setParams({
           current: params.current,
           size: params.size,
-          categoryId: id
+          categoryId: id,
         });
       }
     },
@@ -646,67 +685,84 @@ export default function KnowledgePage() {
   );
 
   // 使用 useCallback 优化分页处理
-  const handlePageChange = useCallback((page: number, size: number) => {
-    setParams({
+  const handlePageChange = useCallback(
+    (page: number, size: number) => {
+      setParams({
         ...params,
         current: page,
         size: size,
-    });
-}, [params, setParams]);
+      });
+    },
+    [params, setParams]
+  );
 
   // 处理编辑分类
-  const handleEditCategory = useCallback(async (id: number, name: string) => {
-    try {
-      await categoryService.update(id, { 
-        name,
-        description: '',
-        parentId: null,
-        sort: 0,
-        status: 1
-      });
-      setSnackbar({
-        open: true,
-        message: t("category.updateSuccess"),
-        severity: "success",
-      });
-      fetchCategories(); // 刷新分类树
-    } catch (error) {
-      setSnackbar({
-        open: true,
-        message: t("category.updateError"),
-        severity: "error",
-      });
-    }
-  }, [fetchCategories, t]);
+  const handleEditCategory = useCallback(
+    async (id: string, name: string) => {
+      try {
+        await categoryService.update(id, {
+          name,
+          description: "",
+          parentId: null,
+          sort: 0,
+          status: 1,
+        });
+        setSnackbar({
+          open: true,
+          message: t("category.updateSuccess"),
+          severity: "success",
+        });
+        fetchCategories(); // 刷新分类树
+      } catch (error) {
+        setSnackbar({
+          open: true,
+          message: t("category.updateError"),
+          severity: "error",
+        });
+      }
+    },
+    [fetchCategories, t]
+  );
 
   // 处理新增子分类
-  const handleAddChildCategory = useCallback(async (parentId: number, name: string) => {
-    try {
-      await categoryService.create({ 
-        name,
-        description: '',
-        parentId,
-        sort: 0,
-        status: 1
-      });
-      setSnackbar({
-        open: true,
-        message: t("category.createSuccess"),
-        severity: "success",
-      });
-      fetchCategories(); // 刷新分类树
-    } catch (error) {
-      setSnackbar({
-        open: true,
-        message: t("category.createError"),
-        severity: "error",
-      });
-    }
-  }, [fetchCategories, t]);
+  const handleAddChildCategory = useCallback(
+    async (parentId: string, name: string) => {
+      try {
+        await categoryService.create({
+          name,
+          description: "",
+          parentId,
+          sort: 0,
+          status: 1,
+        });
+        setSnackbar({
+          open: true,
+          message: t("category.createSuccess"),
+          severity: "success",
+        });
+        fetchCategories(); // 刷新分类树
+      } catch (error) {
+        setSnackbar({
+          open: true,
+          message: t("category.createError"),
+          severity: "error",
+        });
+      }
+    },
+    [fetchCategories, t]
+  );
 
   return (
     <PerformanceLayout>
-      <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
+      <Box
+        sx={{
+          height: "100%",
+          display: "flex",
+          borderColor: "divider",
+          bgcolor: "background.paper",
+          flexDirection: "column",
+        }}
+      >
         <Box
           sx={{
             p: 3,
@@ -720,8 +776,11 @@ export default function KnowledgePage() {
           >
             <Box sx={{ display: "flex", gap: 2 }}>
               <Tooltip title={t("common.refresh")}>
-                <CommonButton buttonVariant="add" startIcon={<RefreshIcon />} onClick={refresh}>
-                  
+                <CommonButton
+                  buttonVariant="add"
+                  startIcon={<RefreshIcon />}
+                  onClick={refresh}
+                >
                   {t("common.refresh")}
                 </CommonButton>
               </Tooltip>
@@ -735,15 +794,17 @@ export default function KnowledgePage() {
         <Box
           sx={{ display: "flex", gap: 3, p: 3, flex: 1, overflow: "hidden" }}
         >
-          <Paper sx={{ 
-            width: 300, 
-            p: 2, 
-            overflow: "auto", 
-            minWidth: 300,
-            height: '100%',
-            display: 'flex',
-            flexDirection: 'column'
-          }}>
+          <Paper
+            sx={{
+              width: 300,
+              p: 2,
+              overflow: "auto",
+              minWidth: 300,
+              height: "100%",
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
             <CategoryTree
               items={categoryTree}
               onSelect={handleCategorySelect}
@@ -810,18 +871,16 @@ export default function KnowledgePage() {
                 ))}
             </Box>
             <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
-            <Pagination
-              total={total}
-              current={Number(params.current)}
-              pageSize={Number(params.size)}
-              onChange={handlePageChange}
-              pageSizeOptions={["12", "20", "50", "100"]}
-            />
+              <Pagination
+                total={total}
+                current={Number(params.current)}
+                pageSize={Number(params.size)}
+                onChange={handlePageChange}
+                pageSizeOptions={["12", "20", "50", "100"]}
+              />
+            </Box>
           </Box>
-          </Box>
-      
         </Box>
-    
 
         <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
           <DialogTitle>
@@ -844,11 +903,16 @@ export default function KnowledgePage() {
                 required
               />
               <CommonSelect
-                  fullWidth
-                  label={t("documents.category")}
-                  value={formData.categoryId || ''}
-                  onChange={(value) =>setFormData({ ...formData, categoryId: value as string })}
-                  options={categories.map((cat) => ({ id: cat.id, name: cat.name }))}
+                fullWidth
+                label={t("documents.category")}
+                value={formData.categoryId || ""}
+                onChange={(value) =>
+                  setFormData({ ...formData, categoryId: value as string })
+                }
+                options={categories.map((cat) => ({
+                  id: cat.id,
+                  name: cat.name,
+                }))}
               />
               <CommonInput
                 label={t("common.description")}

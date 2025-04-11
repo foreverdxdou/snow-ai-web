@@ -1,10 +1,10 @@
 export interface KbCategory {
-  id: number;
+  id: string;
   name: string;
   description: string;
-  parentId: number;
+  parentId: string;
   sort: number;
-  creatorId: number;
+  creatorId: string;
   creatorName: string;
   status: number;
   createTime: string;
@@ -16,7 +16,7 @@ export interface KbCategory {
 export interface KbCategoryCreateDTO {
   name: string;
   description: string;
-  parentId: number | null;
+  parentId: string | null;
   sort: number | null;
   status: number;
 }
@@ -24,7 +24,7 @@ export interface KbCategoryCreateDTO {
 export interface KbCategoryUpdateDTO {
   name: string;
   description: string;
-  parentId: number | null;
+  parentId: string | null;
   sort: number;
 }
 
@@ -37,10 +37,10 @@ export interface PageKbCategoryVO {
 }
 
 export interface Category {
-    id: number;
+    id: string;
     name: string;
     description?: string;
-    parentId: number;
+    parentId: string;
     status: number;
     createTime?: string;
     updateTime?: string;

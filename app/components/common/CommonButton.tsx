@@ -232,7 +232,15 @@ export const RefreshButton = styled(BaseButton)(({ theme }) => ({
     }
 }));
 
-
+// 批量删除按钮 - 错误色渐变
+export const BatchDeleteButton = styled(BaseButton)(({ theme }) => ({
+    background: `linear-gradient(45deg, ${theme.palette.error.main} 30%, ${theme.palette.error.light} 90%)`,
+    color: theme.palette.error.contrastText,
+    border: 'none',
+    '&:hover': {
+        background: `linear-gradient(45deg, ${theme.palette.error.dark} 30%, ${theme.palette.error.main} 90%)`,
+    }
+}));
 
 // 默认按钮 - 主题色
 export const DefaultButton = styled(IconButton)(({ theme }) => ({
@@ -246,7 +254,7 @@ export const DefaultButton = styled(IconButton)(({ theme }) => ({
 
 // 按钮组件
 interface CommonButtonProps extends Omit<ButtonProps, 'variant'> {
-    buttonVariant?: 'default' | 'detail' | 'add' | 'edit' | 'delete' | 'upload' | 'search' | 'reset' | 'login' | 'expand' | 'cancel' | 'submit' | 'close' | 'back' | 'rollback' | 'confirm' | 'parse' | 'refresh';
+    buttonVariant?: 'default' | 'detail' | 'add' | 'edit' | 'delete' | 'upload' | 'search' | 'reset' | 'login' | 'expand' | 'cancel' | 'submit' | 'close' | 'back' | 'rollback' | 'confirm' | 'parse' | 'refresh' | 'batchDelete';
     icon?: boolean;
     expanded?: boolean;
 }
@@ -293,6 +301,8 @@ export const CommonButton = React.forwardRef<HTMLButtonElement, CommonButtonProp
                 return <PsychologyIcon sx={{ fontSize: 20 }} />;
             case 'refresh':
                 return <RefreshIcon sx={{ fontSize: 20 }} />;
+            case 'batchDelete':
+                return <DeleteIcon sx={{ fontSize: 20 }} />;
             default:
                 return null;
         }
@@ -336,6 +346,8 @@ export const CommonButton = React.forwardRef<HTMLButtonElement, CommonButtonProp
                 return ParseButton;
             case 'refresh':
                 return RefreshButton;
+            case 'batchDelete':
+                return BatchDeleteButton;
             default:
                 return DefaultButton;
         }

@@ -11,13 +11,14 @@ import { Visibility, VisibilityOff } from '@mui/icons-material';
 
 // 基础输入框样式
 const BaseInput = styled(TextField)(({ theme }) => ({
+    minWidth: '120px',
     '& .MuiOutlinedInput-root': {
         borderRadius: '8px',
         backgroundColor: alpha(theme.palette.background.paper, 0.6),
         backdropFilter: 'blur(8px)',
         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         '&:hover': {
-            backgroundColor: alpha(theme.palette.background.paper, 0.8),
+            backgroundColor: alpha(theme.palette.background.paper, 0.9),
             transform: 'translateY(-1px)',
             boxShadow: `0 4px 12px ${alpha(theme.palette.common.black, 0.05)}`,
         },
@@ -42,7 +43,7 @@ const BaseInput = styled(TextField)(({ theme }) => ({
         }
     },
     '& .MuiOutlinedInput-notchedOutline': {
-        borderColor: alpha(theme.palette.divider, 0.3),
+        borderColor: alpha(theme.palette.divider, 0.5),
         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
     },
     '&:hover .MuiOutlinedInput-notchedOutline': {

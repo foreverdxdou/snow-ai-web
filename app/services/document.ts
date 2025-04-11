@@ -38,6 +38,11 @@ export const documentService = {
     return request.delete<Result<void>>(`${BASE_URL}/${id}`);
   },
 
+  // 批量删除文档
+  batchDelete: (ids: number[]) => {
+    return request.delete<Result<void>>(`${BASE_URL}/batch`, { data: { ids } });
+  },
+
   // 解析文档
   parse: (id: number) => {
     return request.post<Result<void>>(`${BASE_URL}/${id}/parse`);

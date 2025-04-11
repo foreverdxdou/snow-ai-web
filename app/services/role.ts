@@ -48,6 +48,14 @@ class RoleService {
         });
     }
 
+    // 批量删除角色
+    batchDelete(ids: number[]) {
+        return request<Result<void>>({
+            url: `${BASE_URL}/batch`,
+            method: 'delete',
+            data: { ids },
+        });
+    }
     // 获取角色权限
     getPermissions(id: number) {
         return request<Result<string[]>>({

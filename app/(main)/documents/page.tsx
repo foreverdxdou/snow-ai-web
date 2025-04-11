@@ -285,6 +285,8 @@ export default function DocumentsPage() {
                     sx={{ 
                         p: 3, 
                         flex: 1, 
+                        borderColor: "divider",
+                        bgcolor: "background.paper",
                         overflow: 'auto',
                         '& .MuiPaper-root': {
                             borderRadius: 2,

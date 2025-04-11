@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import {
   Box,
   Card,
@@ -17,21 +17,19 @@ import {
   CircularProgress,
   FormControlLabel,
   Switch,
-} from '@mui/material';
-import {
-  Refresh as RefreshIcon,
-} from '@mui/icons-material';
-import { LlmConfig, ModelType } from '@/app/types/llm';
-import { llmService } from '@/app/services/llm';
-import { useTranslation } from 'react-i18next';
-import { CommonButton } from '@/app/components/common/CommonButton';
-import { CommonInput } from '@/app/components/common/CommonInput';
-import { PerformanceLayout } from '@/app/components/common/PerformanceLayout';
-import { CommonSelect } from '@/app/components/common/CommonSelect';
+} from "@mui/material";
+
+import { LlmConfig, ModelType } from "@/app/types/llm";
+import { llmService } from "@/app/services/llm";
+import { useTranslation } from "react-i18next";
+import { CommonButton } from "@/app/components/common/CommonButton";
+import { CommonInput } from "@/app/components/common/CommonInput";
+import { PerformanceLayout } from "@/app/components/common/PerformanceLayout";
+import { CommonSelect } from "@/app/components/common/CommonSelect";
 
 const MODEL_TYPE_OPTIONS = [
-  { id: 'GENERAL' },
-  { id: 'REASONING' },
+  { id: "GENERAL" },
+  { id: "REASONING" },
   // { id: 'EMBEDDING' },
 ] as const;
 
@@ -42,12 +40,12 @@ export default function LlmPage() {
   const [open, setOpen] = useState(false);
   const [editingConfig, setEditingConfig] = useState<LlmConfig | null>(null);
   const [formData, setFormData] = useState<Partial<LlmConfig>>({
-    modelName: '',
-    modelCode: '',
-    modelProvider: '',
-    modelType: 'GENERAL',
-    apiUrl: '',
-    apiKey: '',
+    modelName: "",
+    modelCode: "",
+    modelProvider: "",
+    modelType: "GENERAL",
+    apiUrl: "",
+    apiKey: "",
     enabled: true,
   });
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -55,11 +53,11 @@ export default function LlmPage() {
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
     message: string;
-    severity: 'success' | 'error';
+    severity: "success" | "error";
   }>({
     open: false,
-    message: '',
-    severity: 'success',
+    message: "",
+    severity: "success",
   });
 
   const fetchConfigs = async () => {
@@ -69,14 +67,14 @@ export default function LlmPage() {
       if (response.data.code === 200) {
         setConfigs(response.data.data);
       } else {
-        throw new Error(response.data.message || t('llm.fetchError'));
+        throw new Error(response.data.message || t("llm.fetchError"));
       }
     } catch (error) {
-      console.error('获取大模型配置失败:', error);
+      console.error("获取大模型配置失败:", error);
       setSnackbar({
         open: true,
-        message: error instanceof Error ? error.message : t('llm.fetchError'),
-        severity: 'error',
+        message: error instanceof Error ? error.message : t("llm.fetchError"),
+        severity: "error",
       });
     } finally {
       setLoading(false);
@@ -97,12 +95,12 @@ export default function LlmPage() {
     } else {
       setEditingConfig(null);
       setFormData({
-        modelName: '',
-        modelCode: '',
-        modelProvider: '',
-        modelType: 'GENERAL', 
-        apiUrl: '',
-        apiKey: '',
+        modelName: "",
+        modelCode: "",
+        modelProvider: "",
+        modelType: "GENERAL",
+        apiUrl: "",
+        apiKey: "",
         enabled: true,
       });
     }
@@ -113,63 +111,76 @@ export default function LlmPage() {
     setOpen(false);
     setEditingConfig(null);
     setFormData({
-      modelName: '',
-      modelCode: '',
-      modelProvider: '',
-      modelType: 'GENERAL',
-      apiUrl: '',
-      apiKey: '',
+      modelName: "",
+      modelCode: "",
+      modelProvider: "",
+      modelType: "GENERAL",
+      apiUrl: "",
+      apiKey: "",
       enabled: true,
     });
   };
 
   const handleSubmit = async () => {
     try {
-      if (!formData.modelName || !formData.apiUrl || !formData.apiKey || !formData.modelCode || !formData.modelProvider) {
+      if (
+        !formData.modelName ||
+        !formData.apiUrl ||
+        !formData.apiKey ||
+        !formData.modelCode ||
+        !formData.modelProvider
+      ) {
         setSnackbar({
           open: true,
-          message: t('llm.nameRequired'),
-          severity: 'error',
+          message: t("llm.nameRequired"),
+          severity: "error",
         });
         return;
       }
 
       if (editingConfig) {
         const response = await llmService.update({
-          ...formData as LlmConfig,
+          ...(formData as LlmConfig),
           id: editingConfig.id,
         });
         if (response.data.code === 200) {
           setSnackbar({
             open: true,
-            message: t('llm.updateSuccess'),
-            severity: 'success',
+            message: t("llm.updateSuccess"),
+            severity: "success",
           });
           handleClose();
           fetchConfigs();
         } else {
-          throw new Error(response.data.message || t('llm.updateError'));
+          throw new Error(response.data.message || t("llm.updateError"));
         }
       } else {
-        const response = await llmService.save(formData as Omit<LlmConfig, 'id' | 'createTime' | 'updateTime'>);
+        const response = await llmService.save(
+          formData as Omit<LlmConfig, "id" | "createTime" | "updateTime">
+        );
         if (response.data.code === 200) {
           setSnackbar({
             open: true,
-            message: t('llm.createSuccess'),
-            severity: 'success',
+            message: t("llm.createSuccess"),
+            severity: "success",
           });
           handleClose();
           fetchConfigs();
         } else {
-          throw new Error(response.data.message || t('llm.createError'));
+          throw new Error(response.data.message || t("llm.createError"));
         }
       }
     } catch (error) {
-      console.error('保存大模型配置失败:', error);
+      console.error("保存大模型配置失败:", error);
       setSnackbar({
         open: true,
-        message: error instanceof Error ? error.message : (editingConfig ? t('llm.updateError') : t('llm.createError')),
-        severity: 'error',
+        message:
+          error instanceof Error
+            ? error.message
+            : editingConfig
+            ? t("llm.updateError")
+            : t("llm.createError"),
+        severity: "error",
       });
     }
   };
@@ -186,19 +197,19 @@ export default function LlmPage() {
       if (response.data.code === 200) {
         setSnackbar({
           open: true,
-          message: t('llm.deleteSuccess'),
-          severity: 'success',
+          message: t("llm.deleteSuccess"),
+          severity: "success",
         });
         fetchConfigs();
       } else {
-        throw new Error(response.data.message || t('llm.deleteError'));
+        throw new Error(response.data.message || t("llm.deleteError"));
       }
     } catch (error) {
-      console.error('删除大模型配置失败:', error);
+      console.error("删除大模型配置失败:", error);
       setSnackbar({
         open: true,
-        message: error instanceof Error ? error.message : t('llm.deleteError'),
-        severity: 'error',
+        message: error instanceof Error ? error.message : t("llm.deleteError"),
+        severity: "error",
       });
     } finally {
       setDeleteDialogOpen(false);
@@ -215,54 +226,51 @@ export default function LlmPage() {
       if (response.data.code === 200) {
         setSnackbar({
           open: true,
-          message: t('llm.statusUpdateSuccess'),
-          severity: 'success',
+          message: t("llm.statusUpdateSuccess"),
+          severity: "success",
         });
         await fetchConfigs();
       } else {
-        throw new Error(response.data.message || t('llm.statusUpdateError'));
+        throw new Error(response.data.message || t("llm.statusUpdateError"));
       }
     } catch (error) {
-      console.error('更新状态失败:', error);
+      console.error("更新状态失败:", error);
       setSnackbar({
         open: true,
-        message: error instanceof Error ? error.message : t('llm.statusUpdateError'),
-        severity: 'error',
+        message:
+          error instanceof Error ? error.message : t("llm.statusUpdateError"),
+        severity: "error",
       });
     }
   };
 
   return (
     <PerformanceLayout>
-      <Box sx={{ p: 3 }}>
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center',
-          mb: 3 
-        }}>
-
-          <Box sx={{ marginLeft: 'auto' }}>
-            {/* <Tooltip title={t('common.refresh')}>
-              <CommonButton
-                buttonVariant="refresh"
-                onClick={fetchConfigs}
-                sx={{ mr: 1 }}
-              >
-                {t('common.refresh')}
-              </CommonButton>
-            </Tooltip> */}
-            <CommonButton
-              buttonVariant="add"
-              onClick={() => handleOpen()}
-            >
-              {t('llm.createConfig')}
+      <Box
+        sx={{
+          p: 3,
+          borderColor: "divider",
+          bgcolor: "background.paper",
+          height: "100%",
+        }}
+      >
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            mb: 3,
+          }}
+        >
+          <Box sx={{ marginLeft: "auto" }}>
+            <CommonButton buttonVariant="add" onClick={() => handleOpen()}>
+              {t("llm.createConfig")}
             </CommonButton>
           </Box>
         </Box>
 
         {loading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+          <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
             <CircularProgress />
           </Box>
         ) : (
@@ -271,19 +279,30 @@ export default function LlmPage() {
               <Grid item xs={12} sm={6} md={4} key={config.id}>
                 <Card
                   sx={{
-                    height: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    transition: 'all 0.3s ease-in-out',
-                    '&:hover': {
-                      transform: 'translateY(-4px)',
+                    height: "100%",
+                    display: "flex",
+                    flexDirection: "column",
+                    transition: "all 0.3s ease-in-out",
+                    "&:hover": {
+                      transform: "translateY(-4px)",
                       boxShadow: 3,
                     },
                   }}
                 >
                   <CardContent sx={{ flexGrow: 1 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                      <Typography variant="h6" component="h3" sx={{ fontWeight: 600 }}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "flex-start",
+                        mb: 2,
+                      }}
+                    >
+                      <Typography
+                        variant="h6"
+                        component="h3"
+                        sx={{ fontWeight: 600 }}
+                      >
                         {config.modelName}
                       </Typography>
                       <FormControlLabel
@@ -294,38 +313,54 @@ export default function LlmPage() {
                             color="primary"
                           />
                         }
-                        label={config.enabled ? t('llm.enabled') : t('llm.disabled')}
+                        label={
+                          config.enabled ? t("llm.enabled") : t("llm.disabled")
+                        }
                       />
                     </Box>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                      {t('llm.modelType')}: {t(`llm.types.${config.modelType}`)}
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ mb: 1 }}
+                    >
+                      {t("llm.modelType")}: {t(`llm.types.${config.modelType}`)}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                      {t('llm.apiUrl')}: {config.apiUrl}
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ mb: 1 }}
+                    >
+                      {t("llm.apiUrl")}: {config.apiUrl}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
-                      {t('common.updateTime')}: {new Date(config.updateTime).toLocaleString()}
+                      {t("common.updateTime")}:{" "}
+                      {new Date(config.updateTime).toLocaleString()}
                     </Typography>
                   </CardContent>
-                  <Box sx={{ p: 2, pt: 0, display: 'flex', justifyContent: 'flex-end' }}>
-                    <Tooltip title={t('common.edit')}>
+                  <Box
+                    sx={{
+                      p: 2,
+                      pt: 0,
+                      display: "flex",
+                      justifyContent: "flex-end",
+                    }}
+                  >
+                    <Tooltip title={t("common.edit")}>
                       <CommonButton
                         buttonVariant="edit"
                         icon
                         onClick={() => handleOpen(config)}
                         size="small"
-                      >
-                      </CommonButton>
+                      ></CommonButton>
                     </Tooltip>
-                    <Tooltip title={t('common.delete')}>
+                    <Tooltip title={t("common.delete")}>
                       <CommonButton
                         buttonVariant="delete"
                         icon
                         onClick={() => handleDelete(config.id)}
                         size="small"
                         color="error"
-                      >
-                      </CommonButton>
+                      ></CommonButton>
                     </Tooltip>
                   </Box>
                 </Card>
@@ -336,140 +371,160 @@ export default function LlmPage() {
 
         <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
           <DialogTitle>
-            {editingConfig ? t('llm.editConfig') : t('llm.createConfig')}
+            {editingConfig ? t("llm.editConfig") : t("llm.createConfig")}
           </DialogTitle>
           <DialogContent>
-            <Box sx={{ pt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <Box
+              sx={{ pt: 2, display: "flex", flexDirection: "column", gap: 2 }}
+            >
               <CommonInput
-                label={t('llm.modelName')}
+                label={t("llm.modelName")}
                 value={formData.modelName}
-                onChange={(value) => setFormData({ ...formData, modelName: value as string })}
+                onChange={(value) =>
+                  setFormData({ ...formData, modelName: value as string })
+                }
                 error={!formData.modelName}
-                helperText={!formData.modelName ? t('llm.nameRequired') : ''}
+                helperText={!formData.modelName ? t("llm.nameRequired") : ""}
                 required
               />
               <CommonInput
-                label={t('llm.modelCode')}
+                label={t("llm.modelCode")}
                 value={formData.modelCode}
-                onChange={(value) => setFormData({ ...formData, modelCode: value as string })}
+                onChange={(value) =>
+                  setFormData({ ...formData, modelCode: value as string })
+                }
                 error={!formData.modelCode}
-                helperText={!formData.modelCode ? t('llm.modelCodeRequired') : ''}
+                helperText={
+                  !formData.modelCode ? t("llm.modelCodeRequired") : ""
+                }
                 required
               />
               <CommonSelect
-                label={t('llm.modelType')}
+                label={t("llm.modelType")}
                 value={formData.modelType}
-                onChange={(value) => setFormData({ ...formData, modelType: value as ModelType })}
+                onChange={(value) =>
+                  setFormData({ ...formData, modelType: value as ModelType })
+                }
                 error={!formData.modelType}
-                helperText={!formData.modelType ? t('llm.modelTypeRequired') : ''}
+                helperText={
+                  !formData.modelType ? t("llm.modelTypeRequired") : ""
+                }
                 required
-                options={MODEL_TYPE_OPTIONS.map(opt => ({
+                options={MODEL_TYPE_OPTIONS.map((opt) => ({
                   id: opt.id,
-                  name: t(`llm.types.${opt.id}`)
+                  name: t(`llm.types.${opt.id}`),
                 }))}
               />
               <CommonSelect
-                label={t('llm.modelProvider')}
+                label={t("llm.modelProvider")}
                 value={formData.modelProvider}
-                onChange={(value) => setFormData({ ...formData, modelProvider: value as string })}
+                onChange={(value) =>
+                  setFormData({ ...formData, modelProvider: value as string })
+                }
                 error={!formData.modelProvider}
-                helperText={!formData.modelProvider ? t('llm.modelProviderRequired') : ''}
+                helperText={
+                  !formData.modelProvider ? t("llm.modelProviderRequired") : ""
+                }
                 required
                 options={[
-                  { id: 'openai', name: t('llm.providers.openai') },
-                  { id: 'anthropic', name: t('llm.providers.anthropic') },
-                  { id: 'google', name: t('llm.providers.google') },
-                  { id: 'meta', name: t('llm.providers.meta') },
-                  { id: 'microsoft', name: t('llm.providers.microsoft') },
-                  { id: 'amazon', name: t('llm.providers.amazon') },
-                  { id: 'baidu', name: t('llm.providers.baidu') },
-                  { id: 'alibaba', name: t('llm.providers.alibaba') },
-                  { id: 'tencent', name: t('llm.providers.tencent') },
-                  { id: 'zhipu', name: t('llm.providers.zhipu') },
-                  { id: 'minimax', name: t('llm.providers.minimax') },
-                  { id: 'moonshot', name: t('llm.providers.moonshot') },
-                  { id: 'deepseek', name: t('llm.providers.deepseek') },
-                  { id: 'ollama', name: t('llm.providers.ollama') },
-                  { id: 'other', name: t('llm.providers.other') },
+                  { id: "openai", name: t("llm.providers.openai") },
+                  { id: "anthropic", name: t("llm.providers.anthropic") },
+                  { id: "google", name: t("llm.providers.google") },
+                  { id: "meta", name: t("llm.providers.meta") },
+                  { id: "microsoft", name: t("llm.providers.microsoft") },
+                  { id: "amazon", name: t("llm.providers.amazon") },
+                  { id: "baidu", name: t("llm.providers.baidu") },
+                  { id: "alibaba", name: t("llm.providers.alibaba") },
+                  { id: "tencent", name: t("llm.providers.tencent") },
+                  { id: "zhipu", name: t("llm.providers.zhipu") },
+                  { id: "minimax", name: t("llm.providers.minimax") },
+                  { id: "moonshot", name: t("llm.providers.moonshot") },
+                  { id: "deepseek", name: t("llm.providers.deepseek") },
+                  { id: "ollama", name: t("llm.providers.ollama") },
+                  { id: "other", name: t("llm.providers.other") },
                 ]}
               />
               <CommonInput
-                label={t('llm.apiUrl')}
+                label={t("llm.apiUrl")}
                 value={formData.apiUrl}
-                onChange={(value) => setFormData({ ...formData, apiUrl: value as string })}
+                onChange={(value) =>
+                  setFormData({ ...formData, apiUrl: value as string })
+                }
                 error={!formData.apiUrl}
-                helperText={!formData.apiUrl ? t('llm.apiUrlRequired') : ''}
+                helperText={!formData.apiUrl ? t("llm.apiUrlRequired") : ""}
                 required
                 inputProps={{
-                  autoComplete: 'off',
-                  autoFill: 'off'
+                  autoComplete: "off",
+                  autoFill: "off",
                 }}
               />
               <CommonInput
-                label={t('llm.apiKey')}
+                label={t("llm.apiKey")}
                 value={formData.apiKey}
-                onChange={(value) => setFormData({ ...formData, apiKey: value as string })}
+                onChange={(value) =>
+                  setFormData({ ...formData, apiKey: value as string })
+                }
                 error={!formData.apiKey}
-                helperText={!formData.apiKey ? t('llm.apiKeyRequired') : ''}
+                helperText={!formData.apiKey ? t("llm.apiKeyRequired") : ""}
                 required
                 isPassword
                 inputProps={{
-                  autoComplete: 'off',
-                  autoFill: 'off'
+                  autoComplete: "off",
+                  autoFill: "off",
                 }}
               />
               <FormControlLabel
                 control={
                   <Switch
                     checked={formData.enabled}
-                    onChange={(e) => setFormData({ ...formData, enabled: e.target.checked })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, enabled: e.target.checked })
+                    }
                   />
                 }
-                label={formData.enabled ? t('llm.enabled') : t('llm.disabled')}
+                label={formData.enabled ? t("llm.enabled") : t("llm.disabled")}
               />
             </Box>
           </DialogContent>
           <DialogActions>
-            <CommonButton
-              buttonVariant="cancel"
-              onClick={handleClose}
-            >
-              {t('common.cancel')}
+            <CommonButton buttonVariant="cancel" onClick={handleClose}>
+              {t("common.cancel")}
             </CommonButton>
             <CommonButton
               buttonVariant="submit"
               onClick={handleSubmit}
-              disabled={!formData.modelName || !formData.modelCode || !formData.modelProvider || !formData.apiUrl || !formData.apiKey}
+              disabled={
+                !formData.modelName ||
+                !formData.modelCode ||
+                !formData.modelProvider ||
+                !formData.apiUrl ||
+                !formData.apiKey
+              }
             >
-              {t('common.submit')}
+              {t("common.submit")}
             </CommonButton>
           </DialogActions>
         </Dialog>
 
-        <Dialog 
-          open={deleteDialogOpen} 
+        <Dialog
+          open={deleteDialogOpen}
           onClose={() => setDeleteDialogOpen(false)}
           maxWidth="xs"
           fullWidth
         >
-          <DialogTitle>{t('llm.deleteConfirm')}</DialogTitle>
+          <DialogTitle>{t("llm.deleteConfirm")}</DialogTitle>
           <DialogContent>
-            <Typography>
-              {t('llm.deleteConfirmMessage')}
-            </Typography>
+            <Typography>{t("llm.deleteConfirmMessage")}</Typography>
           </DialogContent>
           <DialogActions>
             <CommonButton
               buttonVariant="cancel"
               onClick={() => setDeleteDialogOpen(false)}
             >
-              {t('common.cancel')}
+              {t("common.cancel")}
             </CommonButton>
-            <CommonButton
-              buttonVariant="confirm"
-              onClick={handleDeleteConfirm}
-            >
-              {t('common.confirm')}
+            <CommonButton buttonVariant="confirm" onClick={handleDeleteConfirm}>
+              {t("common.confirm")}
             </CommonButton>
           </DialogActions>
         </Dialog>
@@ -482,7 +537,7 @@ export default function LlmPage() {
           <Alert
             onClose={() => setSnackbar({ ...snackbar, open: false })}
             severity={snackbar.severity}
-            sx={{ width: '100%' }}
+            sx={{ width: "100%" }}
           >
             {snackbar.message}
           </Alert>
@@ -490,4 +545,4 @@ export default function LlmPage() {
       </Box>
     </PerformanceLayout>
   );
-} 
+}

@@ -66,7 +66,7 @@ export default function UserPage() {
       current: 1,
       size: 10,
       username: undefined,
-      nickname:undefined,
+      nickname: undefined,
       email: undefined,
       phone: undefined,
       status: undefined,
@@ -113,7 +113,7 @@ export default function UserPage() {
   React.useEffect(() => {
     const cleanupFetch = fetchRoles();
     return () => {
-      cleanupFetch.then(cleanup => cleanup?.());
+      cleanupFetch.then((cleanup) => cleanup?.());
       setRoles([]);
       setFormData({
         username: "",
@@ -238,13 +238,16 @@ export default function UserPage() {
   }, [deletingId, refresh, t]);
 
   // 使用 useDebouncedCallback 优化分页处理
-  const handlePageChange = useCallback((page: number, size: number) => {
-    setParams({
-      ...params,
-      current: page,
-      size: size,
-    });
-  }, [params, setParams]);
+  const handlePageChange = useCallback(
+    (page: number, size: number) => {
+      setParams({
+        ...params,
+        current: page,
+        size: size,
+      });
+    },
+    [params, setParams]
+  );
 
   // 密码强度校验
   const checkPasswordStrength = useCallback((password: string) => {
@@ -267,10 +270,13 @@ export default function UserPage() {
   }, []);
 
   // 处理密码变化
-  const handlePasswordChange = useCallback((value: string | number) => {
-    setFormData(prev => ({ ...prev, password: String(value) }));
-    checkPasswordStrength(String(value));
-  }, [checkPasswordStrength]);
+  const handlePasswordChange = useCallback(
+    (value: string | number) => {
+      setFormData((prev) => ({ ...prev, password: String(value) }));
+      checkPasswordStrength(String(value));
+    },
+    [checkPasswordStrength]
+  );
 
   // 使用 useMemo 优化表格配置
   const columns = useMemo(
@@ -352,7 +358,15 @@ export default function UserPage() {
 
   return (
     <PerformanceLayout>
-      <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
+      <Box
+        sx={{
+          height: "100%",
+          display: "flex",
+          borderColor: "divider",
+          bgcolor: "background.paper",
+          flexDirection: "column",
+        }}
+      >
         <Box
           sx={{
             p: 3,
@@ -822,4 +836,4 @@ export default function UserPage() {
       </Box>
     </PerformanceLayout>
   );
-} 
+}

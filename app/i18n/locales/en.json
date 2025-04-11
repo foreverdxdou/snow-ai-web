@@ -117,6 +117,11 @@
     },
     "selectAll": "Select All",
     "unselectAll": "Unselect All",
+    "batchDelete": "Batch Delete",
+    "batchDeleteConfirm": "Batch Delete Confirmation",
+    "batchDeleteConfirmMessage": "Are you sure you want to delete the selected items? This action cannot be undone.",
+    "batchDeleteSuccess": "Batch delete successful",
+    "batchDeleteError": "Batch delete failed",
     "user": {
       "title": "User Management",
       "add": "Add User",

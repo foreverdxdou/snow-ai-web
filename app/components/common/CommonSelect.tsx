@@ -8,7 +8,7 @@ import {
     Typography,
     styled,
     alpha,
-
+    SxProps,
     FormHelperText
 } from '@mui/material';
 import type { SelectProps } from '@mui/material';
@@ -21,6 +21,7 @@ const BaseSelect = styled(Select)(({ theme }) => ({
     backgroundColor: alpha(theme.palette.background.paper, 0.8),
     transition: 'all 0.3s ease',
     height: '40px',
+    minWidth: '120px',
     '&:hover': {
         backgroundColor: alpha(theme.palette.background.paper, 0.9),
     },
@@ -93,6 +94,7 @@ interface CommonSelectProps extends Omit<SelectProps, 'value' | 'onChange'> {
     showAllLabel?: string | number;
     multiple?: boolean;
     helperText?: string;
+    selectSx?: SxProps;
 }
 
 export const CommonSelect: React.FC<CommonSelectProps> = ({
@@ -106,6 +108,7 @@ export const CommonSelect: React.FC<CommonSelectProps> = ({
     showAllLabel = '',
     multiple = false,
     helperText,
+    selectSx,
     ...props
 }) => {
     const { t } = useTranslation();
@@ -118,7 +121,7 @@ export const CommonSelect: React.FC<CommonSelectProps> = ({
         <FormControl 
             size="small"
             error={!!helperText}
-            sx={{ ...props.sx }}
+            sx={{ display: 'inline-flex', ...props.sx }}
         >
             <InputLabel>{label}</InputLabel>
             <BaseSelect
@@ -136,7 +139,7 @@ export const CommonSelect: React.FC<CommonSelectProps> = ({
                     const selectedOption = options.find(option => option.id === selected);
                     return selectedOption?.name || '';
                 }}
-          
+                sx={{ ...selectSx }}
             >
                 {showAll && (
                     <StyledMenu value={allValue}>

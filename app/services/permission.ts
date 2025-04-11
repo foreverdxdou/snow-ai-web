@@ -30,6 +30,11 @@ export const permissionService = {
         return request.delete<Result<void>>(`${BASE_URL}/${id}`);
     },
 
+    // 批量删除权限
+    batchDelete: (ids: string[]) => {
+        return request.delete<Result<void>>(`${BASE_URL}/batch`, { data: { ids } });
+    },
+
     // 获取用户权限列表
     getUserPermissions: (userId: string) => {
         return request.get<Result<Permission[]>>(`${BASE_URL}/user/${userId}`);

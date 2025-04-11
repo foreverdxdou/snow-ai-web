@@ -376,7 +376,8 @@ export default function PermissionPage() {
 
   return (
     <PerformanceLayout>
-      <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
+      <Box sx={{ height: "100%", display: "flex",            borderColor: "divider",
+            bgcolor: "background.paper", flexDirection: "column" }}>
         <Box
           sx={{
             p: 3,

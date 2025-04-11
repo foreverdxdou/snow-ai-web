@@ -14,6 +14,7 @@ import {
   Stack,
   FormControlLabel,
   Switch,
+  Checkbox,
 } from "@mui/material";
 import type {
   EmbeddingConfig,
@@ -52,6 +53,10 @@ export default function EmbeddingConfigPage() {
     message: "",
     severity: "success" as "success" | "error",
   });
+
+  const [selectedIds, setSelectedIds] = React.useState<number[]>([]);
+  const [batchDeleteDialogOpen, setBatchDeleteDialogOpen] =
+    React.useState(false);
 
   // 使用 useMemo 优化 defaultParams
   const defaultParams = useMemo(
@@ -204,17 +209,84 @@ export default function EmbeddingConfigPage() {
   );
 
   // 使用 useDebouncedCallback 优化分页处理
-  const handlePageChange = useCallback((page: number, size: number) => {
-    setParams({
+  const handlePageChange = useCallback(
+    (page: number, size: number) => {
+      setParams({
         ...params,
         current: page,
         size: size,
-    });
-}, [params, setParams]);
+      });
+    },
+    [params, setParams]
+  );
+
+  // 添加批量删除处理函数
+  const handleBatchDelete = useCallback(async () => {
+    try {
+      await embeddingConfigService.batchDelete(selectedIds);
+      setSnackbar({
+        open: true,
+        message: t("common.batchDeleteSuccess"),
+        severity: "success",
+      });
+      setSelectedIds([]);
+      refresh();
+    } catch (error) {
+      console.error("批量删除失败:", error);
+      setSnackbar({
+        open: true,
+        message: t("common.batchDeleteError"),
+        severity: "error",
+      });
+    }
+  }, [selectedIds, refresh, t]);
+
+  // 处理全选
+  const handleSelectAll = useCallback(
+    (checked: boolean) => {
+      if (checked) {
+        setSelectedIds(configs.map((item) => item.id));
+      } else {
+        setSelectedIds([]);
+      }
+    },
+    [configs]
+  );
+
+  // 处理单个选择
+  const handleSelect = useCallback((id: number, checked: boolean) => {
+    if (checked) {
+      setSelectedIds((prev) => [...prev, id]);
+    } else {
+      setSelectedIds((prev) => prev.filter((item) => item !== id));
+    }
+  }, []);
 
   // 使用 useMemo 优化表格配置
   const columns = useMemo(
     () => [
+      {
+        key: "selection" as keyof EmbeddingConfig,
+        title: (
+          <Checkbox
+            checked={
+              configs.length > 0 && selectedIds.length === configs.length
+            }
+            indeterminate={
+              selectedIds.length > 0 && selectedIds.length < configs.length
+            }
+            onChange={(e) => handleSelectAll(e.target.checked)}
+          />
+        ),
+        width: 50,
+        render: (_: any, record: EmbeddingConfig) => (
+          <Checkbox
+            checked={selectedIds.includes(record.id)}
+            onChange={(e) => handleSelect(record.id, e.target.checked)}
+            onClick={(e) => e.stopPropagation()}
+          />
+        ),
+      },
       {
         key: "name" as keyof EmbeddingConfig,
         title: t("common.name"),
@@ -294,65 +366,92 @@ export default function EmbeddingConfigPage() {
           ),
       },
     ],
-    [t, handleOpen, handleDelete, handleStatusChange]
+    [
+      t,
+      handleOpen,
+      handleDelete,
+      handleStatusChange,
+      configs,
+      selectedIds,
+      handleSelectAll,
+      handleSelect,
+    ]
   );
 
   return (
     <PerformanceLayout>
-      <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
+      <Box
+        sx={{
+          height: "100%",
+          display: "flex",
+          borderColor: "divider",
+          bgcolor: "background.paper",
+          flexDirection: "column",
+        }}
+      >
         <Box
           sx={{
             p: 3,
-            borderBottom: "1px solid",
             borderColor: "divider",
             bgcolor: "background.paper",
           }}
         >
-          <Box sx={{ display: "flex", gap: 2 }}>
-            <CommonInput
-              label={t("common.name")}
-              value={params.name || ""}
-              onChange={(value) =>
-                setParams({ ...params, name: value as string })
-              }
-              sx={{ width: "10%" }}
-            />
-            <CommonSelect
-              label={t("common.status")}
-              value={params.status}
-              onChange={(value) =>
-                setParams({ ...params, status: value as number })
-              }
-              options={[
-                { id: 1, name: t("common.enable") },
-                { id: 0, name: t("common.disable") },
-              ]}
-              sx={{ width: "10%" }}
-            />
-            <CommonButton
-              buttonVariant="search"
-              onClick={() => setParams({ ...params, current: 1 })}
-            >
-              {t("common.search")}
-            </CommonButton>
-            <CommonButton
-              buttonVariant="reset"
-              onClick={() => setParams(defaultParams)}
-            >
-              {t("common.reset")}
-            </CommonButton>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              mb: 2,
+            }}
+          >
+            <Box sx={{ display: "flex", justifyContent: "flex-start", gap: 2 }}>
+              <CommonInput
+                label={t("common.name")}
+                value={params.name || ""}
+                onChange={(value) =>
+                  setParams({ ...params, name: value as string })
+                }
+                sx={{ width: "10%" }}
+              />
+              <CommonSelect
+                label={t("common.status")}
+                value={params.status}
+                onChange={(value) =>
+                  setParams({ ...params, status: value as number })
+                }
+                options={[
+                  { id: 1, name: t("common.enable") },
+                  { id: 0, name: t("common.disable") },
+                ]}
+              />
+              <CommonButton
+                buttonVariant="search"
+                onClick={() => setParams({ ...params, current: 1 })}
+              >
+                {t("common.search")}
+              </CommonButton>
+              <CommonButton
+                buttonVariant="reset"
+                onClick={() => setParams(defaultParams)}
+              >
+                {t("common.reset")}
+              </CommonButton>
+            </Box>
 
-            <CommonButton
-              buttonVariant="add"
-              onClick={() => handleOpen()}
-              sx={{ marginLeft: "auto" }}
-            >
-              {t("embeddingConfig.add")}
-            </CommonButton>
+            <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 2 }}>
+              {selectedIds.length > 0 && (
+                <CommonButton
+                  buttonVariant="batchDelete"
+                  onClick={() => setBatchDeleteDialogOpen(true)}
+                >
+                  {t("common.batchDelete")} ({selectedIds.length})
+                </CommonButton>
+              )}
+              <CommonButton buttonVariant="add" onClick={() => handleOpen()}>
+                {t("embeddingConfig.add")}
+              </CommonButton>
+            </Box>
           </Box>
-        </Box>
 
-        <Box sx={{ p: 3, flex: 1, overflow: "auto" }}>
           <PerformanceTable
             loading={loading}
             data={configs}
@@ -497,9 +596,7 @@ export default function EmbeddingConfigPage() {
         >
           <DialogTitle>{t("embeddingConfig.deleteConfirm")}</DialogTitle>
           <DialogContent>
-            <Typography>
-              {t("embeddingConfig.deleteConfirmMessage")}
-            </Typography>
+            <Typography>{t("embeddingConfig.deleteConfirmMessage")}</Typography>
           </DialogContent>
           <DialogActions>
             <CommonButton
@@ -508,9 +605,35 @@ export default function EmbeddingConfigPage() {
             >
               {t("common.cancel")}
             </CommonButton>
+            <CommonButton buttonVariant="confirm" onClick={handleDeleteConfirm}>
+              {t("common.confirm")}
+            </CommonButton>
+          </DialogActions>
+        </Dialog>
+
+        <Dialog
+          open={batchDeleteDialogOpen}
+          onClose={() => setBatchDeleteDialogOpen(false)}
+          maxWidth="xs"
+          fullWidth
+        >
+          <DialogTitle>{t("common.batchDeleteConfirm")}</DialogTitle>
+          <DialogContent>
+            <Typography>{t("common.batchDeleteConfirmMessage")}</Typography>
+          </DialogContent>
+          <DialogActions>
+            <CommonButton
+              buttonVariant="cancel"
+              onClick={() => setBatchDeleteDialogOpen(false)}
+            >
+              {t("common.cancel")}
+            </CommonButton>
             <CommonButton
               buttonVariant="confirm"
-              onClick={handleDeleteConfirm}
+              onClick={() => {
+                handleBatchDelete();
+                setBatchDeleteDialogOpen(false);
+              }}
             >
               {t("common.confirm")}
             </CommonButton>
