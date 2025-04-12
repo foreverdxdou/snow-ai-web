@@ -28,6 +28,7 @@
     "chart.js": "^4.4.8",
     "cookies-next": "4.1.1",
     "date-fns": "^4.1.0",
+    "formik": "^2.4.6",
     "highlight.js": "^11.11.1",
     "i18next": "^23.10.0",
     "js-cookie": "^3.0.5",
@@ -46,7 +47,8 @@
     "remark-gfm": "^4.0.1",
     "socket.io-client": "^4.7.4",
     "uuid": "^11.1.0",
-    "yarn": "^1.22.22"
+    "yarn": "^1.22.22",
+    "yup": "^1.6.1"
   },
   "devDependencies": {
     "@svgr/webpack": "^8.1.0",

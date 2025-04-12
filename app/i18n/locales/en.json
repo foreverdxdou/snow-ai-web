@@ -183,8 +183,14 @@
     "welcomeBack": "Welcome Back",
     "usernameRequired": "Please enter your username!",
     "passwordRequired": "Please enter your password!",
-    "loginSuccess": "Login successful",
-    "loginFailed": "Login failed",
+    "loginSuccess": "Login Successful",
+    "loginSuccessTitle": "Login Successful!",
+    "loginSuccessDesc": "Welcome back",
+    "loginFailed": {
+      "title": "Login Failed",
+      "401": "Invalid username or password",
+      "default": "Login failed, please try again later"
+    },
     "title": "Welcome Back",
     "description": "Please login to your account",
     "error": "Login failed, please check your username and password",

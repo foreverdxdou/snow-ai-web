@@ -412,7 +412,7 @@ export default function MainLayout({
     const pathname = usePathname();
     const { theme } = useThemeMode();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-    const { user, logout } = useAuth();
+    const { user } = useAuth();
     const [open, setOpen] = useState(!isMobile);
     const [userInfo, setUserInfo] = useState<User | null>(null);
 

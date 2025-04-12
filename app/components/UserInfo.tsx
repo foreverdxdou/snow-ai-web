@@ -474,7 +474,7 @@ export const UserInfo: React.FC<UserInfoProps> = ({
                                 ),
                             }}
                         />
-                    </Box>
+        </Box>
                 </DialogContent>
                 <DialogActions>
                     <Button 

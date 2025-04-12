@@ -3,6 +3,7 @@ import { message } from 'antd';
 import type { Result } from '@/app/types/result';
 import { API_CONFIG } from '@/app/config/api';
 import Cookies from 'js-cookie';
+import { useRouter } from 'next/navigation';
 
 const request: AxiosInstance = axios.create({
   baseURL: API_CONFIG.prefix,
@@ -13,6 +14,10 @@ const request: AxiosInstance = axios.create({
 const noTokenUrls = [
   '/auth/login',
   '/auth/register',
+];
+
+const notJumpUrls = [
+  '/auth/login',
 ];
 
 // 请求拦截器
@@ -43,14 +48,16 @@ request.interceptors.response.use(
     if (res.code === 200) {
       return response;
     } 
+ 
     
     // 处理特定错误状态码
     switch (res.code) {
       case 401:
-        message.error('登录已过期，请重新登录');
-        // 清除token并跳转到登录页
         Cookies.remove('token');
-        window.location.href = '/login';
+        if (notJumpUrls.some(url => response.config.url?.includes(url))) {
+          return response;
+        }
+        message.error('登录已过期，请重新登录');
         break;
       case 403:
         message.error('没有权限访问该资源');
@@ -62,19 +69,20 @@ request.interceptors.response.use(
         message.error(res.message);
         break;
       default:
-        message.error(res.message || '请求失败');
+        message.error(res.message);
     }
     
-    return Promise.reject(new Error(res.message || '请求失败'));
+    return Promise.reject(new Error(res.message));
   },
   (error) => {
     // 处理网络错误
     if (error.response) {
       switch (error.response.status) {
         case 401:
-          message.error('登录已过期，请重新登录');
           Cookies.remove('token');
-          window.location.href = '/login';
+          if (notJumpUrls.some(url => error.response.config.url?.includes(url))) {
+            return error.response;
+          }
           break;
         case 403:
           message.error('没有权限访问该资源');

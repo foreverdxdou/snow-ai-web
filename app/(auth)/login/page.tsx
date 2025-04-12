@@ -13,11 +13,11 @@ import {
     alpha,
     useTheme,
     Button,
-    Snackbar
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/app/hooks/useAuth';
 import { CommonButton } from '@/app/components/common/CommonButton';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
 // 自定义输入框样式
 const StyledTextField = styled(TextField)(({ theme }) => ({
@@ -69,10 +69,12 @@ const LoginForm = React.memo(({
     onSubmit,
     loading,
     error,
+    isSuccess,
 }: {
     onSubmit: (username: string, password: string) => void;
     loading: boolean;
     error: string | null;
+    isSuccess: boolean;
 }) => {
     const { t } = useTranslation();
     const router = useRouter();
@@ -83,6 +85,33 @@ const LoginForm = React.memo(({
         e.preventDefault();
         onSubmit(username, password);
     }, [username, password, onSubmit]);
+
+    if (isSuccess) {
+        return (
+            <Box sx={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 2,
+                py: 4
+            }}>
+                <CheckCircleIcon 
+                    sx={{ 
+                        fontSize: 64,
+                        color: 'success.main',
+                        animation: 'fadeIn 0.5s ease-in-out'
+                    }} 
+                />
+                <Typography variant="h5" sx={{ color: 'success.main', fontWeight: 600 }}>
+                    {t('auth.loginSuccessTitle')}
+                </Typography>
+                <Typography variant="body1" sx={{ color: 'text.secondary' }}>
+                    {t('auth.loginSuccessDesc')}
+                </Typography>
+            </Box>
+        );
+    }
 
     return (
         <form onSubmit={handleSubmit}>
@@ -174,8 +203,7 @@ export default function LoginPage() {
     const { login } = useAuth();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [snackbarOpen, setSnackbarOpen] = useState(false);
-    const [snackbarMessage, setSnackbarMessage] = useState('');
+    const [isSuccess, setIsSuccess] = useState(false);
 
     // 使用 useCallback 优化登录处理函数
     const handleLogin = useCallback(async (username: string, password: string) => {
@@ -183,23 +211,19 @@ export default function LoginPage() {
             setLoading(true);
             setError(null);
             await login(username, password);
-            setSnackbarMessage(t('auth.loginSuccess'));
-            setSnackbarOpen(true);
+            setIsSuccess(true);
             // 延迟跳转，让用户看到成功提示
             setTimeout(() => {
                 router.push('/');
-            }, 1000); // 增加到3秒，与 Snackbar 的 autoHideDuration 一致
-        } catch (err) {
-            setError(t('auth.error'));
-            console.error('登录失败:', err);
+            }, 1500);
+        } catch (err: any) {
+            // 处理错误响应
+            setError(err.message || t('auth.loginFailed.default'));
+            console.error('登录失败err:', err.message);
         } finally {
             setLoading(false);
         }
     }, [login, router, t]);
-
-    const handleCloseSnackbar = () => {
-        setSnackbarOpen(false);
-    };
 
     return (
         <Box sx={{ width: '100%', maxWidth: 400, mx: 'auto' }}>
@@ -224,32 +248,9 @@ export default function LoginPage() {
                     onSubmit={handleLogin}
                     loading={loading}
                     error={error}
+                    isSuccess={isSuccess}
                 />
             </Paper>
-            
-            
-            {/* 登录成功提示 */}
-            <Snackbar
-                open={snackbarOpen}
-                autoHideDuration={3000}
-                onClose={handleCloseSnackbar}
-                anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-            >
-                <Alert 
-                    onClose={handleCloseSnackbar} 
-                    severity="success" 
-                    sx={{ 
-                        width: '100%',
-                        backgroundColor: 'success.light',
-                        color: 'green',
-                        '& .MuiAlert-icon': {
-                            color: 'green'
-                        }
-                    }}
-                >
-                    {snackbarMessage}
-                </Alert>
-            </Snackbar>
         </Box>
     );
 } 

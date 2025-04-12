@@ -197,7 +197,13 @@
     "usernameRequired": "请输入用户名！",
     "passwordRequired": "请输入密码！",
     "loginSuccess": "登录成功",
-    "loginFailed": "登录失败",
+    "loginSuccessTitle": "登录成功！",
+    "loginSuccessDesc": "欢迎回来",
+    "loginFailed": {
+      "title": "登录失败",
+      "401": "用户名或密码错误",
+      "default": "登录失败，请稍后重试"
+    },
     "title": "欢迎回来",
     "description": "请登录您的账号",
     "error": "登录失败，请检查用户名和密码",
