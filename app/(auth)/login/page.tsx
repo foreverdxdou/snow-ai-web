@@ -17,7 +17,7 @@ import {
     IconButton,
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
-import { Visibility, VisibilityOff } from '@mui/icons-material';
+import { Visibility, VisibilityOff, Login } from '@mui/icons-material';
 import { useAuth } from '@/app/hooks/useAuth';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
@@ -209,10 +209,10 @@ const LoginForm = React.memo(({
                         textTransform: 'none',
                         fontSize: '1rem',
                         fontWeight: 600,
-               
                     }}
+                    startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <Login />}
                 >
-                    {loading ? <CircularProgress size={24} /> : t('common.login')}
+                     {loading ? <CircularProgress size={24} /> : t('common.login')}
                 </Button>
                 <Box sx={{ textAlign: 'center', mt: 2 }}>
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>

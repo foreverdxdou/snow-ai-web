@@ -28,6 +28,9 @@ import type { Role, RoleDTO } from "@/app/types/role";
 import type { TreePermission } from "@/app/types/permission";
 import { usePerformanceData } from "@/app/hooks/usePerformanceData";
 import { useDebouncedCallback } from "@/app/utils/performance";
+import { alpha } from "@mui/material/styles";
+import { useTheme } from "@mui/material/styles";
+import { ExpandLess, ExpandMore } from "@mui/icons-material";
 
 export default function RolePage() {
   const { t } = useTranslation();
@@ -44,12 +47,15 @@ export default function RolePage() {
   });
   const [permissions, setPermissions] = useState<TreePermission[]>([]);
   const [selectedItems, setSelectedItems] = React.useState<string[]>([]);
+  const [expandedItems, setExpandedItems] = React.useState<string[]>([]);
 
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
     severity: "success" as "success" | "error",
   });
+
+  const theme = useTheme();
 
   // 使用 useMemo 优化 defaultParams
   const defaultParams = useMemo(
@@ -169,6 +175,29 @@ export default function RolePage() {
     }, []);
   };
 
+  // 获取所有子节点的ID
+  const getAllChildrenIds = (nodes: TreePermission[]): string[] => {
+    return nodes.reduce<string[]>((acc, node) => {
+      acc.push(node.itemId);
+      if (node.children && node.children.length > 0) {
+        acc.push(...getAllChildrenIds(node.children));
+      }
+      return acc;
+    }, []);
+  };
+
+  // 处理展开/收起全部
+  const handleExpandAll = () => {
+    if (expandedItems.length === 0) {
+      // 展开全部
+      const allIds = getAllChildrenIds(permissions);
+      setExpandedItems(allIds);
+    } else {
+      // 收起全部
+      setExpandedItems([]);
+    }
+  };
+
   // 渲染权限树节点
   const renderPermissionTree = useCallback((nodes: TreePermission[]) => {
     return nodes.map((node) => (
@@ -191,6 +220,13 @@ export default function RolePage() {
     },
     [formData]
   );
+
+  const handleExpandedItemsChange = (
+    event: React.SyntheticEvent,
+    itemIds: string[],
+  ) => {
+    setExpandedItems(itemIds);
+  };
 
   // 处理提交
   const handleSubmit = useCallback(async () => {
@@ -470,22 +506,67 @@ export default function RolePage() {
                   <Typography variant="subtitle1">
                     {t("common.role.permissions")}
                   </Typography>
-                  <CommonButton
-                    buttonVariant="default"
-                    size="small"
-                    onClick={handleSelectAll}
-                  >
-                    {selectedItems.length === 0
-                      ? t("common.selectAll")
-                      : t("common.unselectAll")}
-                  </CommonButton>
+                  <Stack direction="row" spacing={1}>
+                    <CommonButton
+                      buttonVariant="selectAll"
+                      size="small"
+                      onClick={handleSelectAll}
+                      selected={selectedItems.length > 0}
+                    >
+                      {t("common.selectAll")}
+                    </CommonButton>
+                    <CommonButton
+                      buttonVariant="add"
+                      size="small"
+                      onClick={handleExpandAll}
+                      startIcon={expandedItems.length === 0 ? <ExpandMore /> : <ExpandLess />}
+                    >
+                      {expandedItems.length === 0 ? t("common.expandAll") : t("common.collapseAll")}
+                    </CommonButton>
+                  </Stack>
                 </Box>
-                <Paper sx={{}}>
+                <Paper sx={{
+                  p: 2,
+                  borderRadius: 2,
+                  overflow: 'auto',
+                  background: theme.palette.mode === 'dark' 
+                    ? alpha(theme.palette.background.paper, 0.8)
+                    : alpha(theme.palette.background.paper, 0.9),
+                  backdropFilter: 'blur(20px)',
+                  border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                  boxShadow: `0 4px 20px ${alpha(theme.palette.common.black, 0.05)}`,
+                  '& .MuiTreeItem-root': {
+                    borderRadius: 1,
+                    transition: 'all 0.2s ease-in-out',
+                    '&:hover': {
+                      backgroundColor: alpha(theme.palette.primary.main, 0.08),
+                    },
+                    '&.Mui-selected': {
+                      backgroundColor: alpha(theme.palette.primary.main, 0.12),
+                      '&:hover': {
+                        backgroundColor: alpha(theme.palette.primary.main, 0.15),
+                      }
+                    }
+                  },
+                  '& .MuiTreeItem-content': {
+                    padding: '4px 8px',
+                    borderRadius: 1,
+                  },
+                  '& .MuiCheckbox-root': {
+                    padding: '4px',
+                    color: alpha(theme.palette.primary.main, 0.5),
+                    '&.Mui-checked': {
+                      color: theme.palette.primary.main,
+                    }
+                  }
+                }}>
                   <SimpleTreeView
                     selectedItems={selectedItems}
                     onSelectedItemsChange={handleSelectedItemsChange}
                     multiSelect
                     checkboxSelection
+                    expandedItems={expandedItems}
+                    onExpandedItemsChange={handleExpandedItemsChange}
                   >
                     {renderPermissionTree(permissions)}
                   </SimpleTreeView>

@@ -12,6 +12,7 @@ import {
   Snackbar,
   Stack,
   IconButton,
+  Checkbox,
 } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import { PerformanceLayout } from "@/app/components/common/PerformanceLayout";
@@ -59,6 +60,9 @@ export default function UserPage() {
     message: "",
     severity: "success" as "success" | "error",
   });
+
+  const [selectedIds, setSelectedIds] = React.useState<number[]>([]);
+  const [batchDeleteDialogOpen, setBatchDeleteDialogOpen] = React.useState(false);
 
   // 使用 useMemo 优化 defaultParams
   const defaultParams = useMemo(
@@ -278,9 +282,64 @@ export default function UserPage() {
     [checkPasswordStrength]
   );
 
+  // 处理全选/取消全选
+  const handleSelectAll = useCallback((checked: boolean) => {
+    if (checked) {
+      setSelectedIds(users.map(user => user.id));
+    } else {
+      setSelectedIds([]);
+    }
+  }, [users]);
+
+  // 处理单个选择
+  const handleSelect = useCallback((id: number, checked: boolean) => {
+    setSelectedIds(prev => 
+      checked ? [...prev, id] : prev.filter(item => item !== id)
+    );
+  }, []);
+
+  // 处理批量删除
+  const handleBatchDelete = useCallback(async () => {
+    try {
+      await userService.batchDelete(selectedIds);
+      setSnackbar({
+        open: true,
+        message: t("common.batchDeleteSuccess"),
+        severity: "success",
+      });
+      setBatchDeleteDialogOpen(false);
+      setSelectedIds([]);
+      refresh();
+    } catch (error) {
+      console.error("批量删除用户失败:", error);
+      setSnackbar({
+        open: true,
+        message: t("common.batchDeleteError"),
+        severity: "error",
+      });
+    }
+  }, [selectedIds, refresh, t]);
+
   // 使用 useMemo 优化表格配置
   const columns = useMemo(
     () => [
+      {
+        key: "selection" as keyof User,
+        title: (
+          <Checkbox
+            checked={selectedIds.length === users.length && users.length > 0}
+            indeterminate={selectedIds.length > 0 && selectedIds.length < users.length}
+            onChange={(e) => handleSelectAll(e.target.checked)}
+          />
+        ),
+        width: 50,
+        render: (_: any, record: User) => (
+          <Checkbox
+            checked={selectedIds.includes(record.id)}
+            onChange={(e) => handleSelect(record.id, e.target.checked)}
+          />
+        ),
+      },
       {
         key: "username" as keyof User,
         title: t("common.user.username"),
@@ -353,7 +412,7 @@ export default function UserPage() {
         ),
       },
     ],
-    [t, handleOpen, handleDelete]
+    [t, handleOpen, handleDelete, users, selectedIds, handleSelectAll, handleSelect]
   );
 
   return (
@@ -453,13 +512,22 @@ export default function UserPage() {
             >
               {t("common.reset")}
             </CommonButton>
-            <CommonButton
-              buttonVariant="add"
-              onClick={() => handleOpen()}
-              sx={{ ml: "auto" }}
-            >
-              {t("common.user.add")}
-            </CommonButton>
+            <Box sx={{ marginLeft: "auto", display: "flex", gap: 2 }}>
+              {selectedIds.length > 0 && (
+                <CommonButton
+                  buttonVariant="batchDelete"
+                  onClick={() => setBatchDeleteDialogOpen(true)}
+                >
+                  {t("common.batchDelete")} ({selectedIds.length})
+                </CommonButton>
+              )}
+              <CommonButton
+                buttonVariant="add"
+                onClick={() => handleOpen()}
+              >
+                {t("common.user.add")}
+              </CommonButton>
+            </Box>
           </SearchBar>
         </Box>
 
@@ -758,48 +826,47 @@ export default function UserPage() {
           onClose={() => setDeleteDialogOpen(false)}
           maxWidth="xs"
           fullWidth
-          PaperProps={{
-            sx: {
-              borderRadius: 2,
-              boxShadow: (theme) =>
-                `0 8px 32px ${alpha(theme.palette.common.black, 0.1)}`,
-            },
-          }}
         >
-          <DialogTitle
-            sx={{
-              pb: 2,
-              borderBottom: "1px solid",
-              borderColor: "divider",
-              backgroundColor: (theme) => alpha(theme.palette.error.main, 0.04),
-            }}
-          >
-            {t("common.user.deleteConfirm")}
-          </DialogTitle>
-          <DialogContent sx={{ pt: 3 }}>
-            <Typography color="error.main">
-              {t("common.user.deleteConfirmMessage")}
-            </Typography>
+          <DialogTitle>{t("common.user.deleteConfirm")}</DialogTitle>
+          <DialogContent>
+            <Typography>{t("common.user.deleteConfirmMessage")}</Typography>
           </DialogContent>
-          <DialogActions
-            sx={{
-              px: 3,
-              py: 2,
-              borderTop: "1px solid",
-              borderColor: "divider",
-              backgroundColor: (theme) => alpha(theme.palette.error.main, 0.02),
-            }}
-          >
+          <DialogActions>
             <CommonButton
               buttonVariant="cancel"
               onClick={() => setDeleteDialogOpen(false)}
             >
               {t("common.cancel")}
             </CommonButton>
+            <CommonButton buttonVariant="confirm" onClick={handleDeleteConfirm}>
+              {t("common.confirm")}
+            </CommonButton>
+          </DialogActions>
+        </Dialog>
+
+        <Dialog
+          open={batchDeleteDialogOpen}
+          onClose={() => setBatchDeleteDialogOpen(false)}
+          maxWidth="xs"
+          fullWidth
+        >
+          <DialogTitle>{t("common.batchDeleteConfirm")}</DialogTitle>
+          <DialogContent>
+            <Typography>{t("common.batchDeleteConfirmMessage")}</Typography>
+          </DialogContent>
+          <DialogActions>
+            <CommonButton
+              buttonVariant="cancel"
+              onClick={() => setBatchDeleteDialogOpen(false)}
+            >
+              {t("common.cancel")}
+            </CommonButton>
             <CommonButton
               buttonVariant="confirm"
-              onClick={handleDeleteConfirm}
-              color="error"
+              onClick={() => {
+                handleBatchDelete();
+                setBatchDeleteDialogOpen(false);
+              }}
             >
               {t("common.confirm")}
             </CommonButton>
@@ -810,25 +877,11 @@ export default function UserPage() {
           open={snackbar.open}
           autoHideDuration={3000}
           onClose={() => setSnackbar({ ...snackbar, open: false })}
-          anchorOrigin={{ vertical: "top", horizontal: "right" }}
-          sx={{
-            "& .MuiSnackbarContent-root": {
-              borderRadius: 2,
-              boxShadow: (theme) =>
-                `0 8px 32px ${alpha(theme.palette.common.black, 0.1)}`,
-            },
-          }}
         >
           <Alert
             onClose={() => setSnackbar({ ...snackbar, open: false })}
             severity={snackbar.severity}
-            sx={{
-              width: "100%",
-              borderRadius: 2,
-              "& .MuiAlert-icon": {
-                fontSize: "1.5rem",
-              },
-            }}
+            sx={{ width: "100%" }}
           >
             {snackbar.message}
           </Alert>

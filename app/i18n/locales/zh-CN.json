@@ -183,7 +183,9 @@
       "logoutSuccess": "退出登录成功",
       "logoutError": "退出登录失败，请重试"
     },
-    "changePassword": "修改密码"
+    "changePassword": "修改密码",
+    "expandAll": "展开全部",
+    "collapseAll": "收起全部"
   },
   "auth": {
     "appName": "Snow AI",

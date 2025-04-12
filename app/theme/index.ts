@@ -1,4 +1,4 @@
-import { createTheme, alpha, Theme, ThemeOptions } from '@mui/material/styles';
+import { createTheme, alpha} from '@mui/material/styles';
 import { zhCN, enUS } from '@mui/material/locale';
 
 // 主题颜色常量
@@ -200,112 +200,6 @@ const darkPalette = {
     selected: themeColors.dark.action.selected,
     disabled: themeColors.dark.action.disabled,
     disabledBackground: themeColors.dark.action.disabledBackground,
-  },
-};
-
-// 共享组件样式
-const components: ThemeOptions['components'] = {
-  MuiCssBaseline: {
-    styleOverrides: {
-      body: {
-        scrollbarWidth: 'thin',
-        '&::-webkit-scrollbar': {
-          width: '6px',
-          height: '6px',
-        },
-        '&::-webkit-scrollbar-track': {
-          background: 'transparent',
-        },
-        '&::-webkit-scrollbar-thumb': {
-          borderRadius: '3px',
-          backgroundColor: 'rgba(0,0,0,0.2)',
-        },
-      },
-    },
-  },
-  MuiButton: {
-    styleOverrides: {
-      root: {
-        textTransform: 'none',
-        borderRadius: '10px',
-        fontWeight: 600,
-        boxShadow: 'none',
-        '&:hover': {
-          boxShadow: 'none',
-        },
-      },
-      contained: {
-        '&:hover': {
-          boxShadow: 'none',
-        },
-      },
-    },
-  },
-  MuiPaper: {
-    styleOverrides: {
-      root: {
-        backgroundImage: 'none',
-        borderRadius: '10px',
-      },
-    },
-  },
-  MuiCard: {
-    styleOverrides: {
-      root: {
-        borderRadius: '10px',
-        border: '1px solid',
-        borderColor: 'divider',
-      },
-    },
-  },
-  MuiDrawer: {
-    styleOverrides: {
-      paper: {
-        border: 'none',
-      },
-    },
-  },
-  MuiTableCell: {
-    styleOverrides: {
-      root: {
-        borderBottom: '1px solid',
-        borderColor: 'divider',
-      },
-      head: {
-        fontWeight: 600,
-        whiteSpace: 'nowrap',
-      },
-    },
-  },
-  MuiTableRow: {
-    styleOverrides: {
-      root: {
-        '&:last-child td': {
-          borderBottom: 0,
-        },
-      },
-    },
-  },
-  MuiListItemButton: {
-    styleOverrides: {
-      root: {
-        borderRadius: '8px',
-        margin: '4px 8px',
-        '&.Mui-selected': {
-          backgroundColor: ({ theme }: { theme: Theme }) => alpha(theme.palette.primary.main, 0.1),
-          '&:hover': {
-            backgroundColor: ({ theme }: { theme: Theme }) => alpha(theme.palette.primary.main, 0.15),
-          },
-        },
-      },
-    },
-  },
-  MuiListItemIcon: {
-    styleOverrides: {
-      root: {
-        minWidth: 40,
-      },
-    },
   },
 };
 

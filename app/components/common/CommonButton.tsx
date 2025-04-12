@@ -21,7 +21,9 @@ import {
     Check as CheckIcon,
     ArrowBack as ArrowBackIcon,
     Restore as RestoreIcon,
-    Psychology as PsychologyIcon
+    Psychology as PsychologyIcon,
+    CheckBox as CheckBoxIcon,
+    CheckBoxOutlineBlank as CheckBoxOutlineBlankIcon
 } from '@mui/icons-material';
 
 // 基础按钮样式
@@ -59,12 +61,11 @@ export const DetailButton = styled(IconButton)(({ theme }) => ({
 
 // 新增按钮 - 主题色
 export const AddButton = styled(BaseButton)(({ theme }) => ({
-    backgroundColor: alpha(theme.palette.primary.main, 0.08),
-    color: theme.palette.primary.main,
-    border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+    background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.primary.light} 90%)`,
+    color: theme.palette.primary.contrastText,
+    border: 'none',
     '&:hover': {
-        backgroundColor: alpha(theme.palette.primary.main, 0.12),
-        borderColor: alpha(theme.palette.primary.main, 0.3),
+        background: `linear-gradient(45deg, ${theme.palette.primary.dark} 30%, ${theme.palette.primary.main} 90%)`,
     }
 }));
 
@@ -90,12 +91,11 @@ export const DeleteButton = styled(IconButton)(({ theme }) => ({
 
 // 上传按钮 - 主题色
 export const UploadButton = styled(BaseButton)(({ theme }) => ({
-    backgroundColor: alpha(theme.palette.primary.main, 0.08),
-    color: theme.palette.primary.main,
-    border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+    background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.primary.light} 90%)`,
+    color: theme.palette.primary.contrastText,
+    border: 'none',
     '&:hover': {
-        backgroundColor: alpha(theme.palette.primary.main, 0.12),
-        borderColor: alpha(theme.palette.primary.main, 0.3),
+        background: `linear-gradient(45deg, ${theme.palette.primary.dark} 30%, ${theme.palette.primary.main} 90%)`,
     }
 }));
 
@@ -242,26 +242,47 @@ export const BatchDeleteButton = styled(BaseButton)(({ theme }) => ({
     }
 }));
 
+// 全选按钮 - 主题色渐变
+export const SelectAllButton = styled(BaseButton)(({ theme }) => ({
+    background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.primary.light} 90%)`,
+    color: theme.palette.primary.contrastText,
+    border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+    padding: '6px 16px',
+    minWidth: 'auto',
+    '&:hover': {
+        background: `linear-gradient(45deg, ${theme.palette.primary.dark} 30%, ${theme.palette.primary.main} 90%)`,
+        borderColor: alpha(theme.palette.primary.main, 0.3),
+        transform: 'translateY(-1px)',
+        boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.1)}`,
+    },
+    '&.Mui-disabled': {
+        background: alpha(theme.palette.action.disabled, 0.12),
+        color: alpha(theme.palette.action.disabled, 0.38),
+    }
+}));
+
 // 默认按钮 - 主题色
 export const DefaultButton = styled(IconButton)(({ theme }) => ({
-    color: theme.palette.primary.main,
-    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.primary.light} 90%)`,
+    color: theme.palette.primary.contrastText,
+    border: 'none',
     '&:hover': {
-        backgroundColor: alpha(theme.palette.primary.main, 0.08),
-        transform: 'translateY(-1px)',
+        background: `linear-gradient(45deg, ${theme.palette.primary.dark} 30%, ${theme.palette.primary.main} 90%)`,
     }
 }));
 
 // 按钮组件
 interface CommonButtonProps extends Omit<ButtonProps, 'variant'> {
-    buttonVariant?: 'default' | 'detail' | 'add' | 'edit' | 'delete' | 'upload' | 'search' | 'reset' | 'login' | 'expand' | 'cancel' | 'submit' | 'close' | 'back' | 'rollback' | 'confirm' | 'parse' | 'refresh' | 'batchDelete';
+    buttonVariant?: 'default' | 'detail' | 'add' | 'edit' | 'delete' | 'upload' | 'search' | 'reset' | 'login' | 'expand' | 'cancel' | 'submit' | 'close' | 'back' | 'rollback' | 'confirm' | 'parse' | 'refresh' | 'batchDelete' | 'selectAll';
     icon?: boolean;
     expanded?: boolean;
+    selected?: boolean;
 }
 
 export const CommonButton = React.forwardRef<HTMLButtonElement, CommonButtonProps>(({
     buttonVariant = 'default',
     expanded = false,
+    selected = false,
     children,
     ...props
 }, ref) => {
@@ -303,6 +324,8 @@ export const CommonButton = React.forwardRef<HTMLButtonElement, CommonButtonProp
                 return <RefreshIcon sx={{ fontSize: 20 }} />;
             case 'batchDelete':
                 return <DeleteIcon sx={{ fontSize: 20 }} />;
+            case 'selectAll':
+                return selected ? <CheckBoxIcon sx={{ fontSize: 20 }} /> : <CheckBoxOutlineBlankIcon sx={{ fontSize: 20 }} />;
             default:
                 return null;
         }
@@ -348,6 +371,8 @@ export const CommonButton = React.forwardRef<HTMLButtonElement, CommonButtonProp
                 return RefreshButton;
             case 'batchDelete':
                 return BatchDeleteButton;
+            case 'selectAll':
+                return SelectAllButton;
             default:
                 return DefaultButton;
         }

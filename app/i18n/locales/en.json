@@ -170,7 +170,9 @@
       "logoutSuccess": "Logout successful",
       "logoutError": "Logout failed, please try again"
     },
-    "changePassword": "Change Password"
+    "changePassword": "Change Password",
+    "expandAll": "Expand All",
+    "collapseAll": "Collapse All"
   },
   "auth": {
     "appName": "Snow AI",

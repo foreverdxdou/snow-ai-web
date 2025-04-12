@@ -14,7 +14,6 @@ import {
     DialogTitle,
     DialogContent,
     DialogActions,
-    Button,
     TextField,
     LinearProgress,
     InputAdornment,
@@ -36,7 +35,7 @@ import {
     VisibilityOff,
 } from '@mui/icons-material';
 import { userService } from '@/app/services/user';
-import { useTheme } from '@mui/material/styles';
+import { CommonButton } from './common/CommonButton';
 
 // 密码强度检查函数
 const checkPasswordStrength = (password: string): { score: number; label: string; color: string } => {
@@ -477,19 +476,20 @@ export const UserInfo: React.FC<UserInfoProps> = ({
         </Box>
                 </DialogContent>
                 <DialogActions>
-                    <Button 
+                    <CommonButton 
                         onClick={handleCloseChangePassword} 
                         disabled={loading}
+                        buttonVariant="cancel"
                     >
                         {t('common.cancel')}
-                    </Button>
-                    <Button 
+                    </CommonButton>
+                    <CommonButton 
                         onClick={handleChangePassword} 
-                        variant="contained" 
                         disabled={loading}
+                        buttonVariant="submit"
                     >
-                        {t('common.confirm')}
-                    </Button>
+                        {t('common.submit')}
+                    </CommonButton>
                 </DialogActions>
             </Dialog>
 
