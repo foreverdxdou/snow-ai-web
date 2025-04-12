@@ -24,7 +24,7 @@ export default function AuthLayout({
                     ? 'linear-gradient(135deg, #1a1a1a 0%, #2c3e50 100%)'
                     : 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
                 position: 'relative',
-                overflow: 'hidden',
+                overflow: 'auto',
                 '&::before': {
                     content: '""',
                     position: 'absolute',
@@ -51,14 +51,21 @@ export default function AuthLayout({
             </Box>
             <Box
                 sx={{
+                    position: 'absolute',
+                    top: '38%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
                     zIndex: 2,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: 3,
                     width: '100%',
                     maxWidth: '1200px',
                     px: 2,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: 2,
+                    minHeight: '100vh',
+                    paddingTop: '120px',
+                    paddingBottom: '40px',
                 }}
             >
                 <Logo />

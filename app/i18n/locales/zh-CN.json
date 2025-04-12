@@ -69,6 +69,7 @@
     "saveError": "保存失败",
     "nickname": "昵称",
     "email": "邮箱",
+    "phone": "手机号",
     "operateSuccess": "操作成功",
     "operateError": "操作失败",
     "permission": {
@@ -197,18 +198,20 @@
     "usernameRequired": "请输入用户名！",
     "passwordRequired": "请输入密码！",
     "loginSuccess": "登录成功",
-    "loginSuccessTitle": "登录成功！",
-    "loginSuccessDesc": "欢迎回来",
+    "loginSuccessTitle": "登录成功",
+    "loginSuccessDesc": "即将跳转到首页...",
     "loginFailed": {
       "title": "登录失败",
       "401": "用户名或密码错误",
-      "default": "登录失败，请稍后重试"
+      "default": "登录失败，请重试"
     },
     "title": "欢迎回来",
     "description": "请登录您的账号",
     "error": "登录失败，请检查用户名和密码",
     "noAccount": "还没有账号？",
-    "register": "立即注册"
+    "register": "立即注册",
+    "registerSuccessTitle": "注册成功",
+    "registerSuccessDesc": "即将跳转到登录页面..."
   },
   "home": {
     "title": "仪表盘",
@@ -621,7 +624,9 @@
     "passwordRequired": "请输入密码",
     "nicknameRequired": "请输入昵称",
     "emailRequired": "请输入邮箱",
-    "emailInvalid": "请输入有效的邮箱地址"
+    "emailInvalid": "请输入有效的邮箱地址",
+    "phoneRequired": "请输入手机号",
+    "phoneInvalid": "请输入有效的手机号"
   },
   "profile": {
     "title": "个人中心",

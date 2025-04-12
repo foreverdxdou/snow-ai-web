@@ -57,6 +57,7 @@
     "detail": "View Details",
     "nickname": "Nickname",
     "email": "Email",
+    "phone": "Phone",
     "operateSuccess": "Operate successfully",
     "operateError": "Operate failed",
     "permission": {
@@ -184,18 +185,20 @@
     "usernameRequired": "Please enter your username!",
     "passwordRequired": "Please enter your password!",
     "loginSuccess": "Login Successful",
-    "loginSuccessTitle": "Login Successful!",
-    "loginSuccessDesc": "Welcome back",
+    "loginSuccessTitle": "Login Successful",
+    "loginSuccessDesc": "You will be redirected to the home page in a moment...",
     "loginFailed": {
       "title": "Login Failed",
       "401": "Invalid username or password",
-      "default": "Login failed, please try again later"
+      "default": "Login failed, please try again"
     },
     "title": "Welcome Back",
     "description": "Please login to your account",
     "error": "Login failed, please check your username and password",
     "noAccount": "Don't have an account?",
-    "register": "Register Now"
+    "register": "Register Now",
+    "registerSuccessTitle": "Registration Successful",
+    "registerSuccessDesc": "You will be redirected to the login page in a moment..."
   },
   "home": {
     "title": "Dashboard",
@@ -612,7 +615,9 @@
     "passwordRequired": "Please enter password",
     "nicknameRequired": "Please enter nickname",
     "emailRequired": "Please enter email",
-    "emailInvalid": "Invalid email address"
+    "emailInvalid": "Invalid email address",
+    "phoneRequired": "Please enter phone",
+    "phoneInvalid": "Invalid phone number"
   },
   "profile": {
     "title": "Profile",

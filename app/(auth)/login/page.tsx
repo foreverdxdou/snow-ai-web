@@ -13,32 +13,57 @@ import {
     alpha,
     useTheme,
     Button,
+    InputAdornment,
+    IconButton,
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { useAuth } from '@/app/hooks/useAuth';
-import { CommonButton } from '@/app/components/common/CommonButton';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
 // 自定义输入框样式
 const StyledTextField = styled(TextField)(({ theme }) => ({
     '& .MuiOutlinedInput-root': {
         borderRadius: '12px',
-        backgroundColor: alpha(theme.palette.background.paper, 0.8),
-        backdropFilter: 'blur(8px)',
+        backgroundColor: 'transparent !important',
         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         '&:hover': {
-            backgroundColor: alpha(theme.palette.background.paper, 0.9),
             transform: 'translateY(-1px)',
             boxShadow: `0 4px 12px ${alpha(theme.palette.common.black, 0.05)}`,
         },
         '&.Mui-focused': {
-            backgroundColor: theme.palette.background.paper,
             boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.15)}`,
             transform: 'translateY(-1px)',
         },
         '&.Mui-disabled': {
             backgroundColor: alpha(theme.palette.action.disabledBackground, 0.4),
-            backdropFilter: 'none',
+        },
+        '& fieldset': {
+            borderColor: alpha(theme.palette.divider, 0.3),
+        },
+        '&:hover fieldset': {
+            borderColor: alpha(theme.palette.primary.main, 0.4),
+        },
+        '&.Mui-focused fieldset': {
+            borderColor: theme.palette.primary.main,
+            borderWidth: '1.5px',
+        },
+        '& input': {
+            backgroundColor: 'transparent !important',
+            '&:-webkit-autofill': {
+                WebkitBoxShadow: '0 0 0 1000px transparent inset !important',
+                WebkitTextFillColor: theme.palette.text.primary,
+                transition: 'background-color 5000s ease-in-out 0s !important',
+            },
+            '&:-webkit-autofill:hover': {
+                WebkitBoxShadow: '0 0 0 1000px transparent inset !important',
+            },
+            '&:-webkit-autofill:focus': {
+                WebkitBoxShadow: '0 0 0 1000px transparent inset !important',
+            },
+            '&:-webkit-autofill:active': {
+                WebkitBoxShadow: '0 0 0 1000px transparent inset !important',
+            }
         }
     },
     '& .MuiOutlinedInput-input': {
@@ -46,21 +71,11 @@ const StyledTextField = styled(TextField)(({ theme }) => ({
         height: '24px',
         fontSize: '1rem',
         letterSpacing: '0.01em',
+        backgroundColor: 'transparent !important',
         '&::placeholder': {
             fontSize: '1rem',
             color: alpha(theme.palette.text.primary, 0.4),
         }
-    },
-    '& .MuiOutlinedInput-notchedOutline': {
-        borderColor: alpha(theme.palette.divider, 0.3),
-        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-    },
-    '&:hover .MuiOutlinedInput-notchedOutline': {
-        borderColor: alpha(theme.palette.primary.main, 0.4),
-    },
-    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-        borderColor: theme.palette.primary.main,
-        borderWidth: '1.5px',
     }
 }));
 
@@ -80,6 +95,7 @@ const LoginForm = React.memo(({
     const router = useRouter();
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
 
     const handleSubmit = useCallback((e: React.FormEvent) => {
         e.preventDefault();
@@ -89,12 +105,19 @@ const LoginForm = React.memo(({
     if (isSuccess) {
         return (
             <Box sx={{ 
-                display: 'flex', 
-                flexDirection: 'column', 
+                display: 'flex',
+                flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: 2,
-                py: 4
+                width: '100%',
+                height: '100%',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                padding: '32px',
             }}>
                 <CheckCircleIcon 
                     sx={{ 
@@ -148,13 +171,25 @@ const LoginForm = React.memo(({
                         {t('common.password')}
                     </Typography>
                     <StyledTextField
-                        type="password"
+                        type={showPassword ? 'text' : 'password'}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
                         disabled={loading}
                         fullWidth
                         placeholder={t('common.password')}
+                        InputProps={{
+                            endAdornment: (
+                                <InputAdornment position="end">
+                                    <IconButton
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        edge="end"
+                                    >
+                                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                                    </IconButton>
+                                </InputAdornment>
+                            ),
+                        }}
                     />
                 </Box>
                 {error && (
@@ -162,15 +197,23 @@ const LoginForm = React.memo(({
                         {error}
                     </Alert>
                 )}
-                <CommonButton
-                    buttonVariant="login"
+                <Button
                     type="submit"
+                    variant="contained"
                     disabled={loading}
                     fullWidth
-                    sx={{ mt: 2 }}
+                    sx={{ 
+                        mt: 2,
+                        py: 1.5,
+                        borderRadius: 2,
+                        textTransform: 'none',
+                        fontSize: '1rem',
+                        fontWeight: 600,
+               
+                    }}
                 >
                     {loading ? <CircularProgress size={24} /> : t('common.login')}
-                </CommonButton>
+                </Button>
                 <Box sx={{ textAlign: 'center', mt: 2 }}>
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                         {t('login.noAccount')}
@@ -226,14 +269,17 @@ export default function LoginPage() {
     }, [login, router, t]);
 
     return (
-        <Box sx={{ width: '100%', maxWidth: 400, mx: 'auto' }}>
+        <Box sx={{ width: '400px', height: '450px' }}>
             <Paper 
                 elevation={0}
                 sx={{ 
                     p: 4,
                     borderRadius: 3,
+                    width: '100%',
+                    height: '100%',
+                    position: 'relative',
                     background: theme.palette.mode === 'dark' 
-                        ? 'rgba(255, 255, 255, 0.95)'
+                        ? "background.paper"
                         : 'rgba(255, 255, 255, 0.9)',
                     backdropFilter: 'blur(20px)',
                     border: theme.palette.mode === 'dark'
