@@ -126,7 +126,7 @@ const LoginForm = React.memo(({
                         animation: 'fadeIn 0.5s ease-in-out'
                     }} 
                 />
-                <Typography variant="h5" sx={{ color: 'success.main', fontWeight: 600 }}>
+                <Typography variant="h5" sx={{ color: 'success.main', fontWeight: 700, fontSize: '2rem' }}>
                     {t('auth.loginSuccessTitle')}
                 </Typography>
                 <Typography variant="body1" sx={{ color: 'text.secondary' }}>

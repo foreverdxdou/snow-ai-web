@@ -215,7 +215,7 @@ export default function RegisterPage() {
             />
             <Typography
               variant="h5"
-              sx={{ color: "success.main", fontWeight: 600 }}
+              sx={{ color: "success.main", fontWeight: 700, fontSize: '2rem' }}
             >
               {t("auth.registerSuccessTitle")}
             </Typography>
@@ -229,12 +229,14 @@ export default function RegisterPage() {
   }
 
   return (
-    <Box sx={{ width: "400px", height: "450px" }}>
+    <Box sx={{ width: "400px", height: "auto" }}>
       <Paper
         elevation={0}
         sx={{
           p: 4,
           borderRadius: 3,
+          width: '100%',
+          height: '100%',
           background:
             theme.palette.mode === "dark"
               ? "background.paper"
