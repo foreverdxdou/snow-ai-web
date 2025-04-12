@@ -12,6 +12,8 @@ import {
   Snackbar,
   Stack,
   Paper,
+  FormControlLabel,
+  Checkbox,
 } from "@mui/material";
 import { SimpleTreeView } from "@mui/x-tree-view/SimpleTreeView";
 import { TreeItem } from "@mui/x-tree-view/TreeItem";
@@ -27,13 +29,15 @@ import { permissionService } from "@/app/services/permission";
 import type { Role, RoleDTO } from "@/app/types/role";
 import type { TreePermission } from "@/app/types/permission";
 import { usePerformanceData } from "@/app/hooks/usePerformanceData";
-import { useDebouncedCallback } from "@/app/utils/performance";
 import { alpha } from "@mui/material/styles";
 import { useTheme } from "@mui/material/styles";
 import { ExpandLess, ExpandMore } from "@mui/icons-material";
+import { useTreeViewApiRef } from '@mui/x-tree-view/hooks/useTreeViewApiRef';
+import { TreeViewBaseItem, TreeViewItemId } from "@mui/x-tree-view/models";
 
 export default function RolePage() {
   const { t } = useTranslation();
+  const apiRef = useTreeViewApiRef();
   const [open, setOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
@@ -48,6 +52,7 @@ export default function RolePage() {
   const [permissions, setPermissions] = useState<TreePermission[]>([]);
   const [selectedItems, setSelectedItems] = React.useState<string[]>([]);
   const [expandedItems, setExpandedItems] = React.useState<string[]>([]);
+  const [cascadeSelect, setCascadeSelect] = React.useState(true);
 
   const [snackbar, setSnackbar] = useState({
     open: false,
@@ -198,8 +203,13 @@ export default function RolePage() {
     }
   };
 
+  // 处理级联选择
+  const handleCascadeSelect = () => {
+    setCascadeSelect(!cascadeSelect);
+  };
+
   // 渲染权限树节点
-  const renderPermissionTree = useCallback((nodes: TreePermission[]) => {
+  const renderPermissionTree = (nodes: TreePermission[]) => {
     return nodes.map((node) => (
       <TreeItem key={node.itemId} itemId={node.itemId} label={node.name}>
         {node.children &&
@@ -207,23 +217,62 @@ export default function RolePage() {
           renderPermissionTree(node.children)}
       </TreeItem>
     ));
+  };
+
+  const getPermissionAllChildrenIds = useCallback((items: string[], itemIds: string[]) => {
+    return items.map((item: string) => {
+      itemIds.push(item);
+      const thisItemChildrenIds: string[] = apiRef.current?.getItemOrderedChildrenIds(item) || [];
+      if (thisItemChildrenIds.length > 0) {
+        getPermissionAllChildrenIds(thisItemChildrenIds, itemIds);
+      }
+    });
   }, []);
 
-  // 处理权限选择变化
-  const handleSelectedItemsChange = useCallback(
-    (event: React.SyntheticEvent, ids: string[]) => {
-      setSelectedItems(ids);
-      setFormData({
-        ...formData,
-        permissionIds: ids,
-      });
-    },
-    [formData]
-  );
+  const handleItemClick = (event: React.SyntheticEvent, itemId: string) => {
+    // 获取所有子节点的ID
+    const itemIds: string[] = [itemId];
+    const thisItemChildrenIds: string[] = apiRef.current?.getItemOrderedChildrenIds(itemId) || [];
+    if (thisItemChildrenIds.length > 0) {
+      getPermissionAllChildrenIds(thisItemChildrenIds, itemIds);
+    }
+    if (selectedItems.includes(itemId)) {
+      // 删除
+      if (cascadeSelect) {
+        const newSelectedItems = selectedItems.filter(
+          (item) => !itemIds.includes(item) && item !== itemId
+        );
+        setSelectedItems(newSelectedItems);
+        setFormData({ ...formData, permissionIds: newSelectedItems });
+      } else {
+        const newSelectedItems = selectedItems.filter(
+          (item) => item !== itemId
+        );
+        setSelectedItems(newSelectedItems);
+        setFormData({
+          ...formData,
+          permissionIds: newSelectedItems,
+        });
+      }
+    } else {
+      // 添加
+      if (cascadeSelect) {
+        setSelectedItems([...selectedItems, ...itemIds, itemId]);
+        setFormData({
+          ...formData,
+          permissionIds: [...selectedItems, ...itemIds, itemId],
+        });
+      } else {
+        setSelectedItems([...selectedItems, itemId]);
+        setFormData({ ...formData, permissionIds: [...selectedItems, itemId] });
+      }
+    }
+  };
+
 
   const handleExpandedItemsChange = (
     event: React.SyntheticEvent,
-    itemIds: string[],
+    itemIds: string[]
   ) => {
     setExpandedItems(itemIds);
   };
@@ -506,7 +555,15 @@ export default function RolePage() {
                   <Typography variant="subtitle1">
                     {t("common.role.permissions")}
                   </Typography>
-                  <Stack direction="row" spacing={1}>
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <CommonButton
+                      buttonVariant="selectAll"
+                      size="small"
+                      onClick={handleCascadeSelect}
+                      selected={cascadeSelect}
+                    >
+                      {t("common.cascadeSelect")}
+                    </CommonButton>
                     <CommonButton
                       buttonVariant="selectAll"
                       size="small"
@@ -519,50 +576,74 @@ export default function RolePage() {
                       buttonVariant="add"
                       size="small"
                       onClick={handleExpandAll}
-                      startIcon={expandedItems.length === 0 ? <ExpandMore /> : <ExpandLess />}
+                      startIcon={
+                        expandedItems.length === 0 ? (
+                          <ExpandMore />
+                        ) : (
+                          <ExpandLess />
+                        )
+                      }
                     >
-                      {expandedItems.length === 0 ? t("common.expandAll") : t("common.collapseAll")}
+                      {expandedItems.length === 0
+                        ? t("common.expandAll")
+                        : t("common.collapseAll")}
                     </CommonButton>
                   </Stack>
                 </Box>
-                <Paper sx={{
-                  p: 2,
-                  borderRadius: 2,
-                  overflow: 'auto',
-                  background: theme.palette.mode === 'dark' 
-                    ? alpha(theme.palette.background.paper, 0.8)
-                    : alpha(theme.palette.background.paper, 0.9),
-                  backdropFilter: 'blur(20px)',
-                  border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-                  boxShadow: `0 4px 20px ${alpha(theme.palette.common.black, 0.05)}`,
-                  '& .MuiTreeItem-root': {
-                    borderRadius: 1,
-                    transition: 'all 0.2s ease-in-out',
-                    '&:hover': {
-                      backgroundColor: alpha(theme.palette.primary.main, 0.08),
+                <Paper
+                  sx={{
+                    p: 2,
+                    borderRadius: 2,
+                    overflow: "auto",
+                    background:
+                      theme.palette.mode === "dark"
+                        ? alpha(theme.palette.background.paper, 0.8)
+                        : alpha(theme.palette.background.paper, 0.9),
+                    backdropFilter: "blur(20px)",
+                    border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                    boxShadow: `0 4px 20px ${alpha(
+                      theme.palette.common.black,
+                      0.05
+                    )}`,
+                    "& .MuiTreeItem-root": {
+                      borderRadius: 1,
+                      transition: "all 0.2s ease-in-out",
+                      "&:hover": {
+                        backgroundColor: alpha(
+                          theme.palette.primary.main,
+                          0.08
+                        ),
+                      },
+                      "&.Mui-selected": {
+                        backgroundColor: alpha(
+                          theme.palette.primary.main,
+                          0.12
+                        ),
+                        "&:hover": {
+                          backgroundColor: alpha(
+                            theme.palette.primary.main,
+                            0.15
+                          ),
+                        },
+                      },
                     },
-                    '&.Mui-selected': {
-                      backgroundColor: alpha(theme.palette.primary.main, 0.12),
-                      '&:hover': {
-                        backgroundColor: alpha(theme.palette.primary.main, 0.15),
-                      }
-                    }
-                  },
-                  '& .MuiTreeItem-content': {
-                    padding: '4px 8px',
-                    borderRadius: 1,
-                  },
-                  '& .MuiCheckbox-root': {
-                    padding: '4px',
-                    color: alpha(theme.palette.primary.main, 0.5),
-                    '&.Mui-checked': {
-                      color: theme.palette.primary.main,
-                    }
-                  }
-                }}>
+                    "& .MuiTreeItem-content": {
+                      padding: "4px 8px",
+                      borderRadius: 1,
+                    },
+                    "& .MuiCheckbox-root": {
+                      padding: "4px",
+                      color: alpha(theme.palette.primary.main, 0.5),
+                      "&.Mui-checked": {
+                        color: theme.palette.primary.main,
+                      },
+                    },
+                  }}
+                >
                   <SimpleTreeView
+                    apiRef={apiRef} 
                     selectedItems={selectedItems}
-                    onSelectedItemsChange={handleSelectedItemsChange}
+                    onItemClick={handleItemClick}
                     multiSelect
                     checkboxSelection
                     expandedItems={expandedItems}

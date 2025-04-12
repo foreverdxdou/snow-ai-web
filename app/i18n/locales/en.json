@@ -172,7 +172,8 @@
     },
     "changePassword": "Change Password",
     "expandAll": "Expand All",
-    "collapseAll": "Collapse All"
+    "collapseAll": "Collapse All",
+    "cascadeSelect": "Cascade Select"
   },
   "auth": {
     "appName": "Snow AI",

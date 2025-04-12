@@ -130,6 +130,7 @@
     },
     "selectAll": "全选",
     "unselectAll": "取消全选",
+    "cascadeSelect": "级联选择",
     "batchDelete": "批量删除",
     "batchDeleteConfirm": "批量删除确认",
     "batchDeleteConfirmMessage": "确定要删除选中的项目吗？此操作不可恢复。",
