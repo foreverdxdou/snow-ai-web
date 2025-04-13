@@ -1,6 +1,12 @@
 "use client";
 
-import React, { useState, useCallback, useEffect, useMemo, useRef } from "react";
+import React, {
+  useState,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+} from "react";
 import {
   Box,
   Typography,
@@ -13,9 +19,6 @@ import {
   Stack,
   Tooltip,
   Paper,
-  Collapse,
-  List,
-  ListItem,
   Grid,
   Checkbox,
   FormControlLabel,
@@ -31,11 +34,10 @@ import {
   Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
-  Folder as FolderIcon,
-  Menu as MenuIcon,
   ExpandMore as ExpandMoreIcon,
   ExpandLess as ExpandLessIcon,
 } from "@mui/icons-material";
+import { TreeItem } from "@mui/x-tree-view/TreeItem";
 import { useTranslation } from "react-i18next";
 import { PerformanceLayout } from "@/app/components/common/PerformanceLayout";
 import { CommonButton } from "@/app/components/common/CommonButton";
@@ -43,59 +45,15 @@ import { CommonInput } from "@/app/components/common/CommonInput";
 import { CommonSelect } from "@/app/components/common/CommonSelect";
 import { permissionService } from "@/app/services/permission";
 import type {
-  Permission,
   PermissionDTO,
   PermissionQuery,
   TreePermission,
 } from "@/app/types/permission";
-import { alpha } from "@mui/material/styles";
 import { useTheme } from "@mui/material/styles";
-
-// 转换函数
-const convertToTree = (items: Permission[]): Permission[] => {
-  const map = new Map<string, Permission>();
-  const roots: Permission[] = [];
-
-  // 创建映射
-  items.forEach((item) => {
-    map.set(item.id, { ...item, children: [] });
-  });
-
-  // 构建树
-  items.forEach((item) => {
-    const node = map.get(item.id)!;
-    if (item.parentId === "0") {
-      roots.push(node);
-    } else {
-      const parent = map.get(item.parentId);
-      if (parent) {
-        if (!parent.children) {
-          parent.children = [];
-        }
-        parent.children.push(node);
-      }
-    }
-  });
-
-  // 对每个节点的子节点进行排序
-  const sortChildren = (nodes: Permission[]) => {
-    nodes.forEach((node) => {
-      if (node.children && node.children.length > 0) {
-        node.children.sort((a, b) => a.sort - b.sort);
-        sortChildren(node.children);
-      }
-    });
-  };
-
-  // 对根节点进行排序
-  roots.sort((a, b) => a.sort - b.sort);
-  sortChildren(roots);
-
-  return roots;
-};
+import { SimpleTreeView } from "@mui/x-tree-view";
 
 // 获取节点及其所有子节点的ID
-const getNodeAndChildrenIds = (node: Permission): string[] => {
+const getNodeAndChildrenIds = (node: TreePermission): string[] => {
   let ids: string[] = [node.id];
   if (node.children && node.children.length > 0) {
     node.children.forEach((child) => {
@@ -105,231 +63,8 @@ const getNodeAndChildrenIds = (node: Permission): string[] => {
   return ids;
 };
 
-// 渲染树节点组件
-const TreeNode = ({
-  node,
-  level = 0,
-  onAdd,
-  onEdit,
-  onDelete,
-  selectedIds,
-  onSelect,
-  onRefresh,
-}: {
-  node: Permission;
-  level?: number;
-  onAdd: (parentId: string) => void;
-  onEdit: (permission: Permission) => void;
-  onDelete: (id: string) => void;
-  selectedIds: string[];
-  onSelect: (id: string, checked: boolean) => void;
-  onRefresh: () => void;
-}) => {
-  const [open, setOpen] = useState(true);
-  const { t } = useTranslation();
-  const theme = useTheme();
-
-  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    e.stopPropagation();
-    const checked = e.target.checked;
-    const allIds = getNodeAndChildrenIds(node);
-    if (checked) {
-      allIds.forEach((id) => {
-        onSelect(id, true);
-      });
-    } else {
-      allIds.forEach((id) => {
-        onSelect(id, false);
-      });
-    }
-  };
-
-  const handleStatusChange = async (e: React.ChangeEvent<HTMLInputElement>, node: Permission): Promise<void> => {
-    e.stopPropagation();
-    try {
-      const status = node.status === 1 ? 0 : 1;
-      await permissionService.update(node.id, {
-        id: node.id,
-        status: status,
-        parentId: node.parentId,
-        name: node.name,
-        type: node.type,
-        permissionCode: node.permissionCode,
-        path: node.path,
-        component: node.component,
-        icon: node.icon,
-        sort: node.sort,
-      });
-      onRefresh();
-    } catch (error) {
-      console.error("更新状态失败:", error);
-    }
-  };
-
-  const handleNodeClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (node.hasChildren !== 0) {
-      setOpen(!open);
-    }
-  };
-
-  return (
-    <>
-      <ListItem
-        onClick={handleNodeClick}
-        sx={{
-          pl: level * 2 + 2,
-          position: "relative",
-          "&:before": {
-            content: '""',
-            position: "absolute",
-            left: level * 2 + 1,
-            top: 0,
-            bottom: 0,
-            width: 1,
-            opacity: 0.5,
-          },
-          "&:hover": {
-            backgroundColor: alpha(theme.palette.primary.main, 0.04),
-          },
-        }}
-      >
-        <Grid container spacing={2} alignItems="center">
-          <Grid item xs={1} sx={{ display: "flex", justifyContent: "center" }}>
-            <Checkbox
-              checked={selectedIds.includes(node.id)}
-              onChange={handleCheckboxChange}
-              onClick={(e) => e.stopPropagation()}
-              indeterminate={
-                node.children && node.children.length > 0 &&
-                node.children.some(child => selectedIds.includes(child.id)) &&
-                !node.children.every(child => selectedIds.includes(child.id))
-              }
-            />
-          </Grid>
-          <Grid item xs={2}>
-            <Box sx={{ display: "flex", alignItems: "center" }}>
-              {node.hasChildren === 0 ? (
-                <MenuIcon
-                  sx={{
-                    fontSize: 20,
-                    mr: 1,
-                    color: theme.palette.primary.main,
-                  }}
-                />
-              ) : open ? (
-                <ExpandMoreIcon
-                  sx={{
-                    fontSize: 20,
-                    mr: 1,
-                    color: theme.palette.primary.main,
-                  }}
-                />
-              ) : (
-                <ExpandLessIcon
-                  sx={{
-                    fontSize: 20,
-                    mr: 1,
-                    color: theme.palette.primary.main,
-                  }}
-                />
-              )}
-              <Typography variant="body2">{node.name}</Typography>
-            </Box>
-          </Grid>
-          <Grid item xs={2}>
-            <Typography variant="body2">{node.component}</Typography>
-          </Grid>
-          <Grid item xs={2}>
-            <Typography variant="body2">{node.path}</Typography>
-          </Grid>
-          <Grid item xs={2}>
-            <Typography variant="body2">{node.permissionCode}</Typography>
-          </Grid>
-          <Grid item xs={1}>
-            <Typography variant="body2">{node.sort}</Typography>
-          </Grid>
-          <Grid item xs={1}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={node.status === 1}
-                  onChange={(e) => handleStatusChange(e, node)}
-                  color="primary"
-                />
-              }
-              label={node.status === 1 ? t("common.enable") : t("common.disable")}
-              sx={{
-                "& .MuiFormControlLabel-label": {
-                  fontSize: "0.875rem",
-                },
-              }}
-            />
-          </Grid>
-          <Grid item xs={1}>
-            <Stack direction="row" spacing={0.5}>
-              <Tooltip title={t("common.add")}>
-                <CommonButton
-                  buttonVariant="edit"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onAdd(node.id);
-                  }}
-                >
-                  <AddIcon />
-                </CommonButton>
-              </Tooltip>
-              <Tooltip title={t("common.edit")}>
-                <CommonButton
-                  buttonVariant="edit"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onEdit(node);
-                  }}
-                >
-                  <EditIcon />
-                </CommonButton>
-              </Tooltip>
-              <Tooltip title={t("common.delete")}>
-                <CommonButton
-                  buttonVariant="delete"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDelete(node.id);
-                  }}
-                >
-                  <DeleteIcon fontSize="small" />
-                </CommonButton>
-              </Tooltip>
-            </Stack>
-          </Grid>
-        </Grid>
-      </ListItem>
-      {node.children && node.children.length > 0 && (
-        <Collapse in={open} timeout="auto" unmountOnExit>
-          <List component="div" disablePadding>
-            {node.children.map((child) => (
-              <TreeNode
-                key={child.id}
-                node={child}
-                level={level + 1}
-                onAdd={onAdd}
-                onEdit={onEdit}
-                onDelete={onDelete}
-                selectedIds={selectedIds}
-                onSelect={onSelect}
-                onRefresh={onRefresh}
-              />
-            ))}
-          </List>
-        </Collapse>
-      )}
-    </>
-  );
-};
-
 // 获取所有节点ID（包括子节点）
-const getAllNodeIds = (nodes: Permission[]): string[] => {
+const getAllNodeIds = (nodes: TreePermission[]): string[] => {
   let ids: string[] = [];
   nodes.forEach((node) => {
     ids.push(node.id);
@@ -376,7 +111,7 @@ const TreeSelect = ({
     if (currentId === "0") {
       return false;
     }
-    
+
     // 如果当前节点是正在编辑的节点，则不允许选择
     if (node.id === currentId) {
       return false;
@@ -408,7 +143,10 @@ const TreeSelect = ({
   };
 
   const handleClose = (event: Event) => {
-    if (anchorRef.current && anchorRef.current.contains(event.target as HTMLElement)) {
+    if (
+      anchorRef.current &&
+      anchorRef.current.contains(event.target as HTMLElement)
+    ) {
       return;
     }
     setOpen(false);
@@ -428,9 +166,10 @@ const TreeSelect = ({
           disabled={!selectable}
           sx={{
             pl: level * 2 + 2,
-            backgroundColor: value === node.id ? 'action.selected' : 'transparent',
-            '&:hover': {
-              backgroundColor: selectable ? 'action.hover' : 'transparent',
+            backgroundColor:
+              value === node.id ? "action.selected" : "transparent",
+            "&:hover": {
+              backgroundColor: selectable ? "action.hover" : "transparent",
             },
             opacity: selectable ? 1 : 0.5,
           }}
@@ -496,19 +235,20 @@ const TreeSelect = ({
 
 export default function PermissionPage() {
   const { t } = useTranslation();
-  const [permissions, setPermissions] = useState<Permission[]>([]);
+  const [permissions, setPermissions] = useState<TreePermission[]>([]);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [batchDeleteDialogOpen, setBatchDeleteDialogOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [editingPermission, setEditingPermission] = useState<Permission | null>(
-    null
-  );
+  const [expandedItems, setExpandedItems] = useState<string[]>([]);
+  const [editingPermission, setEditingPermission] =
+    useState<TreePermission | null>(null);
   const [params, setParams] = useState<PermissionQuery>({
     type: undefined,
     status: undefined,
+    name: undefined,
   });
   const [formData, setFormData] = useState<PermissionDTO>({
     parentId: "0",
@@ -530,14 +270,15 @@ export default function PermissionPage() {
 
   const [treeOptions, setTreeOptions] = useState<TreePermission[]>([]);
 
+  const theme = useTheme();
+
   // 获取权限树
   const fetchPermissions = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await permissionService.getTree(params);
+      const response = await permissionService.getTreeForControl(params);
       if (response.data?.data) {
-        const treeData = convertToTree(response.data.data);
-        setPermissions(treeData);
+        setPermissions(response.data?.data);
       }
     } catch (error) {
       console.error("获取权限列表失败:", error);
@@ -564,37 +305,40 @@ export default function PermissionPage() {
   }, [fetchPermissions, fetchTreeOptions]);
 
   // 处理打开对话框
-  const handleOpen = useCallback((permission?: Permission, parent?: string) => {
-    if (permission) {
-      setEditingPermission(permission);
-      setFormData({
-        id: permission.id,
-        parentId: permission.parentId,
-        name: permission.name,
-        type: permission.type,
-        permissionCode: permission.permissionCode,
-        path: permission.path,
-        component: permission.component,
-        icon: permission.icon,
-        sort: permission.sort,
-        status: permission.status,
-      });
-    } else {
-      setEditingPermission(null);
-      setFormData({
-        parentId: parent || "0",
-        name: "",
-        type: 1,
-        permissionCode: "",
-        path: "",
-        component: "",
-        icon: "",
-        sort: 0,
-        status: 1,
-      });
-    }
-    setOpen(true);
-  }, []);
+  const handleOpen = useCallback(
+    (permission?: TreePermission, parent?: string) => {
+      if (permission) {
+        setEditingPermission(permission);
+        setFormData({
+          id: permission.id,
+          parentId: permission.parentId,
+          name: permission.name,
+          type: permission.type,
+          permissionCode: permission.permissionCode,
+          path: permission.path,
+          component: permission.component,
+          icon: permission.icon,
+          sort: permission.sort,
+          status: permission.status,
+        });
+      } else {
+        setEditingPermission(null);
+        setFormData({
+          parentId: parent || "0",
+          name: "",
+          type: 1,
+          permissionCode: "",
+          path: "",
+          component: "",
+          icon: "",
+          sort: 0,
+          status: 1,
+        });
+      }
+      setOpen(true);
+    },
+    []
+  );
 
   // 处理关闭对话框
   const handleClose = useCallback(() => {
@@ -646,7 +390,14 @@ export default function PermissionPage() {
         severity: "error",
       });
     }
-  }, [editingPermission, formData, handleClose, fetchPermissions, fetchTreeOptions, t]);
+  }, [
+    editingPermission,
+    formData,
+    handleClose,
+    fetchPermissions,
+    fetchTreeOptions,
+    t,
+  ]);
 
   // 处理删除
   const handleDelete = useCallback((id: string) => {
@@ -751,6 +502,199 @@ export default function PermissionPage() {
         </Typography>
       );
     }
+
+    const handleStatusChange = async (
+      e: React.ChangeEvent<HTMLInputElement>,
+      node: TreePermission
+    ): Promise<void> => {
+      e.stopPropagation();
+      try {
+        const status = node.status === 1 ? 0 : 1;
+        await permissionService.update(node.id, {
+          id: node.id,
+          status: status,
+          parentId: node.parentId,
+          name: node.name,
+          type: node.type,
+          permissionCode: node.permissionCode,
+          path: node.path,
+          component: node.component,
+          icon: node.icon,
+          sort: node.sort,
+        });
+        fetchPermissions();
+      } catch (error) {
+        console.error("更新状态失败:", error);
+      }
+    };
+
+    const handleSelect = (id: string, checked: boolean) => {
+      setSelectedIds((prev) => {
+        if (checked) {
+          if (!prev.includes(id)) {
+            return [...prev, id];
+          }
+        } else {
+          return prev.filter((item) => item !== id);
+        }
+        return prev;
+      });
+    };
+
+    const renderTreeItem = (node: TreePermission) => {
+      const renderIcon = () => {
+        if (!node.children || node.children.length === 0) return null;
+        return expandedItems.includes(node.id) ? (
+          <ExpandLessIcon
+            sx={{ fontSize: 20, mr: 1, color: theme.palette.primary.main }}
+          />
+        ) : (
+          <ExpandMoreIcon
+            sx={{ fontSize: 20, mr: 1, color: theme.palette.primary.main }}
+          />
+        );
+      };
+
+      return (
+        <TreeItem
+          key={node.id}
+          itemId={node.id}
+          slots={{
+            icon: () => null,
+          }}
+          sx={{
+            "& .MuiTreeItem-content": {
+              paddingLeft: "0 !important",
+              "& .MuiTreeItem-iconContainer": {
+                display: "none",
+              },
+            },
+            "& .MuiTreeItem-group": {
+              marginLeft: 0,
+              paddingLeft: 0,
+            },
+          }}
+          label={
+            <Grid container spacing={2} alignItems="center">
+              <Grid
+                item
+                xs={1}
+                sx={{
+                  display: "flex",
+                  justifyContent: "center",
+                  paddingLeft: 0,
+                }}
+              >
+                <Checkbox
+                  checked={selectedIds.includes(node.id)}
+                  onChange={(e) => {
+                    e.stopPropagation();
+                    const checked = e.target.checked;
+                    const allIds = getNodeAndChildrenIds(node);
+                    allIds.forEach((id) => {
+                      handleSelect(id, checked);
+                    });
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                  indeterminate={
+                    node.children &&
+                    node.children.length > 0 &&
+                    node.children.some((child) =>
+                      selectedIds.includes(child.id)
+                    ) &&
+                    !node.children.every((child) =>
+                      selectedIds.includes(child.id)
+                    )
+                  }
+                  sx={{ padding: 0 }}
+                />
+              </Grid>
+              <Grid item xs={2}>
+                <Box sx={{ display: "flex", alignItems: "center" }}>
+                  {renderIcon()}
+                  <Typography variant="body2">{node.name}</Typography>
+                </Box>
+              </Grid>
+              <Grid item xs={2}>
+                <Typography variant="body2">{node.component}</Typography>
+              </Grid>
+              <Grid item xs={2}>
+                <Typography variant="body2">{node.path}</Typography>
+              </Grid>
+              <Grid item xs={2}>
+                <Typography variant="body2">{node.permissionCode}</Typography>
+              </Grid>
+              <Grid item xs={1}>
+                <Typography variant="body2">{node.sort}</Typography>
+              </Grid>
+              <Grid item xs={1}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={node.status === 1}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        handleStatusChange(e, node);
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                      color="primary"
+                    />
+                  }
+                  label={
+                    node.status === 1 ? t("common.enable") : t("common.disable")
+                  }
+                  sx={{
+                    "& .MuiFormControlLabel-label": {
+                      fontSize: "0.875rem",
+                    },
+                  }}
+                />
+              </Grid>
+              <Grid item xs={1}>
+                <Stack direction="row" spacing={0.5}>
+                  <Tooltip title={t("common.add")}>
+                    <CommonButton
+                      buttonVariant="edit"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleOpen(undefined, node.id);
+                      }}
+                    >
+                      <AddIcon />
+                    </CommonButton>
+                  </Tooltip>
+                  <Tooltip title={t("common.edit")}>
+                    <CommonButton
+                      buttonVariant="edit"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleOpen(node);
+                      }}
+                    >
+                      <EditIcon />
+                    </CommonButton>
+                  </Tooltip>
+                  <Tooltip title={t("common.delete")}>
+                    <CommonButton
+                      buttonVariant="delete"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(node.id);
+                      }}
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </CommonButton>
+                  </Tooltip>
+                </Stack>
+              </Grid>
+            </Grid>
+          }
+        >
+          {node.children?.map((child) => renderTreeItem(child))}
+        </TreeItem>
+      );
+    };
+
     return (
       <Paper sx={{ width: "100%" }}>
         <Box sx={{ p: 2, borderBottom: 1, borderColor: "divider" }}>
@@ -758,15 +702,18 @@ export default function PermissionPage() {
             <Grid
               item
               xs={1}
-              sx={{ display: "flex", justifyContent: "center" }}
+              sx={{ display: "flex", justifyContent: "center", paddingLeft: 0 }}
             >
               <Checkbox
-                checked={selectedIds.length === getAllNodeIds(permissions).length}
+                checked={
+                  selectedIds.length === getAllNodeIds(permissions).length
+                }
                 indeterminate={
                   selectedIds.length > 0 &&
                   selectedIds.length < getAllNodeIds(permissions).length
                 }
                 onChange={(e) => handleSelectAll(e.target.checked)}
+                sx={{ padding: 0 }}
               />
             </Grid>
             <Grid item xs={2}>
@@ -806,22 +753,43 @@ export default function PermissionPage() {
             </Grid>
           </Grid>
         </Box>
-        <List>
-          {permissions.map((node) => (
-            <TreeNode
-              key={node.id}
-              node={node}
-              onAdd={(parentId) => handleOpen(undefined, parentId)}
-              onEdit={handleOpen}
-              onDelete={handleDelete}
-              selectedIds={selectedIds}
-              onSelect={handleSelect}
-              onRefresh={fetchPermissions}
-            />
-          ))}
-        </List>
+        <SimpleTreeView
+          defaultExpandedItems={permissions.map((node) => node.id)}
+          expandedItems={expandedItems}
+          onExpandedItemsChange={(event, expandedItems) => {
+            setExpandedItems(expandedItems);
+          }}
+          onItemClick={(event, itemId) => {
+            // 处理点击事件
+          }}
+          sx={{ p: 2 }}
+        >
+          {permissions.map((node) => renderTreeItem(node))}
+        </SimpleTreeView>
       </Paper>
     );
+  };
+
+  const handleExpandAll = () => {
+    if (expandedItems.length === 0) {
+      // 展开全部
+      const allIds = getAllChildrenIds(permissions);
+      setExpandedItems(allIds);
+    } else {
+      // 收起全部
+      setExpandedItems([]);
+    }
+  };
+
+  // 获取所有子节点的ID
+  const getAllChildrenIds = (nodes: TreePermission[]): string[] => {
+    return nodes.reduce<string[]>((acc, node) => {
+      acc.push(node.itemId);
+      if (node.children && node.children.length > 0) {
+        acc.push(...getAllChildrenIds(node.children));
+      }
+      return acc;
+    }, []);
   };
 
   return (
@@ -843,6 +811,14 @@ export default function PermissionPage() {
           }}
         >
           <Box sx={{ display: "flex", gap: 2 }}>
+            <CommonInput
+              label={t("common.permission.name")}
+              value={params.name || ""}
+              onChange={(value) =>
+                setParams({ ...params, name: value as string })
+              }
+              sx={{ width: "10%" }}
+            />
             <CommonSelect
               label={t("common.permission.type")}
               value={params.type}
@@ -870,9 +846,7 @@ export default function PermissionPage() {
             <CommonButton
               buttonVariant="search"
               onClick={() => {
-                setParams({
-                  ...params,
-                });
+                fetchPermissions();
               }}
               sx={{
                 flex: { xs: 1, sm: "0 0 auto" },
@@ -884,11 +858,10 @@ export default function PermissionPage() {
               buttonVariant="reset"
               onClick={() => {
                 setParams({
-                  ...params,
                   type: undefined,
                   status: undefined,
+                  name: undefined,
                 });
-                fetchPermissions();
               }}
             >
               {t("common.reset")}
@@ -906,6 +879,22 @@ export default function PermissionPage() {
               <CommonButton buttonVariant="add" onClick={() => handleOpen()}>
                 {t("common.add")}
               </CommonButton>
+              <CommonButton
+                buttonVariant="add"
+                size="small"
+                onClick={handleExpandAll}
+                startIcon={
+                  expandedItems.length === 0 ? (
+                    <ExpandMoreIcon />
+                  ) : (
+                    <ExpandLessIcon />
+                  )
+                }
+              >
+                {expandedItems.length === 0
+                  ? t("common.expandAll")
+                  : t("common.collapseAll")}
+              </CommonButton>
             </Box>
           </Box>
         </Box>
@@ -922,7 +911,9 @@ export default function PermissionPage() {
             >
               <TreeSelect
                 value={formData.parentId}
-                onChange={(value) => setFormData({ ...formData, parentId: value })}
+                onChange={(value) =>
+                  setFormData({ ...formData, parentId: value })
+                }
                 options={treeOptions}
                 label={t("common.permission.parent")}
                 currentId={editingPermission?.id}

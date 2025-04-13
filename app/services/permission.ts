@@ -50,7 +50,7 @@ export const permissionService = {
     /**
      * 获取权限树（用于前端控件）
      */
-    getTreeForControl: () => {
-        return request.get<Result<TreePermission[]>>(`${BASE_URL}/tree/select`);
+    getTreeForControl: (params?: PermissionQuery) => {
+        return request.get<Result<TreePermission[]>>(`${BASE_URL}/tree/select`, { params });
     }
 }; 

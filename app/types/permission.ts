@@ -32,6 +32,7 @@ export interface PermissionQuery {
     parentId?: string;
     type?: number;
     status?: number;
+    name?: string;
 }
 
 export interface TreePermission {
@@ -39,5 +40,15 @@ export interface TreePermission {
     itemId: string;
     parentId: string;
     name: string;
+    type: number;
+    permissionCode: string;
+    path: string;
+    component: string;
+    icon: string;
+    sort: number;
+    status: number;
+    hasChildren: number;
+    createTime?: string;
+    updateTime?: string;
     children?: TreePermission[];
 } 
