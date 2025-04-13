@@ -945,7 +945,7 @@ export default function KnowledgePage() {
           maxWidth="xs"
           fullWidth
         >
-          <DialogTitle>{t("knowledge.deleteKnowledge")}</DialogTitle>
+          <DialogTitle>{t("common.deleteKnowledge")}</DialogTitle>
           <DialogContent>
             <Typography>{t("knowledge.deleteConfirm")}</Typography>
           </DialogContent>

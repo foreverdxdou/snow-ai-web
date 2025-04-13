@@ -271,8 +271,8 @@ export const SelectAllButton = styled(BaseButton)(({ theme }) => ({
   },
 }));
 
-// 默认按钮 - 主题色
-export const DefaultButton = styled(IconButton)(({ theme }) => ({
+// 默认按钮 - 主题色图标按钮
+export const DefaultIconButton = styled(IconButton)(({ theme }) => ({
   background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.primary.light} 90%)`,
   color: theme.palette.primary.contrastText,
   border: "none",
@@ -281,10 +281,22 @@ export const DefaultButton = styled(IconButton)(({ theme }) => ({
   },
 }));
 
+// 默认按钮 - 主题色按钮
+export const DefaultBaseButton = styled(BaseButton)(({ theme }) => ({
+  background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.primary.light} 90%)`,
+  color: theme.palette.primary.contrastText,
+  border: "none",
+  "&:hover": {
+    background: `linear-gradient(45deg, ${theme.palette.primary.dark} 30%, ${theme.palette.primary.main} 90%)`,
+  },
+}));
+
+
 // 按钮组件
 interface CommonButtonProps extends Omit<ButtonProps, "variant"> {
   buttonVariant?:
     | "default"
+    | "defaultBase"
     | "detail"
     | "add"
     | "edit"
@@ -377,6 +389,8 @@ export const CommonButton = React.forwardRef<
               indeterminate={indeterminate}
             />
           );
+        case "defaultBase":
+          return null;
         default:
           return null;
       }
@@ -385,7 +399,7 @@ export const CommonButton = React.forwardRef<
     const getButtonComponent = () => {
       switch (buttonVariant) {
         case "default":
-          return DefaultButton;
+          return DefaultIconButton;
         case "detail":
           return DetailButton;
         case "add":
@@ -424,8 +438,10 @@ export const CommonButton = React.forwardRef<
           return BatchDeleteButton;
         case "selectAll":
           return SelectAllButton;
+        case "defaultBase":
+          return DefaultBaseButton;
         default:
-          return DefaultButton;
+          return DefaultIconButton;
       }
     };
 

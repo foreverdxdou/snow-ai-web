@@ -552,12 +552,11 @@ export default function RolePage() {
         <Box
           sx={{
             p: 3,
-            borderBottom: "1px solid",
             borderColor: "divider",
             bgcolor: "background.paper",
           }}
         >
-          <SearchBar>
+           <Box sx={{ display: "flex", gap: 2 }}>
             <CommonInput
               label={t("common.role.roleName")}
               value={params.roleName || ""}
@@ -614,7 +613,7 @@ export default function RolePage() {
                 {t("common.role.add")}
               </CommonButton>
             </Box>
-          </SearchBar>
+          </Box>
         </Box>
 
         <Box sx={{ p: 3, flex: 1, overflow: "auto" }}>

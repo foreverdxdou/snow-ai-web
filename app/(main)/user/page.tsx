@@ -429,18 +429,11 @@ export default function UserPage() {
         <Box
           sx={{
             p: 3,
-            borderBottom: "1px solid",
             borderColor: "divider",
             bgcolor: "background.paper",
-            position: "sticky",
-            top: 0,
-            zIndex: 1,
-            backdropFilter: "blur(8px)",
-            backgroundColor: (theme) =>
-              alpha(theme.palette.background.paper, 0.8),
           }}
         >
-          <SearchBar>
+            <Box sx={{ display: "flex", gap: 2 }}>
             <CommonInput
               label={t("common.user.username")}
               value={params.username || ""}
@@ -528,7 +521,7 @@ export default function UserPage() {
                 {t("common.user.add")}
               </CommonButton>
             </Box>
-          </SearchBar>
+          </Box>
         </Box>
 
         <Box sx={{ p: 3, flex: 1, overflow: "auto" }}>

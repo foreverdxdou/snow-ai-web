@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useMemo } from "react";
 import {
   Box,
   Typography,
@@ -20,10 +20,9 @@ import {
   ListItemButton,
   ListItemIcon,
   Grid,
+  Checkbox,
 } from "@mui/material";
 import {
-  ExpandMore as ExpandMoreIcon,
-  ExpandLess as ExpandLessIcon,
   Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
@@ -34,7 +33,6 @@ import { PerformanceLayout } from "@/app/components/common/PerformanceLayout";
 import { CommonButton } from "@/app/components/common/CommonButton";
 import { CommonInput } from "@/app/components/common/CommonInput";
 import { CommonSelect } from "@/app/components/common/CommonSelect";
-import { SearchBar } from "@/app/components/common/SearchBar";
 import { permissionService } from "@/app/services/permission";
 import type {
   Permission,
@@ -92,15 +90,24 @@ const TreeNode = ({
   onAdd,
   onEdit,
   onDelete,
+  selectedIds,
+  onSelect,
 }: {
   node: Permission;
   level?: number;
   onAdd: (parentId: string) => void;
   onEdit: (permission: Permission) => void;
   onDelete: (id: string) => void;
+  selectedIds: string[];
+  onSelect: (id: string, checked: boolean) => void;
 }) => {
   const [open, setOpen] = useState(true);
   const { t } = useTranslation();
+
+  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.stopPropagation();
+    onSelect(node.id, e.target.checked);
+  };
 
   return (
     <>
@@ -112,79 +119,87 @@ const TreeNode = ({
           },
         }}
       >
-        <ListItemButton
-          onClick={() => setOpen(!open)}
-          sx={{
-            minHeight: 48,
-            width: "100%",
-          }}
-        >
-          <Grid container spacing={2} alignItems="center">
-            <Grid item xs={1}>
-              <ListItemIcon>
-                <FolderIcon />
-              </ListItemIcon>
-            </Grid>
-            <Grid item xs={2}>
-              <Typography variant="body2">{node.name}</Typography>
-            </Grid>
-            <Grid item xs={2}>
-              <Typography variant="body2">{node.component}</Typography>
-            </Grid>
-            <Grid item xs={2}>
-              <Typography variant="body2">{node.path}</Typography>
-            </Grid>
-            <Grid item xs={2}>
-              <Typography variant="body2">{node.permissionCode}</Typography>
-            </Grid>
-            <Grid item xs={1}>
-              <Typography variant="body2">{node.sort}</Typography>
-            </Grid>
-            <Grid item xs={1}>
-              <Typography variant="body2">
-                {node.status === 1 ? "启用" : "禁用"}
-              </Typography>
-            </Grid>
-            <Grid item xs={1}>
-              {node.children &&
-                node.children.length > 0 &&
-                (open ? <ExpandLessIcon /> : <ExpandMoreIcon />)}
-            </Grid>
+        <Grid container spacing={2} alignItems="center">
+          <Grid item xs={1}>
+            <Checkbox
+              edge="start"
+              checked={selectedIds.includes(node.id)}
+              onChange={handleCheckboxChange}
+              onClick={(e) => e.stopPropagation()}
+              tabIndex={-1}
+              disableRipple
+              inputProps={{ "aria-labelledby": node.id }}
+            />
           </Grid>
-        </ListItemButton>
+          <Grid item xs={11}>
+            <ListItemButton
+              onClick={() => setOpen(!open)}
+              sx={{
+                minHeight: 48,
+                width: "100%",
+              }}
+            >
+              <Grid container spacing={2} alignItems="center">
+                <Grid item xs={2}>
+                  <ListItemIcon>
+                    <FolderIcon />
+                    <Typography variant="body2">{node.name}</Typography>
+                  </ListItemIcon>
+                </Grid>
+                <Grid item xs={2}>
+                  <Typography variant="body2">{node.component}</Typography>
+                </Grid>
+                <Grid item xs={2}>
+                  <Typography variant="body2">{node.path}</Typography>
+                </Grid>
+                <Grid item xs={2}>
+                  <Typography variant="body2">{node.permissionCode}</Typography>
+                </Grid>
+                <Grid item xs={1}>
+                  <Typography variant="body2">{node.sort}</Typography>
+                </Grid>
+                <Grid item xs={1}>
+                  <Typography variant="body2">
+                    {node.status === 1 ? "启用" : "禁用"}
+                  </Typography>
+                </Grid>
+              </Grid>
+            </ListItemButton>
+          </Grid>
+        </Grid>
         <Stack direction="row" spacing={0.5}>
           <Tooltip title={t("common.add")}>
-            <IconButton
-              size="small"
+            <CommonButton
+              buttonVariant="edit"
               onClick={(e) => {
                 e.stopPropagation();
                 onAdd(node.id);
               }}
             >
-              <AddIcon fontSize="small" />
-            </IconButton>
+              <AddIcon />
+            </CommonButton>
           </Tooltip>
           <Tooltip title={t("common.edit")}>
-            <IconButton
-              size="small"
+            <CommonButton
+              buttonVariant="edit"
               onClick={(e) => {
                 e.stopPropagation();
                 onEdit(node);
               }}
             >
-              <EditIcon fontSize="small" />
-            </IconButton>
+              <EditIcon />
+            </CommonButton>
           </Tooltip>
           <Tooltip title={t("common.delete")}>
-            <IconButton
-              size="small"
+            <CommonButton
+              buttonVariant="delete"
               onClick={(e) => {
                 e.stopPropagation();
                 onDelete(node.id);
               }}
             >
               <DeleteIcon fontSize="small" />
-            </IconButton>
+            </CommonButton>
           </Tooltip>
         </Stack>
       </ListItem>
@@ -199,6 +214,8 @@ const TreeNode = ({
                 onAdd={onAdd}
                 onEdit={onEdit}
                 onDelete={onDelete}
+                selectedIds={selectedIds}
+                onSelect={onSelect}
               />
             ))}
           </List>
@@ -214,7 +231,9 @@ export default function PermissionPage() {
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [batchDeleteDialogOpen, setBatchDeleteDialogOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [editingPermission, setEditingPermission] = useState<Permission | null>(
     null
   );
@@ -374,19 +393,111 @@ export default function PermissionPage() {
     }
   }, [deletingId, fetchPermissions, t]);
 
+  // 处理全选
+  const handleSelectAll = useCallback(
+    (checked: boolean) => {
+      if (checked) {
+        setSelectedIds(permissions.map((item) => item.id));
+      } else {
+        setSelectedIds([]);
+      }
+    },
+    [permissions]
+  );
+
+  // 处理单个选择
+  const handleSelect = useCallback((id: string, checked: boolean) => {
+    if (checked) {
+      setSelectedIds((prev) => [...prev, id]);
+    } else {
+      setSelectedIds((prev) => prev.filter((item) => item !== id));
+    }
+  }, []);
+
+  // 处理批量删除
+  const handleBatchDelete = useCallback(async () => {
+    try {
+      await permissionService.batchDelete(selectedIds);
+      setSnackbar({
+        open: true,
+        message: t("common.batchDeleteSuccess"),
+        severity: "success",
+      });
+      setSelectedIds([]);
+      fetchPermissions();
+    } catch (error) {
+      console.error("批量删除失败:", error);
+      setSnackbar({
+        open: true,
+        message: t("common.batchDeleteError"),
+        severity: "error",
+      });
+    }
+  }, [selectedIds, fetchPermissions, t]);
+
+  const renderContent = () => {
+    if (loading) {
+      return (
+        <Typography variant="body2" color="text.secondary" sx={{ p: 2 }}>
+          {t("common.loading")}
+        </Typography>
+      );
+    }
+    if (permissions.length === 0) {
+      return (
+        <Typography
+          variant="body2"
+          color="text.secondary"
+          sx={{
+            p: 2,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            height: "100%",
+          }}
+        >
+          {t("common.noData")}
+        </Typography>
+      );
+    }
+    return (
+      <Paper sx={{ width: "100%" }}>
+        <List>
+          {permissions.map((node) => (
+            <TreeNode
+              key={node.id}
+              node={node}
+              onAdd={(parentId) => handleOpen(undefined, parentId)}
+              onEdit={handleOpen}
+              onDelete={handleDelete}
+              selectedIds={selectedIds}
+              onSelect={handleSelect}
+            />
+          ))}
+        </List>
+      </Paper>
+    );
+  };
+
   return (
     <PerformanceLayout>
-      <Box sx={{ height: "100%", display: "flex",            borderColor: "divider",
-            bgcolor: "background.paper", flexDirection: "column" }}>
+      <Box
+        sx={{
+          height: "100%",
+          display: "flex",
+          borderColor: "divider",
+          bgcolor: "background.paper",
+          flexDirection: "column",
+        }}
+      >
         <Box
           sx={{
             p: 3,
-            borderBottom: "1px solid",
             borderColor: "divider",
             bgcolor: "background.paper",
           }}
         >
-          <SearchBar>
+          <Box sx={{ display: "flex", gap: 2 }}>
             <CommonSelect
               label={t("common.permission.type")}
               value={params.type}
@@ -415,7 +526,7 @@ export default function PermissionPage() {
               buttonVariant="search"
               onClick={() => {
                 setParams({
-                  ...params
+                  ...params,
                 });
               }}
               sx={{
@@ -437,41 +548,24 @@ export default function PermissionPage() {
             >
               {t("common.reset")}
             </CommonButton>
-            <CommonButton
-              buttonVariant="add"
-              onClick={() => handleOpen()}
-              sx={{ marginLeft: "auto" }}
-            >
-              {t("common.add")}
-            </CommonButton>
-          </SearchBar>
+
+            <Box sx={{ marginLeft: "auto", display: "flex", gap: 2 }}>
+              {selectedIds.length > 0 && (
+                <CommonButton
+                  buttonVariant="batchDelete"
+                  onClick={() => setBatchDeleteDialogOpen(true)}
+                >
+                  {t("common.batchDelete")} ({selectedIds.length})
+                </CommonButton>
+              )}
+              <CommonButton buttonVariant="add" onClick={() => handleOpen()}>
+                {t("common.add")}
+              </CommonButton>
+            </Box>
+          </Box>
         </Box>
 
-        <Box sx={{ p: 3, flex: 1, overflow: "auto" }}>
-          {loading ? (
-            <Typography variant="body2" color="text.secondary" sx={{ p: 2 }}>
-              {t("common.loading")}
-            </Typography>
-          ) : permissions.length === 0 ? (
-            <Typography variant="body2" color="text.secondary" sx={{ p: 2 }}>
-              {t("common.noData")}
-            </Typography>
-          ) : (
-            <Paper sx={{ width: "100%" }}>
-              <List>
-                {permissions.map((node) => (
-                  <TreeNode
-                    key={node.id}
-                    node={node}
-                    onAdd={(parentId) => handleOpen(undefined, parentId)}
-                    onEdit={handleOpen}
-                    onDelete={handleDelete}
-                  />
-                ))}
-              </List>
-            </Paper>
-          )}
-        </Box>
+        <Box sx={{ p: 3, flex: 1, overflow: "auto" }}>{renderContent()}</Box>
 
         <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
           <DialogTitle>
@@ -601,6 +695,35 @@ export default function PermissionPage() {
               {t("common.cancel")}
             </CommonButton>
             <CommonButton buttonVariant="confirm" onClick={handleDeleteConfirm}>
+              {t("common.confirm")}
+            </CommonButton>
+          </DialogActions>
+        </Dialog>
+
+        <Dialog
+          open={batchDeleteDialogOpen}
+          onClose={() => setBatchDeleteDialogOpen(false)}
+          maxWidth="xs"
+          fullWidth
+        >
+          <DialogTitle>{t("common.batchDeleteConfirm")}</DialogTitle>
+          <DialogContent>
+            <Typography>{t("common.batchDeleteConfirmMessage")}</Typography>
+          </DialogContent>
+          <DialogActions>
+            <CommonButton
+              buttonVariant="cancel"
+              onClick={() => setBatchDeleteDialogOpen(false)}
+            >
+              {t("common.cancel")}
+            </CommonButton>
+            <CommonButton
+              buttonVariant="confirm"
+              onClick={() => {
+                handleBatchDelete();
+                setBatchDeleteDialogOpen(false);
+              }}
+            >
               {t("common.confirm")}
             </CommonButton>
           </DialogActions>

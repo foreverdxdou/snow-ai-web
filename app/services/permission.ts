@@ -32,7 +32,7 @@ export const permissionService = {
 
     // 批量删除权限
     batchDelete: (ids: string[]) => {
-        return request.delete<Result<void>>(`${BASE_URL}/batch`, { data: { ids } });
+        return request.delete<Result<void>>(`${BASE_URL}/batch`, { data:  ids  });
     },
 
     // 获取用户权限列表

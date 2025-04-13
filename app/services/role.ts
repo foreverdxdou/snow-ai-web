@@ -53,9 +53,10 @@ class RoleService {
         return request<Result<void>>({
             url: `${BASE_URL}/batch`,
             method: 'delete',
-            data: { ids },
+            data: ids,
         });
     }
+
     // 获取角色权限
     getPermissions(id: number) {
         return request<Result<string[]>>({

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useCallback } from "react";
+import React, { useMemo, useCallback, useState } from "react";
 import {
   Box,
   Typography,
@@ -8,11 +8,11 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  TextField,
   Tooltip,
   Alert,
   Snackbar,
   Stack,
+  Checkbox,
 } from "@mui/material";
 import {
   SystemConfig,
@@ -32,7 +32,9 @@ export default function SystemConfigPage() {
   const { t } = useTranslation();
   const [open, setOpen] = React.useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
+  const [batchDeleteDialogOpen, setBatchDeleteDialogOpen] = useState(false);
   const [deletingId, setDeletingId] = React.useState<number | null>(null);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [editingConfig, setEditingConfig] = React.useState<SystemConfig | null>(
     null
   );
@@ -177,9 +179,71 @@ export default function SystemConfigPage() {
     [params, setParams]
   );
 
+  // 处理全选
+  const handleSelectAll = useCallback(
+    (checked: boolean) => {
+      if (checked) {
+        setSelectedIds(configs.map((item) => item.id));
+      } else {
+        setSelectedIds([]);
+      }
+    },
+    [configs]
+  );
+
+  // 处理单个选择
+  const handleSelect = useCallback((id: number, checked: boolean) => {
+    if (checked) {
+      setSelectedIds((prev) => [...prev, id]);
+    } else {
+      setSelectedIds((prev) => prev.filter((item) => item !== id));
+    }
+  }, []);
+
+  // 处理批量删除
+  const handleBatchDelete = useCallback(async () => {
+    try {
+      await systemConfigService.batchDelete(selectedIds);
+      setSnackbar({
+        open: true,
+        message: t("common.batchDeleteSuccess"),
+        severity: "success",
+      });
+      setSelectedIds([]);
+      refresh();
+    } catch (error) {
+      console.error("批量删除失败:", error);
+      setSnackbar({
+        open: true,
+        message: t("common.batchDeleteError"),
+        severity: "error",
+      });
+    }
+  }, [selectedIds, refresh, t]);
+
   // 使用 useMemo 优化表格配置
   const columns = useMemo(
     () => [
+      {
+        key: "selection" as keyof SystemConfig,
+        title: (
+          <Checkbox
+            checked={configs.length > 0 && selectedIds.length === configs.length}
+            indeterminate={
+              selectedIds.length > 0 && selectedIds.length < configs.length
+            }
+            onChange={(e) => handleSelectAll(e.target.checked)}
+          />
+        ),
+        width: 50,
+        render: (_: any, record: SystemConfig) => (
+          <Checkbox
+            checked={selectedIds.includes(record.id)}
+            onChange={(e) => handleSelect(record.id, e.target.checked)}
+            onClick={(e) => e.stopPropagation()}
+          />
+        ),
+      },
       {
         key: "configKey" as keyof SystemConfig,
         title: t("systemConfig.configKey"),
@@ -237,7 +301,7 @@ export default function SystemConfigPage() {
           ),
       },
     ],
-    [t, handleOpen, handleDelete]
+    [t, handleOpen, handleDelete, configs, selectedIds, handleSelectAll, handleSelect]
   );
 
   return (
@@ -254,7 +318,6 @@ export default function SystemConfigPage() {
         <Box
           sx={{
             p: 3,
-            borderBottom: "1px solid",
             borderColor: "divider",
             bgcolor: "background.paper",
           }}
@@ -303,14 +366,19 @@ export default function SystemConfigPage() {
               {t("common.reset")}
             </CommonButton>
 
-            {/* 添加按钮 */}
-            <CommonButton
-              buttonVariant="add"
-              onClick={() => handleOpen()}
-              sx={{ marginLeft: "auto" }}
-            >
-              {t("systemConfig.add")}
-            </CommonButton>
+            <Box sx={{ marginLeft: "auto", display: "flex", gap: 2 }}>
+              {selectedIds.length > 0 && (
+                <CommonButton
+                  buttonVariant="batchDelete"
+                  onClick={() => setBatchDeleteDialogOpen(true)}
+                >
+                  {t("common.batchDelete")} ({selectedIds.length})
+                </CommonButton>
+              )}
+              <CommonButton buttonVariant="add" onClick={() => handleOpen()}>
+                {t("systemConfig.add")}
+              </CommonButton>
+            </Box>
           </Box>
         </Box>
 
@@ -435,6 +503,36 @@ export default function SystemConfigPage() {
               {t("common.cancel")}
             </CommonButton>
             <CommonButton buttonVariant="confirm" onClick={handleDeleteConfirm}>
+              {t("common.confirm")}
+            </CommonButton>
+          </DialogActions>
+        </Dialog>
+
+        {/* 批量删除确认对话框 */}
+        <Dialog
+          open={batchDeleteDialogOpen}
+          onClose={() => setBatchDeleteDialogOpen(false)}
+          maxWidth="xs"
+          fullWidth
+        >
+          <DialogTitle>{t("common.batchDeleteConfirm")}</DialogTitle>
+          <DialogContent>
+            <Typography>{t("common.batchDeleteConfirmMessage")}</Typography>
+          </DialogContent>
+          <DialogActions>
+            <CommonButton
+              buttonVariant="cancel"
+              onClick={() => setBatchDeleteDialogOpen(false)}
+            >
+              {t("common.cancel")}
+            </CommonButton>
+            <CommonButton
+              buttonVariant="confirm"
+              onClick={() => {
+                handleBatchDelete();
+                setBatchDeleteDialogOpen(false);
+              }}
+            >
               {t("common.confirm")}
             </CommonButton>
           </DialogActions>
