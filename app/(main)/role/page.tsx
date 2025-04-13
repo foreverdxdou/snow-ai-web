@@ -26,17 +26,14 @@ import { PerformanceTable } from "@/app/components/common/PerformanceTable";
 import { roleService } from "@/app/services/role";
 import { permissionService } from "@/app/services/permission";
 import type { Role, RoleDTO } from "@/app/types/role";
-import type { TreePermission } from "@/app/types/permission";
+import type { TreePermission, Permission } from "@/app/types/permission";
 import { usePerformanceData } from "@/app/hooks/usePerformanceData";
 import { alpha } from "@mui/material/styles";
 import { useTheme } from "@mui/material/styles";
 import { ExpandLess, ExpandMore } from "@mui/icons-material";
-import { useTreeViewApiRef } from "@mui/x-tree-view/hooks/useTreeViewApiRef";
-import { el } from "date-fns/locale";
 
 export default function RolePage() {
   const { t } = useTranslation();
-  const apiRef = useTreeViewApiRef();
   const [open, setOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [batchDeleteDialogOpen, setBatchDeleteDialogOpen] = useState(false);
@@ -51,9 +48,24 @@ export default function RolePage() {
     status: 1,
   });
   const [permissions, setPermissions] = useState<TreePermission[]>([]);
+  const [permissions1, setPermissions1] = useState<Permission[]>([]);
   const [selectedItems, setSelectedItems] = React.useState<string[]>([]);
   const [expandedItems, setExpandedItems] = React.useState<string[]>([]);
   const [cascadeSelect, setCascadeSelect] = React.useState(true);
+
+  const isAllSelected = useMemo(() => {
+    console.log("isAllSelected", selectedItems, permissions1.length);
+    return (
+      selectedItems.length > 0 && selectedItems.length === permissions1.length
+    );
+  }, [selectedItems, permissions1.length]);
+
+  const isIndeterminate = useMemo(() => {
+    console.log("isIndeterminate", selectedItems, permissions1.length);
+    return (
+      selectedItems.length > 0 && selectedItems.length < permissions1.length
+    );
+  }, [selectedItems, permissions1.length]);
 
   const [snackbar, setSnackbar] = useState({
     open: false,
@@ -92,8 +104,12 @@ export default function RolePage() {
   const fetchPermissions = useCallback(async () => {
     try {
       const response = await permissionService.getTreeForControl();
+      const response1 = await permissionService.getTree();
       if (response.data?.code === 200 && response.data?.data) {
         setPermissions(response.data.data);
+      }
+      if (response1.data?.code === 200 && response1.data?.data) {
+        setPermissions1(response1.data.data);
       }
     } catch (error) {
       console.error("获取权限列表失败:", error);
@@ -169,7 +185,7 @@ export default function RolePage() {
     setSelectedItems((prev) =>
       prev.length === 0 ? getAllItemIds(permissions) : []
     );
-  }, [permissions]);
+  }, [permissions1, permissions]);
 
   const getAllItemIds = (nodes: TreePermission[]): string[] => {
     return nodes.reduce<string[]>((acc, node) => {
@@ -192,15 +208,6 @@ export default function RolePage() {
     },
     [roles]
   );
-
-  // 处理按钮点击全选
-  const handleSelectAllClick = useCallback(() => {
-    if (selectedIds.length === roles.length) {
-      setSelectedIds([]);
-    } else {
-      setSelectedIds(roles.map((item) => item.id));
-    }
-  }, [roles, selectedIds.length]);
 
   // 处理单个选择
   const handleSelect = useCallback((id: number, checked: boolean) => {
@@ -321,29 +328,36 @@ export default function RolePage() {
         const newSelectedItems = selectedItems.filter(
           (item) => !allChangeItemIds.includes(item)
         );
-        setSelectedItems(newSelectedItems);
-        setFormData({ ...formData, permissionIds: newSelectedItems });
+        // newSelectedItems去重
+        const uniqueSelectedItems = [...new Set(newSelectedItems)];
+        setSelectedItems(uniqueSelectedItems);
+        setFormData({ ...formData, permissionIds: uniqueSelectedItems });
       } else {
         const newSelectedItems = selectedItems.filter(
           (item) => item !== itemId
         );
-        setSelectedItems(newSelectedItems);
+        // newSelectedItems去重
+        const uniqueSelectedItems = [...new Set(newSelectedItems)];
+        setSelectedItems(uniqueSelectedItems);
         setFormData({
           ...formData,
-          permissionIds: newSelectedItems,
+          permissionIds: uniqueSelectedItems,
         });
       }
     } else {
       const diff = itemIds.filter((item) => !selectedItems.includes(item));
       const itemId = diff[0];
-      const allChangeItemIds: string[] = [itemId];
-      getPermissionAllChildrenIds(itemId, allChangeItemIds);
       // 添加
       if (cascadeSelect) {
-        setSelectedItems([...selectedItems, ...itemIds, ...allChangeItemIds]);
+        const allChangeItemIds: string[] = [itemId];
+        getPermissionAllChildrenIds(itemId, allChangeItemIds);
+        allChangeItemIds.push(...selectedItems);
+        // allChangeItemIds去重
+        const uniqueAllChangeItemIds = [...new Set(allChangeItemIds)];
+        setSelectedItems(uniqueAllChangeItemIds);
         setFormData({
           ...formData,
-          permissionIds: [...selectedItems, ...itemIds, ...allChangeItemIds],
+          permissionIds: uniqueAllChangeItemIds,
         });
       } else {
         setSelectedItems([...selectedItems, itemId]);
@@ -354,8 +368,6 @@ export default function RolePage() {
       }
     }
   };
-
-  const handleItemClick = (event: React.SyntheticEvent, itemId: string) => {};
 
   const handleExpandedItemsChange = (
     event: React.SyntheticEvent,
@@ -665,7 +677,7 @@ export default function RolePage() {
                 }
                 fullWidth
                 multiline
-                rows={3}
+                rows={2}
               />
               <Box>
                 <Box
@@ -679,12 +691,14 @@ export default function RolePage() {
                   <Typography variant="subtitle1">
                     {t("common.role.permissions")}
                   </Typography>
+
                   <Stack direction="row" spacing={1} alignItems="center">
                     <CommonButton
                       buttonVariant="selectAll"
                       size="small"
                       onClick={handleCascadeSelect}
                       selected={cascadeSelect}
+                      checked={cascadeSelect}
                     >
                       {t("common.cascadeSelect")}
                     </CommonButton>
@@ -692,10 +706,12 @@ export default function RolePage() {
                       buttonVariant="selectAll"
                       size="small"
                       onClick={handlePermissionSelectAll}
-                      selected={selectedIds.length === roles.length}
+                      checked={isAllSelected}
+                      indeterminate={isIndeterminate}
                     >
                       {t("common.selectAll")}
                     </CommonButton>
+
                     <CommonButton
                       buttonVariant="add"
                       size="small"
@@ -765,9 +781,7 @@ export default function RolePage() {
                   }}
                 >
                   <SimpleTreeView
-                    apiRef={apiRef}
                     selectedItems={selectedItems}
-                    onItemClick={handleItemClick}
                     onSelectedItemsChange={handleSelectedItemsChange}
                     multiSelect
                     checkboxSelection
