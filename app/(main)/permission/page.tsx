@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback, useEffect, useMemo } from "react";
+import React, { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import {
   Box,
   Typography,
@@ -20,6 +20,12 @@ import {
   Checkbox,
   FormControlLabel,
   Switch,
+  FormControl,
+  InputLabel,
+  OutlinedInput,
+  InputAdornment,
+  Menu,
+  MenuItem,
 } from "@mui/material";
 import {
   Add as AddIcon,
@@ -40,6 +46,7 @@ import type {
   Permission,
   PermissionDTO,
   PermissionQuery,
+  TreePermission,
 } from "@/app/types/permission";
 import { alpha } from "@mui/material/styles";
 import { useTheme } from "@mui/material/styles";
@@ -127,18 +134,12 @@ const TreeNode = ({
     const checked = e.target.checked;
     const allIds = getNodeAndChildrenIds(node);
     if (checked) {
-      onSelect(node.id, true);
       allIds.forEach((id) => {
-        if (id !== node.id) {
-          onSelect(id, true);
-        }
+        onSelect(id, true);
       });
     } else {
-      onSelect(node.id, false);
       allIds.forEach((id) => {
-        if (id !== node.id) {
-          onSelect(id, false);
-        }
+        onSelect(id, false);
       });
     }
   };
@@ -199,6 +200,11 @@ const TreeNode = ({
               checked={selectedIds.includes(node.id)}
               onChange={handleCheckboxChange}
               onClick={(e) => e.stopPropagation()}
+              indeterminate={
+                node.children && node.children.length > 0 &&
+                node.children.some(child => selectedIds.includes(child.id)) &&
+                !node.children.every(child => selectedIds.includes(child.id))
+              }
             />
           </Grid>
           <Grid item xs={2}>
@@ -334,6 +340,160 @@ const getAllNodeIds = (nodes: Permission[]): string[] => {
   return ids;
 };
 
+// 树形选择组件
+const TreeSelect = ({
+  value,
+  onChange,
+  options,
+  label,
+  currentId,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  options: TreePermission[];
+  label: string;
+  currentId?: string;
+}) => {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const anchorRef = useRef<HTMLDivElement>(null);
+
+  // 获取节点的所有子节点ID
+  const getAllChildrenIds = (node: TreePermission): string[] => {
+    let ids: string[] = [];
+    if (node.children && node.children.length > 0) {
+      node.children.forEach((child) => {
+        ids.push(child.id);
+        ids = ids.concat(getAllChildrenIds(child));
+      });
+    }
+    return ids;
+  };
+
+  // 检查节点是否可以被选择为父菜单
+  const isSelectable = (node: TreePermission): boolean => {
+    // 如果当前节点是根节点（parentId为0），则不允许选择其任何子节点
+    if (currentId === "0") {
+      return false;
+    }
+    
+    // 如果当前节点是正在编辑的节点，则不允许选择
+    if (node.id === currentId) {
+      return false;
+    }
+
+    // 如果当前节点是正在编辑节点的子节点，则不允许选择
+    if (currentId) {
+      const findNode = (nodes: TreePermission[]): TreePermission | null => {
+        for (const n of nodes) {
+          if (n.id === currentId) return n;
+          if (n.children && n.children.length > 0) {
+            const found = findNode(n.children);
+            if (found) return found;
+          }
+        }
+        return null;
+      };
+
+      const currentNode = findNode(options);
+      if (currentNode) {
+        const childrenIds = getAllChildrenIds(currentNode);
+        if (childrenIds.includes(node.id)) {
+          return false;
+        }
+      }
+    }
+
+    return true;
+  };
+
+  const handleClose = (event: Event) => {
+    if (anchorRef.current && anchorRef.current.contains(event.target as HTMLElement)) {
+      return;
+    }
+    setOpen(false);
+  };
+
+  const handleSelect = (id: string) => {
+    onChange(id);
+    setOpen(false);
+  };
+
+  const renderTreeItem = (node: TreePermission, level: number = 0) => {
+    const selectable = isSelectable(node);
+    return (
+      <Box key={node.id}>
+        <MenuItem
+          onClick={() => handleSelect(node.id)}
+          disabled={!selectable}
+          sx={{
+            pl: level * 2 + 2,
+            backgroundColor: value === node.id ? 'action.selected' : 'transparent',
+            '&:hover': {
+              backgroundColor: selectable ? 'action.hover' : 'transparent',
+            },
+            opacity: selectable ? 1 : 0.5,
+          }}
+        >
+          <Typography variant="body2">{node.name}</Typography>
+        </MenuItem>
+        {node.children && node.children.length > 0 && (
+          <Box sx={{ pl: 2 }}>
+            {node.children.map((child) => renderTreeItem(child, level + 1))}
+          </Box>
+        )}
+      </Box>
+    );
+  };
+
+  const selectedName = useMemo(() => {
+    const findNode = (nodes: TreePermission[]): string | undefined => {
+      for (const node of nodes) {
+        if (node.id === value) return node.name;
+        if (node.children && node.children.length > 0) {
+          const found = findNode(node.children);
+          if (found) return found;
+        }
+      }
+      return undefined;
+    };
+    return findNode(options) || t("common.permission.select");
+  }, [value, options, t]);
+
+  return (
+    <Box>
+      <FormControl fullWidth>
+        <InputLabel>{label}</InputLabel>
+        <OutlinedInput
+          ref={anchorRef}
+          value={selectedName}
+          onClick={() => setOpen(true)}
+          endAdornment={
+            <InputAdornment position="end">
+              {open ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+            </InputAdornment>
+          }
+          label={label}
+          readOnly
+        />
+      </FormControl>
+      <Menu
+        anchorEl={anchorRef.current}
+        open={open}
+        onClose={handleClose}
+        PaperProps={{
+          style: {
+            maxHeight: 300,
+            width: anchorRef.current?.clientWidth,
+          },
+        }}
+      >
+        {options.map((node) => renderTreeItem(node))}
+      </Menu>
+    </Box>
+  );
+};
+
 export default function PermissionPage() {
   const { t } = useTranslation();
   const [permissions, setPermissions] = useState<Permission[]>([]);
@@ -368,6 +528,8 @@ export default function PermissionPage() {
     severity: "success" as "success" | "error",
   });
 
+  const [treeOptions, setTreeOptions] = useState<TreePermission[]>([]);
+
   // 获取权限树
   const fetchPermissions = useCallback(async () => {
     setLoading(true);
@@ -384,9 +546,22 @@ export default function PermissionPage() {
     }
   }, [params]);
 
+  // 获取树形选择数据
+  const fetchTreeOptions = useCallback(async () => {
+    try {
+      const response = await permissionService.getTreeForControl();
+      if (response.data?.data) {
+        setTreeOptions(response.data.data);
+      }
+    } catch (error) {
+      console.error("获取树形选择数据失败:", error);
+    }
+  }, []);
+
   useEffect(() => {
     fetchPermissions();
-  }, [fetchPermissions]);
+    fetchTreeOptions();
+  }, [fetchPermissions, fetchTreeOptions]);
 
   // 处理打开对话框
   const handleOpen = useCallback((permission?: Permission, parent?: string) => {
@@ -458,6 +633,7 @@ export default function PermissionPage() {
       }
       handleClose();
       fetchPermissions();
+      fetchTreeOptions();
     } catch (error) {
       console.error(`${editingPermission ? "更新" : "创建"}权限失败:`, error);
       setSnackbar({
@@ -470,7 +646,7 @@ export default function PermissionPage() {
         severity: "error",
       });
     }
-  }, [editingPermission, formData, handleClose, fetchPermissions, t]);
+  }, [editingPermission, formData, handleClose, fetchPermissions, fetchTreeOptions, t]);
 
   // 处理删除
   const handleDelete = useCallback((id: string) => {
@@ -517,11 +693,16 @@ export default function PermissionPage() {
 
   // 处理单个选择
   const handleSelect = useCallback((id: string, checked: boolean) => {
-    if (checked) {
-      setSelectedIds((prev) => [...prev, id]);
-    } else {
-      setSelectedIds((prev) => prev.filter((item) => item !== id));
-    }
+    setSelectedIds((prev) => {
+      if (checked) {
+        if (!prev.includes(id)) {
+          return [...prev, id];
+        }
+      } else {
+        return prev.filter((item) => item !== id);
+      }
+      return prev;
+    });
   }, []);
 
   // 处理批量删除
@@ -580,10 +761,10 @@ export default function PermissionPage() {
               sx={{ display: "flex", justifyContent: "center" }}
             >
               <Checkbox
-                checked={selectedIds.length === permissions.length}
+                checked={selectedIds.length === getAllNodeIds(permissions).length}
                 indeterminate={
                   selectedIds.length > 0 &&
-                  selectedIds.length < permissions.length
+                  selectedIds.length < getAllNodeIds(permissions).length
                 }
                 onChange={(e) => handleSelectAll(e.target.checked)}
               />
@@ -739,6 +920,13 @@ export default function PermissionPage() {
             <Box
               sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 2 }}
             >
+              <TreeSelect
+                value={formData.parentId}
+                onChange={(value) => setFormData({ ...formData, parentId: value })}
+                options={treeOptions}
+                label={t("common.permission.parent")}
+                currentId={editingPermission?.id}
+              />
               <CommonInput
                 label={t("common.permission.name")}
                 value={formData.name}
