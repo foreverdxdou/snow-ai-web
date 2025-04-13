@@ -12,7 +12,6 @@ import {
   Snackbar,
   Stack,
   Paper,
-  FormControlLabel,
   Checkbox,
 } from "@mui/material";
 import { SimpleTreeView } from "@mui/x-tree-view/SimpleTreeView";
@@ -32,15 +31,17 @@ import { usePerformanceData } from "@/app/hooks/usePerformanceData";
 import { alpha } from "@mui/material/styles";
 import { useTheme } from "@mui/material/styles";
 import { ExpandLess, ExpandMore } from "@mui/icons-material";
-import { useTreeViewApiRef } from '@mui/x-tree-view/hooks/useTreeViewApiRef';
-import { TreeViewBaseItem, TreeViewItemId } from "@mui/x-tree-view/models";
+import { useTreeViewApiRef } from "@mui/x-tree-view/hooks/useTreeViewApiRef";
+import { el } from "date-fns/locale";
 
 export default function RolePage() {
   const { t } = useTranslation();
   const apiRef = useTreeViewApiRef();
   const [open, setOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [batchDeleteDialogOpen, setBatchDeleteDialogOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [editingRole, setEditingRole] = useState<Role | null>(null);
   const [formData, setFormData] = useState<RoleDTO>({
     roleName: "",
@@ -164,7 +165,7 @@ export default function RolePage() {
   }, []);
 
   // 处理全选/取消全选
-  const handleSelectAll = useCallback(() => {
+  const handlePermissionSelectAll = useCallback(() => {
     setSelectedItems((prev) =>
       prev.length === 0 ? getAllItemIds(permissions) : []
     );
@@ -179,6 +180,57 @@ export default function RolePage() {
       return acc;
     }, []);
   };
+
+  // 处理全选
+  const handleSelectAll = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      if (event.target.checked) {
+        setSelectedIds(roles.map((item) => item.id));
+      } else {
+        setSelectedIds([]);
+      }
+    },
+    [roles]
+  );
+
+  // 处理按钮点击全选
+  const handleSelectAllClick = useCallback(() => {
+    if (selectedIds.length === roles.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(roles.map((item) => item.id));
+    }
+  }, [roles, selectedIds.length]);
+
+  // 处理单个选择
+  const handleSelect = useCallback((id: number, checked: boolean) => {
+    if (checked) {
+      setSelectedIds((prev) => [...prev, id]);
+    } else {
+      setSelectedIds((prev) => prev.filter((item) => item !== id));
+    }
+  }, []);
+
+  // 处理批量删除
+  const handleBatchDelete = useCallback(async () => {
+    try {
+      await roleService.batchDelete(selectedIds);
+      setSnackbar({
+        open: true,
+        message: t("common.batchDeleteSuccess"),
+        severity: "success",
+      });
+      setSelectedIds([]);
+      refresh();
+    } catch (error) {
+      console.error("批量删除失败:", error);
+      setSnackbar({
+        open: true,
+        message: t("common.batchDeleteError"),
+        severity: "error",
+      });
+    }
+  }, [selectedIds, refresh, t]);
 
   // 获取所有子节点的ID
   const getAllChildrenIds = (nodes: TreePermission[]): string[] => {
@@ -219,28 +271,55 @@ export default function RolePage() {
     ));
   };
 
-  const getPermissionAllChildrenIds = useCallback((items: string[], itemIds: string[]) => {
-    return items.map((item: string) => {
-      itemIds.push(item);
-      const thisItemChildrenIds: string[] = apiRef.current?.getItemOrderedChildrenIds(item) || [];
-      if (thisItemChildrenIds.length > 0) {
-        getPermissionAllChildrenIds(thisItemChildrenIds, itemIds);
-      }
-    });
-  }, []);
+  const getPermissionAllChildrenIds = useCallback(
+    (itemId: string, itemIds: string[]) => {
+      const findNode = (nodes: TreePermission[]): TreePermission | null => {
+        for (const node of nodes) {
+          if (node.id === itemId) {
+            return node;
+          }
+          if (node.children?.length) {
+            const found = findNode(node.children);
+            if (found) return found;
+          }
+        }
+        return null;
+      };
 
-  const handleItemClick = (event: React.SyntheticEvent, itemId: string) => {
-    // 获取所有子节点的ID
-    const itemIds: string[] = [itemId];
-    const thisItemChildrenIds: string[] = apiRef.current?.getItemOrderedChildrenIds(itemId) || [];
-    if (thisItemChildrenIds.length > 0) {
-      getPermissionAllChildrenIds(thisItemChildrenIds, itemIds);
-    }
-    if (selectedItems.includes(itemId)) {
+      const node = findNode(permissions);
+      const findChildren = (nodes: TreePermission[]): string[] => {
+        return nodes.reduce<string[]>((acc, node) => {
+          acc.push(node.id);
+          if (node.children?.length) {
+            acc.push(...findChildren(node.children));
+          }
+          return acc;
+        }, []);
+      };
+
+      const childrenIds = node
+        ? [node.id, ...findChildren(node.children || [])]
+        : [];
+      itemIds.push(...childrenIds);
+    },
+    [permissions]
+  );
+
+  const handleSelectedItemsChange = (
+    event: React.SyntheticEvent,
+    itemIds: string[]
+  ) => {
+    // 删除
+    if (selectedItems.length > itemIds.length) {
+      const diff = selectedItems.filter((item) => !itemIds.includes(item));
+      const itemId = diff[0];
+      const allChangeItemIds: string[] = [itemId];
+      getPermissionAllChildrenIds(itemId, allChangeItemIds);
+
       // 删除
       if (cascadeSelect) {
         const newSelectedItems = selectedItems.filter(
-          (item) => !itemIds.includes(item) && item !== itemId
+          (item) => !allChangeItemIds.includes(item)
         );
         setSelectedItems(newSelectedItems);
         setFormData({ ...formData, permissionIds: newSelectedItems });
@@ -255,20 +334,28 @@ export default function RolePage() {
         });
       }
     } else {
+      const diff = itemIds.filter((item) => !selectedItems.includes(item));
+      const itemId = diff[0];
+      const allChangeItemIds: string[] = [itemId];
+      getPermissionAllChildrenIds(itemId, allChangeItemIds);
       // 添加
       if (cascadeSelect) {
-        setSelectedItems([...selectedItems, ...itemIds, itemId]);
+        setSelectedItems([...selectedItems, ...itemIds, ...allChangeItemIds]);
         setFormData({
           ...formData,
-          permissionIds: [...selectedItems, ...itemIds, itemId],
+          permissionIds: [...selectedItems, ...itemIds, ...allChangeItemIds],
         });
       } else {
         setSelectedItems([...selectedItems, itemId]);
-        setFormData({ ...formData, permissionIds: [...selectedItems, itemId] });
+        setFormData({
+          ...formData,
+          permissionIds: [...selectedItems, itemId],
+        });
       }
     }
   };
 
+  const handleItemClick = (event: React.SyntheticEvent, itemId: string) => {};
 
   const handleExpandedItemsChange = (
     event: React.SyntheticEvent,
@@ -359,6 +446,26 @@ export default function RolePage() {
   const columns = useMemo(
     () => [
       {
+        key: "selection" as keyof Role,
+        title: (
+          <Checkbox
+            checked={roles.length > 0 && selectedIds.length === roles.length}
+            indeterminate={
+              selectedIds.length > 0 && selectedIds.length < roles.length
+            }
+            onChange={(e) => handleSelectAll(e)}
+          />
+        ),
+        width: 50,
+        render: (_: any, record: Role) => (
+          <Checkbox
+            checked={selectedIds.includes(record.id)}
+            onChange={(e) => handleSelect(record.id, e.target.checked)}
+            onClick={(e) => e.stopPropagation()}
+          />
+        ),
+      },
+      {
         key: "roleName" as keyof Role,
         title: t("common.role.roleName"),
         width: 200,
@@ -408,7 +515,15 @@ export default function RolePage() {
         ),
       },
     ],
-    [t, handleOpen, handleDelete]
+    [
+      t,
+      handleOpen,
+      handleDelete,
+      roles,
+      selectedIds,
+      handleSelectAll,
+      handleSelect,
+    ]
   );
 
   return (
@@ -465,19 +580,28 @@ export default function RolePage() {
             <CommonButton
               buttonVariant="reset"
               onClick={() => {
-                setParams(defaultParams);
-                refresh();
+                setParams({
+                  ...defaultParams,
+                  current: 1,
+                  size: 10,
+                });
               }}
             >
               {t("common.reset")}
             </CommonButton>
-            <CommonButton
-              buttonVariant="add"
-              onClick={() => handleOpen()}
-              sx={{ marginLeft: "auto" }}
-            >
-              {t("common.role.add")}
-            </CommonButton>
+            <Box sx={{ marginLeft: "auto", display: "flex", gap: 2 }}>
+              {selectedIds.length > 0 && (
+                <CommonButton
+                  buttonVariant="batchDelete"
+                  onClick={() => setBatchDeleteDialogOpen(true)}
+                >
+                  {t("common.batchDelete")} ({selectedIds.length})
+                </CommonButton>
+              )}
+              <CommonButton buttonVariant="add" onClick={() => handleOpen()}>
+                {t("common.role.add")}
+              </CommonButton>
+            </Box>
           </SearchBar>
         </Box>
 
@@ -567,8 +691,8 @@ export default function RolePage() {
                     <CommonButton
                       buttonVariant="selectAll"
                       size="small"
-                      onClick={handleSelectAll}
-                      selected={selectedItems.length > 0}
+                      onClick={handlePermissionSelectAll}
+                      selected={selectedIds.length === roles.length}
                     >
                       {t("common.selectAll")}
                     </CommonButton>
@@ -641,9 +765,10 @@ export default function RolePage() {
                   }}
                 >
                   <SimpleTreeView
-                    apiRef={apiRef} 
+                    apiRef={apiRef}
                     selectedItems={selectedItems}
                     onItemClick={handleItemClick}
+                    onSelectedItemsChange={handleSelectedItemsChange}
                     multiSelect
                     checkboxSelection
                     expandedItems={expandedItems}
@@ -687,6 +812,35 @@ export default function RolePage() {
               {t("common.cancel")}
             </CommonButton>
             <CommonButton buttonVariant="confirm" onClick={handleDeleteConfirm}>
+              {t("common.confirm")}
+            </CommonButton>
+          </DialogActions>
+        </Dialog>
+
+        <Dialog
+          open={batchDeleteDialogOpen}
+          onClose={() => setBatchDeleteDialogOpen(false)}
+          maxWidth="xs"
+          fullWidth
+        >
+          <DialogTitle>{t("common.batchDeleteConfirm")}</DialogTitle>
+          <DialogContent>
+            <Typography>{t("common.batchDeleteConfirmMessage")}</Typography>
+          </DialogContent>
+          <DialogActions>
+            <CommonButton
+              buttonVariant="cancel"
+              onClick={() => setBatchDeleteDialogOpen(false)}
+            >
+              {t("common.cancel")}
+            </CommonButton>
+            <CommonButton
+              buttonVariant="confirm"
+              onClick={() => {
+                handleBatchDelete();
+                setBatchDeleteDialogOpen(false);
+              }}
+            >
               {t("common.confirm")}
             </CommonButton>
           </DialogActions>
