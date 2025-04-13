@@ -30,6 +30,7 @@ import {
     DialogContentText,
     DialogActions,
     Fab,
+    Collapse,
 } from '@mui/material';
 import {
     Send as SendIcon,
@@ -43,6 +44,9 @@ import {
     ExpandLess as ExpandLessIcon,
     KeyboardArrowDown as KeyboardArrowDownIcon,
     Refresh as RefreshIcon,
+    History as HistoryIcon,
+    Folder as FolderIcon,
+    ClearAll as ClearAllIcon,
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { v4 as uuidv4 } from 'uuid';
@@ -202,6 +206,8 @@ export default function QaPage() {
     const abortControllerRef = useRef<AbortController | null>(null);
     const isMountedRef = useRef(true);
     const [showScrollButton, setShowScrollButton] = useState(false);
+    const [showKnowledgeBase, setShowKnowledgeBase] = useState(false);
+    const [showChatHistory, setShowChatHistory] = useState(false);
 
     const [snackbar, setSnackbar] = useState({
         open: false,
@@ -743,12 +749,14 @@ export default function QaPage() {
         <Box sx={{ height: '100%', display: 'flex' }}>
             {/* 左侧对话历史面板 */}
             <Box sx={{
-                width: 260,
+                width: showChatHistory ? 260 : 0,
                 borderRight: '1px solid',
                 borderColor: 'divider',
                 bgcolor: 'background.paper',
                 display: 'flex',
                 flexDirection: 'column',
+                transition: 'width 0.3s ease',
+                overflow: 'hidden',
             }}>
                 <Box sx={{
                     p: 2,
@@ -933,7 +941,7 @@ export default function QaPage() {
             {/* 右侧聊天面板 */}
             <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
                 <Box sx={{
-                    p: 3,
+                    p: 2,
                     borderBottom: '1px solid',
                     borderColor: 'divider',
                     bgcolor: 'background.paper',
@@ -944,17 +952,57 @@ export default function QaPage() {
                         alignItems: 'center',
                         mb: 2,
                     }}>
-                        <Typography variant="h5" sx={{ fontWeight: 600 }}>
-                            {t('qa.title')}
-                        </Typography>
-                        <Button
-                            variant="outlined"
-                            color="error"
-                            startIcon={<DeleteIcon />}
-                            onClick={handleClearHistory}
-                        >
-                            {t('qa.clearHistory')}
-                        </Button>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Typography variant="h5" sx={{ fontWeight: 600 }}>
+                                {t('qa.title')}
+                            </Typography>
+                            <Box sx={{ display: 'flex', gap: 0.5 }}>
+                                <Tooltip title={t('qa.chatHistory')}>
+                                    <IconButton
+                                        size="small"
+                                        onClick={() => setShowChatHistory(!showChatHistory)}
+                                        sx={{
+                                            color: showChatHistory ? 'primary.main' : 'text.secondary',
+                                            transition: 'all 0.2s',
+                                            '&:hover': {
+                                                bgcolor: 'action.hover',
+                                            },
+                                        }}
+                                    >
+                                        <HistoryIcon fontSize="small" />
+                                    </IconButton>
+                                </Tooltip>
+                                <Tooltip title={t('qa.knowledgeBase')}>
+                                    <IconButton
+                                        size="small"
+                                        onClick={() => setShowKnowledgeBase(!showKnowledgeBase)}
+                                        sx={{
+                                            color: showKnowledgeBase ? 'primary.main' : 'text.secondary',
+                                            transition: 'all 0.2s',
+                                            '&:hover': {
+                                                bgcolor: 'action.hover',
+                                            },
+                                        }}
+                                    >
+                                        <FolderIcon fontSize="small" />
+                                    </IconButton>
+                                </Tooltip>
+                            </Box>
+                        </Box>
+                        <Tooltip title={t('qa.clearHistory')}>
+                            <IconButton
+                                color="error"
+                                onClick={handleClearHistory}
+                                sx={{
+                                    transition: 'all 0.2s',
+                                    '&:hover': {
+                                        bgcolor: 'error.light',
+                                    },
+                                }}
+                            >
+                                <ClearAllIcon />
+                            </IconButton>
+                        </Tooltip>
                     </Box>
 
                     {initialLoading ? (
@@ -962,14 +1010,16 @@ export default function QaPage() {
                             <CircularProgress size={24} />
                         </Box>
                     ) : (
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                            <KnowledgeBaseSelector
-                                knowledgeBases={knowledgeBases}
-                                selectedKbs={selectedKbs}
-                                onSelectAll={handleSelectAll}
-                                onSelectKb={handleKbSelect}
-                            />
-                        </Box>
+                        <Collapse in={showKnowledgeBase}>
+                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                <KnowledgeBaseSelector
+                                    knowledgeBases={knowledgeBases}
+                                    selectedKbs={selectedKbs}
+                                    onSelectAll={handleSelectAll}
+                                    onSelectKb={handleKbSelect}
+                                />
+                            </Box>
+                        </Collapse>
                     )}
                 </Box>
 

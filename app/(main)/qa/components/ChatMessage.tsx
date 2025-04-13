@@ -22,23 +22,20 @@ const markdownStyles = {
             mb: 1,
             fontWeight: 600,
             lineHeight: 1.25,
+            color: (theme: Theme) => theme.palette.mode === 'dark' ? '#E2E8F0' : '#1E293B',
         },
-        '& h1': { fontSize: '2em' },
-        '& h2': { fontSize: '1.5em' },
-        '& h3': { fontSize: '1.25em' },
-        '& h4': { fontSize: '1em' },
-        '& h5': { fontSize: '0.875em' },
-        '& h6': { fontSize: '0.85em' },
         '& p': {
             mt: 0,
             mb: 2,
             lineHeight: 1.6,
+            color: (theme: Theme) => theme.palette.mode === 'dark' ? '#CBD5E1' : '#334155',
         },
         '& a': {
-            color: 'primary.main',
+            color: (theme: Theme) => theme.palette.mode === 'dark' ? '#60A5FA' : '#2563EB',
             textDecoration: 'none',
             '&:hover': {
                 textDecoration: 'underline',
+                color: (theme: Theme) => theme.palette.mode === 'dark' ? '#93C5FD' : '#3B82F6',
             },
         },
         '& img': {
@@ -46,27 +43,30 @@ const markdownStyles = {
             height: 'auto',
             display: 'block',
             margin: '1em 0',
+            borderRadius: '8px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
         },
         '& pre': {
             mt: 2,
             mb: 2,
             p: 2,
-            borderRadius: 1,
-            bgcolor: (theme: Theme) => theme.palette.mode === 'dark' ? 'grey.900' : 'grey.100',
+            borderRadius: '12px',
+            bgcolor: (theme: Theme) => theme.palette.mode === 'dark' ? 'rgba(30, 41, 59, 0.5)' : 'rgba(241, 245, 249, 0.8)',
             overflow: 'auto',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
             '& code': {
-                color: 'inherit',
+                color: (theme: Theme) => theme.palette.mode === 'dark' ? '#E2E8F0' : '#1E293B',
                 fontSize: '0.875rem',
                 fontFamily: 'Consolas, Monaco, "Andale Mono", "Ubuntu Mono", monospace',
             },
         },
         '& code': {
-            color: 'primary.main',
+            color: (theme: Theme) => theme.palette.mode === 'dark' ? '#60A5FA' : '#2563EB',
             fontSize: '0.875rem',
             fontFamily: 'Consolas, Monaco, "Andale Mono", "Ubuntu Mono", monospace',
             p: 0.5,
-            borderRadius: 0.5,
-            bgcolor: (theme: Theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+            borderRadius: '4px',
+            bgcolor: (theme: Theme) => theme.palette.mode === 'dark' ? 'rgba(30, 41, 59, 0.5)' : 'rgba(241, 245, 249, 0.8)',
         },
         '& blockquote': {
             m: 0,
@@ -74,23 +74,34 @@ const markdownStyles = {
             mb: 2,
             pl: 2,
             borderLeft: '4px solid',
-            borderColor: 'primary.main',
-            color: 'text.secondary',
+            borderColor: (theme: Theme) => theme.palette.mode === 'dark' ? '#60A5FA' : '#2563EB',
+            color: (theme: Theme) => theme.palette.mode === 'dark' ? '#CBD5E1' : '#475569',
             fontStyle: 'italic',
+            bgcolor: (theme: Theme) => theme.palette.mode === 'dark' ? 'rgba(30, 41, 59, 0.3)' : 'rgba(241, 245, 249, 0.5)',
+            borderRadius: '0 8px 8px 0',
+            p: 2,
         },
         '& table': {
             width: '100%',
             mt: 2,
             mb: 2,
-            borderCollapse: 'collapse',
+            borderCollapse: 'separate',
+            borderSpacing: 0,
+            borderRadius: '8px',
+            overflow: 'hidden',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
             '& th, & td': {
-                p: 1,
+                p: 1.5,
                 border: '1px solid',
-                borderColor: 'divider',
+                borderColor: (theme: Theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
             },
             '& th': {
                 fontWeight: 600,
-                bgcolor: (theme: Theme) => theme.palette.mode === 'dark' ? 'grey.900' : 'grey.100',
+                bgcolor: (theme: Theme) => theme.palette.mode === 'dark' ? 'rgba(30, 41, 59, 0.5)' : 'rgba(241, 245, 249, 0.8)',
+                color: (theme: Theme) => theme.palette.mode === 'dark' ? '#E2E8F0' : '#1E293B',
+            },
+            '& td': {
+                color: (theme: Theme) => theme.palette.mode === 'dark' ? '#CBD5E1' : '#334155',
             },
         },
         '& ul, & ol': {
@@ -99,13 +110,19 @@ const markdownStyles = {
             pl: 3,
             '& li': {
                 mb: 0.5,
+                position: 'relative',
+                color: (theme: Theme) => theme.palette.mode === 'dark' ? '#CBD5E1' : '#334155',
+                '&::marker': {
+                    color: (theme: Theme) => theme.palette.mode === 'dark' ? '#60A5FA' : '#2563EB',
+                },
             },
         },
         '& hr': {
             my: 2,
             border: 'none',
             borderTop: '1px solid',
-            borderColor: 'divider',
+            borderColor: (theme: Theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+            opacity: 0.3,
         },
     },
 };
@@ -598,27 +615,55 @@ export const ChatMessage = ({ chat, onRegenerate, onDelete }: ChatMessageProps) 
         <>
             <Box>
                 {/* 用户问题 */}
-                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', mb: 2 }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', mb: 3 }}>
                     <Paper
                         sx={{
                             maxWidth: '85%',
-                            p: 2,
-                            bgcolor: 'primary.main',
-                            color: 'primary.contrastText',
-                            borderRadius: '12px 12px 0 12px',
+                            p: 2.5,
+                            bgcolor: (theme: Theme) => theme.palette.mode === 'dark' ? '#2563EB' : '#3B82F6',
+                            color: '#FFFFFF',
+                            borderRadius: '20px 20px 0 20px',
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                            position: 'relative',
+                            '&::after': {
+                                content: '""',
+                                position: 'absolute',
+                                right: 0,
+                                bottom: 0,
+                                width: '20px',
+                                height: '20px',
+                                background: 'inherit',
+                                clipPath: 'polygon(0 0, 100% 0, 100% 100%)',
+                            },
+                            transition: 'all 0.3s ease',
+                            '&:hover': {
+                                transform: 'translateY(-2px)',
+                                boxShadow: '0 6px 16px rgba(0,0,0,0.15)',
+                                bgcolor: (theme: Theme) => theme.palette.mode === 'dark' ? '#1D4ED8' : '#2563EB',
+                            },
                         }}
                     >
-                        <Typography>{chat.question}</Typography>
+                        <Typography sx={{ 
+                            fontSize: '1rem',
+                            lineHeight: 1.6,
+                            fontWeight: 500,
+                        }}>
+                            {chat.question}
+                        </Typography>
                     </Paper>
-                    <Box sx={{ display: 'flex', gap: 1, mt: 0.5 }}>
+                    <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
                         <Tooltip title={t('qa.copyMessage')}>
                             <IconButton
                                 onClick={() => handleCopyMessage()}
                                 sx={{
-                                    color: 'primary.main',
+                                    color: (theme: Theme) => theme.palette.mode === 'dark' ? '#60A5FA' : '#2563EB',
                                     opacity: 0.7,
                                     transition: 'all 0.2s',
-                                    '&:hover': { opacity: 1, transform: 'scale(1.1)' },
+                                    '&:hover': { 
+                                        opacity: 1, 
+                                        transform: 'scale(1.1)',
+                                        bgcolor: (theme: Theme) => theme.palette.mode === 'dark' ? 'rgba(96, 165, 250, 0.1)' : 'rgba(37, 99, 235, 0.1)',
+                                    },
                                 }}
                                 size="small"
                             >
@@ -629,10 +674,14 @@ export const ChatMessage = ({ chat, onRegenerate, onDelete }: ChatMessageProps) 
                             <IconButton
                                 onClick={handleDeleteMessage}
                                 sx={{
-                                    color: 'error.main',
+                                    color: (theme: Theme) => theme.palette.mode === 'dark' ? '#F87171' : '#EF4444',
                                     opacity: 0.7,
                                     transition: 'all 0.2s',
-                                    '&:hover': { opacity: 1, transform: 'scale(1.1)' },
+                                    '&:hover': { 
+                                        opacity: 1, 
+                                        transform: 'scale(1.1)',
+                                        bgcolor: (theme: Theme) => theme.palette.mode === 'dark' ? 'rgba(248, 113, 113, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                                    },
                                 }}
                                 size="small"
                             >
@@ -649,7 +698,7 @@ export const ChatMessage = ({ chat, onRegenerate, onDelete }: ChatMessageProps) 
                             display: 'flex',
                             alignItems: 'center',
                             gap: 1,
-                            mb: 1,
+                            mb: 1.5,
                             ml: 1
                         }}>
                             <Box
@@ -657,7 +706,13 @@ export const ChatMessage = ({ chat, onRegenerate, onDelete }: ChatMessageProps) 
                                 sx={{
                                     display: 'flex',
                                     alignItems: 'center',
-                                    color: '#818cf8'
+                                    color: (theme: Theme) => theme.palette.mode === 'dark' ? '#60A5FA' : '#2563EB',
+                                    animation: 'pulse 2s infinite',
+                                    '@keyframes pulse': {
+                                        '0%': { opacity: 1 },
+                                        '50%': { opacity: 0.5 },
+                                        '100%': { opacity: 1 },
+                                    },
                                 }}
                             >
                                 ❄️
@@ -665,11 +720,12 @@ export const ChatMessage = ({ chat, onRegenerate, onDelete }: ChatMessageProps) 
                             <Typography
                                 variant="body2"
                                 sx={{
-                                    color: '#6b7280',
+                                    color: (theme: Theme) => theme.palette.mode === 'dark' ? '#94A3B8' : '#64748B',
                                     fontSize: '0.875rem',
                                     display: 'flex',
                                     alignItems: 'center',
-                                    gap: 1
+                                    gap: 1,
+                                    fontWeight: 500,
                                 }}
                             >
                                 {chat.answer.includes('</think>') && chat.isStop === 0 ? t('qa.thinkingCompleted') : chat.isStop === 1 ? t('qa.thinkingAborted') : t('qa.thinking')}
@@ -679,11 +735,13 @@ export const ChatMessage = ({ chat, onRegenerate, onDelete }: ChatMessageProps) 
                                 <IconButton
                                     onClick={handleToggleReasoning}
                                     sx={{
-                                        color: '#6b7280',
+                                        color: (theme: Theme) => theme.palette.mode === 'dark' ? '#94A3B8' : '#64748B',
                                         padding: '2px',
+                                        transition: 'all 0.2s',
                                         '&:hover': {
-                                            color: '#818cf8',
-                                            bgcolor: 'transparent'
+                                            color: (theme: Theme) => theme.palette.mode === 'dark' ? '#60A5FA' : '#2563EB',
+                                            bgcolor: 'transparent',
+                                            transform: 'scale(1.1)',
                                         }
                                     }}
                                     size="small"
@@ -697,10 +755,31 @@ export const ChatMessage = ({ chat, onRegenerate, onDelete }: ChatMessageProps) 
                         elevation={2}
                         sx={{
                             maxWidth: '85%',
-                            p: 2,
-                            borderRadius: '12px 12px 12px 0',
-                            bgcolor: 'background.paper',
-                            '&:hover': { boxShadow: 3 },
+                            p: 2.5,
+                            borderRadius: '20px 20px 20px 0',
+                            bgcolor: (theme: Theme) => theme.palette.mode === 'dark' 
+                                ? 'rgba(139, 92, 246, 0.12)'  // 暗色模式：柔和的紫色
+                                : 'rgba(248, 250, 252, 0.95)', // 亮色模式：浅灰色
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                            position: 'relative',
+                            '&::after': {
+                                content: '""',
+                                position: 'absolute',
+                                left: 0,
+                                bottom: 0,
+                                width: '20px',
+                                height: '20px',
+                                background: 'inherit',
+                                clipPath: 'polygon(0 0, 0 100%, 100% 100%)',
+                            },
+                            transition: 'all 0.3s ease',
+                            '&:hover': {
+                                transform: 'translateY(-2px)',
+                                boxShadow: '0 6px 16px rgba(0,0,0,0.15)',
+                                bgcolor: (theme: Theme) => theme.palette.mode === 'dark' 
+                                    ? 'rgba(139, 92, 246, 0.18)'  // 暗色模式悬停：稍深的紫色
+                                    : 'rgba(248, 250, 252, 1)', // 亮色模式悬停：更实的浅灰色
+                            },
                             ...markdownStyles,
                         }}
                     >
@@ -708,35 +787,25 @@ export const ChatMessage = ({ chat, onRegenerate, onDelete }: ChatMessageProps) 
                             {renderAnswer(chat.answer)}
                         </Box>
                     </Paper>
-                    <Box sx={{ display: 'flex', gap: 1, mt: 0.5 }}>
+                    <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
                         <Tooltip title={t('qa.copyMessage')}>
                             <IconButton
                                 onClick={() => handleCopyMessage()}
                                 sx={{
-                                    color: 'primary.main',
+                                    color: (theme: Theme) => theme.palette.mode === 'dark' ? '#60A5FA' : '#2563EB',
                                     opacity: 0.7,
                                     transition: 'all 0.2s',
-                                    '&:hover': { opacity: 1, transform: 'scale(1.1)' },
+                                    '&:hover': { 
+                                        opacity: 1, 
+                                        transform: 'scale(1.1)',
+                                        bgcolor: (theme: Theme) => theme.palette.mode === 'dark' ? 'rgba(96, 165, 250, 0.1)' : 'rgba(37, 99, 235, 0.1)',
+                                    },
                                 }}
                                 size="small"
                             >
                                 <ContentCopyIcon fontSize="small" />
                             </IconButton>
                         </Tooltip>
-                        {/* <Tooltip title={t('qa.regenerate')}>
-                            <IconButton
-                                onClick={onRegenerate}
-                                sx={{
-                                    color: 'primary.main',
-                                    opacity: 0.7,
-                                    transition: 'all 0.2s',
-                                    '&:hover': { opacity: 1, transform: 'scale(1.1)' },
-                                }}
-                                size="small"
-                            >
-                                <RefreshIcon fontSize="small" />
-                            </IconButton>
-                        </Tooltip> */}
                     </Box>
                 </Box>
             </Box>
