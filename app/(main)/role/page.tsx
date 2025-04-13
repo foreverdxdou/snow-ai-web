@@ -20,7 +20,6 @@ import { useTranslation } from "react-i18next";
 import { PerformanceLayout } from "@/app/components/common/PerformanceLayout";
 import { CommonButton } from "@/app/components/common/CommonButton";
 import { CommonInput } from "@/app/components/common/CommonInput";
-import { SearchBar } from "@/app/components/common/SearchBar";
 import { Pagination } from "@/app/components/common/Pagination";
 import { PerformanceTable } from "@/app/components/common/PerformanceTable";
 import { roleService } from "@/app/services/role";
@@ -28,10 +27,9 @@ import { permissionService } from "@/app/services/permission";
 import type { Role, RoleDTO } from "@/app/types/role";
 import type { TreePermission, Permission } from "@/app/types/permission";
 import { usePerformanceData } from "@/app/hooks/usePerformanceData";
-import { alpha } from "@mui/material/styles";
-import { useTheme } from "@mui/material/styles";
+import { alpha, useTheme } from "@mui/material/styles";
 import { ExpandLess, ExpandMore } from "@mui/icons-material";
-
+import { formatDate } from "@/app/utils/format";
 export default function RolePage() {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
@@ -500,11 +498,15 @@ export default function RolePage() {
       {
         key: "createTime" as keyof Role,
         title: t("common.createTime"),
+        render: (_: any, record: Role) =>
+          record.createTime ? formatDate(record.createTime) : "-",
         width: 180,
       },
       {
         key: "updateTime" as keyof Role,
         title: t("common.updateTime"),
+        render: (_: any, record: Role) =>
+          record.updateTime ? formatDate(record.updateTime) : "-",
         width: 180,
       },
       {

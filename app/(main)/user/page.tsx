@@ -13,6 +13,8 @@ import {
   Stack,
   IconButton,
   Checkbox,
+  FormControlLabel,
+  Switch,
 } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import { PerformanceLayout } from "@/app/components/common/PerformanceLayout";
@@ -23,7 +25,6 @@ import { formatDate } from "@/app/utils/format";
 import { CommonButton } from "@/app/components/common/CommonButton";
 import { CommonInput } from "@/app/components/common/CommonInput";
 import { CommonSelect } from "@/app/components/common/CommonSelect";
-import { SearchBar } from "@/app/components/common/SearchBar";
 import { userService } from "@/app/services/user";
 import { roleService } from "@/app/services/role";
 import type { User, UserSaveRequest } from "@/app/types/user";
@@ -320,6 +321,31 @@ export default function UserPage() {
     }
   }, [selectedIds, refresh, t]);
 
+  const handleStatusChange = useCallback(
+    async (user: User) => {
+      try {
+        await userService.updateStatus(
+          user.id,
+          user.status === 1 ? 0 : 1
+        );
+        setSnackbar({
+          open: true,
+          message: t("user.statusUpdateSuccess"),
+          severity: "success",
+        });
+        refresh();
+      } catch (error) {
+        console.error("更新状态失败:", error);
+        setSnackbar({
+          open: true,
+          message: t("user.statusUpdateError"),
+          severity: "error",
+        });
+      }
+    },
+    [refresh, t]
+  );
+
   // 使用 useMemo 优化表格配置
   const columns = useMemo(
     () => [
@@ -363,13 +389,25 @@ export default function UserPage() {
       {
         key: "status" as keyof User,
         title: t("common.user.status"),
-        width: 100,
+        width: 150,
         render: (_: any, record: User) => (
-          <Typography
-            color={record.status === 1 ? "success.main" : "error.main"}
-          >
-            {record.status === 1 ? t("common.enable") : t("common.disable")}
-          </Typography>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={record.status === 1}
+                onChange={() => handleStatusChange(record)}
+                color="primary"
+              />
+            }
+            label={
+              record.status === 1 ? t("common.enable") : t("common.disable")
+            }
+            sx={{
+              "& .MuiFormControlLabel-label": {
+                fontSize: "0.875rem",
+              },
+            }}
+          />
         ),
       },
       {

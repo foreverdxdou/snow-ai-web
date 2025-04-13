@@ -57,7 +57,19 @@ const BaseSelect = styled(Select)(({ theme }) => ({
     '&.Mui-focused .MuiSelect-icon': {
         transform: 'rotate(180deg)',
         color: theme.palette.primary.main,
-    }
+    },
+    '& .MuiInputLabel-root': {
+        color: alpha(theme.palette.text.primary, 0.6),
+        fontSize: '0.875rem',
+        transform: 'translate(14px, 50%)',
+        '&.Mui-focused': {
+            color: theme.palette.primary.main,
+            transform: 'translate(14px, -9px) scale(0.75)',
+        },
+        '&.MuiInputLabel-shrink': {
+            transform: 'translate(14px, -9px) scale(0.75)',
+        }
+    },
 }));
 
 // 下拉菜单样式
@@ -123,7 +135,19 @@ export const CommonSelect: React.FC<CommonSelectProps> = ({
             error={!!helperText}
             sx={{ display: 'inline-flex', ...props.sx }}
         >
-            <InputLabel>{label}</InputLabel>
+            <InputLabel sx={{
+                color: 'text.primary',
+                opacity: 0.8,
+                fontSize: '1rem',
+                transform: 'translate(14px, 40%)',
+                '&.Mui-focused': {
+                    color: 'primary.main',
+                    transform: 'translate(14px, -9px) scale(0.75)',
+                },
+                '&.MuiInputLabel-shrink': {
+                    transform: 'translate(14px, -9px) scale(0.75)',
+                }
+            }}>{label}</InputLabel>
             <BaseSelect
                 value={value ?? (multiple ? [] : '')}
                 label={label}

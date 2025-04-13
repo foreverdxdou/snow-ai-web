@@ -45,13 +45,14 @@ import { useAuth } from '@/app/hooks/useAuth';
 import { useThemeMode } from '@/app/hooks/useThemeMode';
 import { PerformanceLayout } from '@/app/components/common/PerformanceLayout';
 import { ThemeLanguageSwitch } from '@/app/components/common/ThemeLanguageSwitch';
+import BackgroundEffects from '@/app/components/common/BackgroundEffects';
 import { UserInfo } from '@/app/components/UserInfo';
 import { authService } from '@/app/services/auth';
 import type { User } from '@/app/types/userinfo';
 
 // 常量和类型定义
 const DRAWER_WIDTH = 260;
-const DRAWER_COLLAPSED_WIDTH = 90;
+const DRAWER_COLLAPSED_WIDTH = 100;
 const TOPBAR_HEIGHT = { xs: 56, sm: 64 };
 
 interface MenuItem {
@@ -494,56 +495,81 @@ export default function MainLayout({
     const pageTitle = menuItems.find(item => item.path === pathname)?.text || 'Snow AI';
 
     return (
-        <Box sx={{ display: 'flex', minHeight: '100vh' }}>
-            <TopBar
-                open={open}
-                isMobile={isMobile}
-                title={pageTitle}
-                userInfo={userInfo}
-                onDrawerToggle={handleDrawerToggle}
-            />
+        <Box sx={{ 
+            position: 'relative',
+            display: 'flex', 
+            minHeight: '100vh',
+            overflow: 'hidden',
+            bgcolor: 'background.default',
+        }}>
+            <Box sx={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                zIndex: 0,
+            }}>
+                <BackgroundEffects />
+            </Box>
+            <Box sx={{ 
+                position: 'relative',
+                display: 'flex',
+                flexDirection: 'column',
+                width: '100%',
+                zIndex: 1,
+            }}>
+                <TopBar
+                    open={open}
+                    isMobile={isMobile}
+                    title={pageTitle}
+                    userInfo={userInfo}
+                    onDrawerToggle={handleDrawerToggle}
+                />
 
-            <SideBar
-                open={open}
-                isMobile={isMobile}
-                menuItems={menuItems}
-                currentPath={pathname}
-                onDrawerToggle={handleDrawerToggle}
-                onNavigate={handleNavigation}
-            />
+                <SideBar
+                    open={open}
+                    isMobile={isMobile}
+                    menuItems={menuItems}
+                    currentPath={pathname}
+                    onDrawerToggle={handleDrawerToggle}
+                    onNavigate={handleNavigation}
+                />
 
-            <Box
-                component="main"
-                sx={{
-                    position: 'relative',
-                    flexGrow: 1,
-                    height: '100vh',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    width: { sm: `calc(100% - ${open ? DRAWER_WIDTH : DRAWER_COLLAPSED_WIDTH}px)` },
-                    ml: { sm: `${open ? DRAWER_WIDTH : DRAWER_COLLAPSED_WIDTH}px` },
-                    transition: theme.transitions.create(['margin', 'width'], {
-                        easing: theme.transitions.easing.sharp,
-                        duration: theme.transitions.duration.leavingScreen,
-                    }),
-                }}
-            >
-                <Box sx={{ 
-                    position: 'fixed',
-                    top: TOPBAR_HEIGHT,
-                    left: { sm: open ? DRAWER_WIDTH : DRAWER_COLLAPSED_WIDTH },
-                    right: 0,
-                    bottom: 0,
-                    overflow: 'auto',
-                    transition: theme.transitions.create('left', {
-                        easing: theme.transitions.easing.sharp,
-                        duration: theme.transitions.duration.leavingScreen,
-                    }),
-                    bgcolor: 'background.default',
-                }}>
-                    <PerformanceLayout>
-                        {children}
-                    </PerformanceLayout>
+                <Box
+                    component="main"
+                    sx={{
+                        position: 'relative',
+                        flexGrow: 1,
+                        height: '100vh',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        width: { sm: `calc(100% - ${open ? DRAWER_WIDTH : DRAWER_COLLAPSED_WIDTH}px)` },
+                        ml: { sm: `${open ? DRAWER_WIDTH : DRAWER_COLLAPSED_WIDTH}px` },
+                        transition: theme.transitions.create(['margin', 'width'], {
+                            easing: theme.transitions.easing.sharp,
+                            duration: theme.transitions.duration.leavingScreen,
+                        }),
+                    }}
+                >
+                    <Box sx={{ 
+                        position: 'fixed',
+                        top: TOPBAR_HEIGHT,
+                        left: { sm: open ? DRAWER_WIDTH : DRAWER_COLLAPSED_WIDTH },
+                        right: 0,
+                        bottom: 0,
+                        overflow: 'auto',
+                        transition: theme.transitions.create('left', {
+                            easing: theme.transitions.easing.sharp,
+                            duration: theme.transitions.duration.leavingScreen,
+                        }),
+                        bgcolor: 'background.default',
+                        opacity: 0.95,
+                    }}>
+                        <PerformanceLayout>
+                            {children}
+                        </PerformanceLayout>
+                    </Box>
                 </Box>
             </Box>
         </Box>

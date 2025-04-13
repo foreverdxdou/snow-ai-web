@@ -18,6 +18,8 @@ import {
   FormControlLabel,
   Switch,
 } from "@mui/material";
+import { alpha } from '@mui/material/styles';
+import { useTheme } from '@mui/material/styles';
 
 import { LlmConfig, ModelType } from "@/app/types/llm";
 import { llmService } from "@/app/services/llm";
@@ -33,8 +35,46 @@ const MODEL_TYPE_OPTIONS = [
   // { id: 'EMBEDDING' },
 ] as const;
 
+// 添加卡片颜色配置
+const cardColors = [
+    { 
+        light: { bg: 'linear-gradient(135deg, #f8f9fa, #e9ecef)', border: '#dee2e6' },
+        dark: { bg: 'linear-gradient(135deg, #1a1a1a, #2a2a2a)', border: '#3a3a3a' }
+    }, // 高级灰
+    { 
+        light: { bg: 'linear-gradient(135deg, #e3f2fd, #bbdefb)', border: '#90caf9' },
+        dark: { bg: 'linear-gradient(135deg, #0a1a2a, #0d2a3a)', border: '#1a3a4a' }
+    }, // 深邃蓝
+    { 
+        light: { bg: 'linear-gradient(135deg, #f3e5f5, #e1bee7)', border: '#ce93d8' },
+        dark: { bg: 'linear-gradient(135deg, #1a0a2a, #2a1a3a)', border: '#3a2a4a' }
+    }, // 典雅紫
+    { 
+        light: { bg: 'linear-gradient(135deg, #e8f5e9, #c8e6c9)', border: '#a5d6a7' },
+        dark: { bg: 'linear-gradient(135deg, #0a1a0a, #1a2a1a)', border: '#2a3a2a' }
+    }, // 沉稳绿
+    { 
+        light: { bg: 'linear-gradient(135deg, #fff3e0, #ffe0b2)', border: '#ffb74d' },
+        dark: { bg: 'linear-gradient(135deg, #2a1a0a, #3a2a1a)', border: '#4a3a2a' }
+    }, // 温暖橙
+    { 
+        light: { bg: 'linear-gradient(135deg, #fbe9e7, #ffccbc)', border: '#ff8a65' },
+        dark: { bg: 'linear-gradient(135deg, #2a0a0a, #3a1a1a)', border: '#4a2a2a' }
+    }, // 热情红
+    { 
+        light: { bg: 'linear-gradient(135deg, #e0f7fa, #b2ebf2)', border: '#80deea' },
+        dark: { bg: 'linear-gradient(135deg, #0a2a2a, #1a3a3a)', border: '#2a4a4a' }
+    }, // 清新青
+    { 
+        light: { bg: 'linear-gradient(135deg, #f8f9fa, #e9ecef)', border: '#dee2e6' },
+        dark: { bg: 'linear-gradient(135deg, #1a1a1a, #2a2a2a)', border: '#3a3a3a' }
+    }, // 高级灰
+];
+
 export default function LlmPage() {
   const { t } = useTranslation();
+  const theme = useTheme();
+  const isDarkMode = theme.palette.mode === 'dark';
   const [configs, setConfigs] = useState<LlmConfig[]>([]);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
@@ -275,97 +315,147 @@ export default function LlmPage() {
           </Box>
         ) : (
           <Grid container spacing={3}>
-            {configs.map((config) => (
-              <Grid item xs={12} sm={6} md={4} key={config.id}>
-                <Card
-                  sx={{
-                    height: "100%",
-                    display: "flex",
-                    flexDirection: "column",
-                    transition: "all 0.3s ease-in-out",
-                    "&:hover": {
-                      transform: "translateY(-4px)",
-                      boxShadow: 3,
-                    },
-                  }}
-                >
-                  <CardContent sx={{ flexGrow: 1 }}>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "flex-start",
-                        mb: 2,
-                      }}
-                    >
-                      <Typography
-                        variant="h6"
-                        component="h3"
-                        sx={{ fontWeight: 600 }}
-                      >
-                        {config.modelName}
-                      </Typography>
-                      <FormControlLabel
-                        control={
-                          <Switch
-                            checked={config.enabled}
-                            onChange={() => handleStatusChange(config)}
-                            color="primary"
-                          />
-                        }
-                        label={
-                          config.enabled ? t("llm.enabled") : t("llm.disabled")
-                        }
-                      />
-                    </Box>
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{ mb: 1 }}
-                    >
-                      {t("llm.modelType")}: {t(`llm.types.${config.modelType}`)}
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{ mb: 1 }}
-                    >
-                      {t("llm.apiUrl")}: {config.apiUrl}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {t("common.updateTime")}:{" "}
-                      {new Date(config.updateTime).toLocaleString()}
-                    </Typography>
-                  </CardContent>
-                  <Box
-                    sx={{
-                      p: 2,
-                      pt: 0,
-                      display: "flex",
-                      justifyContent: "flex-end",
-                    }}
-                  >
-                    <Tooltip title={t("common.edit")}>
-                      <CommonButton
-                        buttonVariant="edit"
-                        icon
-                        onClick={() => handleOpen(config)}
-                        size="small"
-                      ></CommonButton>
-                    </Tooltip>
-                    <Tooltip title={t("common.delete")}>
-                      <CommonButton
-                        buttonVariant="delete"
-                        icon
-                        onClick={() => handleDelete(config.id)}
-                        size="small"
-                        color="error"
-                      ></CommonButton>
-                    </Tooltip>
-                  </Box>
-                </Card>
-              </Grid>
-            ))}
+            {configs.map((config, index) => {
+                const colorIndex = index % cardColors.length;
+                const color = cardColors[colorIndex][isDarkMode ? 'dark' : 'light'];
+                return (
+                    <Grid item xs={12} sm={6} md={4} key={config.id}>
+                        <Card
+                            sx={{
+                                height: "100%",
+                                display: "flex",
+                                flexDirection: "column",
+                                transition: "all 0.3s ease-in-out",
+                                background: color.bg,
+                                border: `1px solid ${color.border}`,
+                                position: 'relative',
+                                overflow: 'hidden',
+                                '&:before': {
+                                    content: '""',
+                                    position: 'absolute',
+                                    top: 0,
+                                    left: 0,
+                                    right: 0,
+                                    bottom: 0,
+                                    background: isDarkMode 
+                                        ? 'linear-gradient(45deg, transparent, rgba(255,255,255,0.03))'
+                                        : 'linear-gradient(45deg, transparent, rgba(255,255,255,0.1))',
+                                    zIndex: 1,
+                                },
+                                '&:hover': {
+                                    transform: "translateY(-4px)",
+                                    boxShadow: (theme) => `0 8px 24px ${alpha(color.border, 0.15)}`,
+                                    '&:before': {
+                                        background: isDarkMode 
+                                            ? 'linear-gradient(45deg, transparent, rgba(255,255,255,0.05))'
+                                            : 'linear-gradient(45deg, transparent, rgba(255,255,255,0.15))',
+                                    }
+                                },
+                            }}
+                        >
+                            <CardContent sx={{ 
+                                flexGrow: 1,
+                                position: 'relative',
+                                zIndex: 2,
+                            }}>
+                                <Box
+                                    sx={{
+                                        display: "flex",
+                                        justifyContent: "space-between",
+                                        alignItems: "flex-start",
+                                        mb: 2,
+                                    }}
+                                >
+                                    <Typography
+                                        variant="h6"
+                                        component="h3"
+                                        sx={{ 
+                                            fontWeight: 600,
+                                            background: isDarkMode
+                                                ? 'linear-gradient(45deg, #e0e0e0, #b0b0b0)'
+                                                : 'linear-gradient(45deg, #1a237e, #283593)',
+                                            WebkitBackgroundClip: 'text',
+                                            WebkitTextFillColor: 'transparent',
+                                        }}
+                                    >
+                                        {config.modelName}
+                                    </Typography>
+                                    <FormControlLabel
+                                        control={
+                                            <Switch
+                                                checked={config.enabled}
+                                                onChange={() => handleStatusChange(config)}
+                                                color="primary"
+                                            />
+                                        }
+                                        label={
+                                            config.enabled ? t("llm.enabled") : t("llm.disabled")
+                                        }
+                                    />
+                                </Box>
+                                <Typography
+                                    variant="body2"
+                                    sx={{ 
+                                        mb: 1,
+                                        fontWeight: 500,
+                                        color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.9)'
+                                    }}
+                                >
+                                    {t("llm.modelType")}: {t(`llm.types.${config.modelType}`)}
+                                </Typography>
+                                <Typography
+                                    variant="body2"
+                                    sx={{ 
+                                        mb: 1,
+                                        fontWeight: 500,
+                                        color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.9)'
+                                    }}
+                                >
+                                    {t("llm.apiUrl")}: {config.apiUrl}
+                                </Typography>
+                                <Typography 
+                                    variant="caption" 
+                                    sx={{
+                                        color: isDarkMode ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.8)',
+                                        fontWeight: 500
+                                    }}
+                                >
+                                    {t("common.updateTime")}:{" "}
+                                    {new Date(config.updateTime).toLocaleString()}
+                                </Typography>
+                            </CardContent>
+                            <Box
+                                sx={{
+                                    p: 2,
+                                    pt: 0,
+                                    display: "flex",
+                                    justifyContent: "flex-end",
+                                    position: 'relative',
+                                    zIndex: 2,
+                                }}
+                            >
+                                <Tooltip title={t("common.edit")}>
+                                    <CommonButton
+                                        buttonVariant="edit"
+                                        icon
+                                        onClick={() => handleOpen(config)}
+                                        size="small"
+                                    />
+                                </Tooltip>
+                                <Tooltip title={t("common.delete")}>
+                                    <CommonButton
+                                        buttonVariant="delete"
+                                        icon
+                                        onClick={() => handleDelete(config.id)}
+                                        size="small"
+                                        color="error"
+                                    />
+                                </Tooltip>
+                            </Box>
+                        </Card>
+                    </Grid>
+                );
+            })}
           </Grid>
         )}
 

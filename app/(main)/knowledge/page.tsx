@@ -48,6 +48,7 @@ import { CommonSelect } from "@/app/components/common/CommonSelect";
 import { SimpleTreeView } from "@mui/x-tree-view";
 import { KbCategory } from "@/app/types/category";
 import { formatDate, formatFileSize } from "@/app/utils/format";
+import { alpha } from "@mui/material/styles";
 
 interface TreeItemData {
   id: string;
@@ -86,17 +87,170 @@ const KnowledgeCard = React.memo(
           height: "100%",
           display: "flex",
           flexDirection: "column",
-          transition: "transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out",
+          transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
           cursor: "pointer",
+          border: (theme) => `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
+          position: "relative",
+          overflow: "hidden",
+          background: (theme) => theme.palette.mode === 'light'
+            ? `linear-gradient(135deg, 
+                ${alpha(theme.palette.primary.light, 0.1)},
+                ${alpha(theme.palette.secondary.light, 0.1)}),
+                linear-gradient(45deg,
+                ${alpha(theme.palette.background.paper, 0.9)},
+                ${alpha(theme.palette.background.default, 0.9)})`
+            : `linear-gradient(135deg, 
+                ${alpha(theme.palette.background.paper, 0.9)},
+                ${alpha(theme.palette.background.default, 0.9)})`,
+          "&::before": {
+            content: '""',
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            height: "4px",
+            background: (theme) => `linear-gradient(to right, 
+              ${theme.palette.primary.main}, 
+              ${theme.palette.secondary.main})`,
+            transform: "scaleX(0)",
+            transformOrigin: "left",
+            transition: "transform 0.3s ease",
+          },
+          "&::after": {
+            content: '""',
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: (theme) => theme.palette.mode === 'light'
+              ? `radial-gradient(circle at top right,
+                  ${alpha(theme.palette.primary.main, 0.05)},
+                  ${alpha(theme.palette.secondary.main, 0.05)}),
+                  radial-gradient(circle at bottom left,
+                  ${alpha(theme.palette.secondary.main, 0.05)},
+                  ${alpha(theme.palette.primary.main, 0.05)})`
+              : `linear-gradient(135deg, 
+                  ${alpha(theme.palette.primary.main, 0.05)}, 
+                  ${alpha(theme.palette.secondary.main, 0.05)})`,
+            opacity: 0,
+            transition: "opacity 0.3s ease",
+          },
+          "& .MuiCardHeader-root": {
+            position: "relative",
+            zIndex: 1,
+            paddingTop: "16px",
+            background: (theme) => theme.palette.mode === 'light'
+              ? `linear-gradient(to bottom,
+                  ${alpha(theme.palette.primary.light, 0.05)},
+                  ${alpha(theme.palette.primary.light, 0)})`
+              : 'transparent',
+            "&::before": {
+              content: '""',
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              height: "1px",
+              background: (theme) => `linear-gradient(to right, 
+                ${alpha(theme.palette.primary.main, 0)}, 
+                ${alpha(theme.palette.primary.main, 0.1)}, 
+                ${alpha(theme.palette.primary.main, 0)})`,
+            },
+          },
+          "& .MuiCardContent-root": {
+            position: "relative",
+            zIndex: 1,
+            background: (theme) => theme.palette.mode === 'light'
+              ? `linear-gradient(to top,
+                  ${alpha(theme.palette.secondary.light, 0.05)},
+                  ${alpha(theme.palette.secondary.light, 0)})`
+              : 'transparent',
+            "&::before": {
+              content: '""',
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              height: "1px",
+              background: (theme) => `linear-gradient(to right, 
+                ${alpha(theme.palette.secondary.main, 0)}, 
+                ${alpha(theme.palette.secondary.main, 0.1)}, 
+                ${alpha(theme.palette.secondary.main, 0)})`,
+            },
+          },
           "&:hover": {
             transform: "translateY(-4px)",
-            boxShadow: 4,
+            boxShadow: (theme) => `0 8px 24px ${theme.palette.mode === 'dark' 
+              ? 'rgba(0, 0, 0, 0.3)' 
+              : 'rgba(0, 0, 0, 0.1)'}`,
+            borderColor: (theme) => alpha(theme.palette.primary.main, 0.3),
+            "&::before": {
+              transform: "scaleX(1)",
+            },
+            "&::after": {
+              opacity: 1,
+            },
+            "& .MuiCardHeader-root": {
+              background: (theme) => theme.palette.mode === 'light'
+                ? `linear-gradient(to bottom,
+                    ${alpha(theme.palette.primary.main, 0.1)},
+                    ${alpha(theme.palette.primary.main, 0)})`
+                : `linear-gradient(to bottom,
+                    ${alpha(theme.palette.primary.main, 0.05)},
+                    ${alpha(theme.palette.primary.main, 0)})`,
+              "&::before": {
+                background: (theme) => `linear-gradient(to right, 
+                  ${alpha(theme.palette.primary.main, 0.1)}, 
+                  ${alpha(theme.palette.primary.main, 0.2)}, 
+                  ${alpha(theme.palette.primary.main, 0.1)})`,
+              },
+              "& .MuiAvatar-root": {
+                transform: "scale(1.1)",
+                boxShadow: (theme) => `0 0 12px ${alpha(theme.palette.primary.main, 0.3)}`,
+                "&::after": {
+                  content: '""',
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  borderRadius: "50%",
+                  background: (theme) => `radial-gradient(circle at center, 
+                    ${alpha(theme.palette.primary.main, 0.2)}, 
+                    ${alpha(theme.palette.primary.main, 0)})`,
+                },
+              }
+            },
+            "& .MuiCardContent-root": {
+              background: (theme) => theme.palette.mode === 'light'
+                ? `linear-gradient(to top,
+                    ${alpha(theme.palette.secondary.main, 0.1)},
+                    ${alpha(theme.palette.secondary.main, 0)})`
+                : `linear-gradient(to top,
+                    ${alpha(theme.palette.secondary.main, 0.05)},
+                    ${alpha(theme.palette.secondary.main, 0)})`,
+              "&::before": {
+                background: (theme) => `linear-gradient(to right, 
+                  ${alpha(theme.palette.secondary.main, 0.1)},
+                  ${alpha(theme.palette.secondary.main, 0.2)},
+                  ${alpha(theme.palette.secondary.main, 0.1)})`,
+              },
+              "& .MuiTypography-root": {
+                color: "text.primary",
+                transition: "color 0.3s ease",
+              },
+              "& .MuiChip-root": {
+                transform: "translateY(-2px)",
+                boxShadow: (theme) => `0 2px 8px ${alpha(theme.palette.primary.main, 0.1)}`,
+              }
+            }
           },
         }}
       >
         <CardHeader
           avatar={
-            <Avatar sx={{ bgcolor: "primary.main" }}>
+            <Avatar sx={{ bgcolor: "primary.main", transition: "all 0.3s ease" }}>
               <MenuBookIcon />
             </Avatar>
           }
@@ -126,6 +280,14 @@ const KnowledgeCard = React.memo(
               </Tooltip>
             </Box>
           }
+          sx={{
+            position: "relative",
+            zIndex: 1,
+            paddingTop: "16px",
+            "& .MuiCardHeader-content": {
+              marginTop: "4px"
+            }
+          }}
         />
         <CardContent sx={{ flexGrow: 1 }}>
           <Box sx={{ mb: 2 }}>
@@ -154,10 +316,16 @@ const KnowledgeCard = React.memo(
                   label={type}
                   size="small"
                   sx={{
-                    bgcolor: "primary.light",
-                    color: "primary.contrastText",
+                    bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1),
+                    color: "primary.main",
+                    fontWeight: 500,
+                    transition: "all 0.2s ease",
                     "&:hover": {
-                      bgcolor: "primary.main",
+                      bgcolor: (theme) => alpha(theme.palette.primary.main, 0.2),
+                      transform: "translateY(-1px)",
+                    },
+                    "& .MuiChip-label": {
+                      px: 1,
                     },
                   }}
                 />
@@ -178,10 +346,16 @@ const KnowledgeCard = React.memo(
                   label={tag.name}
                   size="small"
                   sx={{
-                    bgcolor: "secondary.light",
-                    color: "secondary.contrastText",
+                    bgcolor: (theme) => alpha(theme.palette.secondary.main, 0.1),
+                    color: "secondary.main",
+                    fontWeight: 500,
+                    transition: "all 0.2s ease",
                     "&:hover": {
-                      bgcolor: "secondary.main",
+                      bgcolor: (theme) => alpha(theme.palette.secondary.main, 0.2),
+                      transform: "translateY(-1px)",
+                    },
+                    "& .MuiChip-label": {
+                      px: 1,
                     },
                   }}
                 />
@@ -449,11 +623,134 @@ const CategoryTree = React.memo(
           overflowY: "auto",
           minHeight: "400px",
           maxHeight: "800px",
+          borderRadius: "8px",
+          padding: "12px",
+          position: "relative",
+          "&::before": {
+            content: '""',
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: (theme) => theme.palette.mode === 'light' 
+              ? `linear-gradient(135deg, 
+                  ${alpha(theme.palette.primary.light, 0.05)}, 
+                  ${alpha(theme.palette.secondary.light, 0.05)})`
+              : `linear-gradient(135deg, 
+                  ${alpha(theme.palette.background.paper, 0.8)}, 
+                  ${alpha(theme.palette.background.default, 0.8)})`,
+            zIndex: -1,
+          },
+          "&::after": {
+            content: '""',
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            borderRadius: "8px",
+            pointerEvents: "none",
+          },
+          "& .MuiTreeItem-root": {
+            position: "relative",
+            "&::before": {
+              content: '""',
+              position: "absolute",
+              left: 0,
+              right: 0,
+              height: "1px",
+              background: (theme) => theme.palette.mode === 'light'
+                ? `linear-gradient(to right, 
+                    ${alpha(theme.palette.primary.main, 0.05)}, 
+                    ${alpha(theme.palette.secondary.main, 0.1)}, 
+                    ${alpha(theme.palette.primary.main, 0.05)})`
+                : `linear-gradient(to right, 
+                    ${alpha(theme.palette.divider, 0)}, 
+                    ${alpha(theme.palette.divider, 0.1)},
+                    ${alpha(theme.palette.divider, 0)})`,
+            },
+          },
           "& .MuiTreeItem-content": {
-            padding: "4px 8px",
+            padding: "8px 12px",
+            borderRadius: "4px",
+            margin: "2px 0",
+            transition: "all 0.2s ease",
+            border: (theme) => `1px solid ${alpha(theme.palette.primary.main, 0.05)}`,
+            background: (theme) => theme.palette.mode === 'light'
+              ? `linear-gradient(to right, 
+                  ${alpha(theme.palette.primary.light, 0.1)},
+                  ${alpha(theme.palette.secondary.light, 0.1)})`
+              : `linear-gradient(to right, 
+                  ${alpha(theme.palette.background.paper, 0.5)}, 
+                  ${alpha(theme.palette.background.paper, 0.8)})`,
+            "&:hover": {
+              background: (theme) => theme.palette.mode === 'light'
+                ? `linear-gradient(to right, 
+                    ${alpha(theme.palette.primary.main, 0.1)}, 
+                    ${alpha(theme.palette.secondary.main, 0.1)})`
+                : `linear-gradient(to right, 
+                    ${alpha(theme.palette.primary.main, 0.05)},
+                    ${alpha(theme.palette.primary.main, 0.1)})`,
+              boxShadow: (theme) => theme.palette.mode === 'light'
+                ? `0 2px 8px ${alpha(theme.palette.primary.main, 0.1)}`
+                : 'none',
+              border: (theme) => `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+            },
+            "&.Mui-selected": {
+              background: (theme) => theme.palette.mode === 'light'
+                ? `linear-gradient(to right, 
+                    ${alpha(theme.palette.primary.main, 0.15)},
+                    ${alpha(theme.palette.secondary.main, 0.15)}) !important`
+                : `linear-gradient(to right, 
+                    ${alpha(theme.palette.primary.main, 0.1)},
+                    ${alpha(theme.palette.primary.main, 0.15)}) !important`,
+              border: (theme) => `1px solid ${alpha(theme.palette.primary.main, 0.3)}`,
+              "&:hover": {
+                background: (theme) => theme.palette.mode === 'light'
+                  ? `linear-gradient(to right, 
+                      ${alpha(theme.palette.primary.main, 0.2)},
+                      ${alpha(theme.palette.secondary.main, 0.2)}) !important`
+                  : `linear-gradient(to right, 
+                      ${alpha(theme.palette.primary.main, 0.15)},
+                      ${alpha(theme.palette.primary.main, 0.2)}) !important`,
+              },
+            },
           },
           "& .MuiTreeItem-group": {
-            marginLeft: "16px",
+            marginLeft: "24px",
+            position: "relative",
+            "&::before": {
+              content: '""',
+              position: "absolute",
+              top: 0,
+              bottom: 0,
+              left: "12px",
+              width: "1px",
+              background: (theme) => theme.palette.mode === 'light'
+                ? `linear-gradient(to bottom, 
+                    ${alpha(theme.palette.primary.main, 0.05)}, 
+                    ${alpha(theme.palette.secondary.main, 0.1)}, 
+                    ${alpha(theme.palette.primary.main, 0.05)})`
+                : `linear-gradient(to bottom, 
+                    ${alpha(theme.palette.divider, 0)},
+                    ${alpha(theme.palette.divider, 0.1)},
+                    ${alpha(theme.palette.divider, 0)})`,
+            },
+          },
+          "& .MuiTreeItem-iconContainer": {
+            width: "24px",
+            marginRight: "4px",
+            color: (theme) => theme.palette.mode === 'light'
+              ? theme.palette.primary.main
+              : theme.palette.text.secondary,
+            transition: "all 0.2s ease",
+            "&:hover": {
+              color: (theme) => theme.palette.mode === 'light'
+                ? theme.palette.secondary.main
+                : theme.palette.primary.main,
+              transform: "scale(1.1)",
+            },
           },
         }}
       >
@@ -765,7 +1062,7 @@ export default function KnowledgePage() {
       >
         <Box
           sx={{
-            p: 3,
+            p: 2,
           }}
         >
           <Box
@@ -792,7 +1089,35 @@ export default function KnowledgePage() {
         </Box>
 
         <Box
-          sx={{ display: "flex", gap: 3, p: 3, flex: 1, overflow: "hidden" }}
+          sx={{
+            display: "flex",
+            gap: 3,
+            p: 3,
+            flex: 1,
+            position: "relative",
+            "&::before": {
+              content: '""',
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+             
+              borderRadius: "8px",
+              pointerEvents: "none",
+            },
+            "&::after": {
+              content: '""',
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              borderRadius: "8px",
+              margin: "1px",
+              pointerEvents: "none",
+            }
+          }}
         >
           <Paper
             sx={{
@@ -803,6 +1128,7 @@ export default function KnowledgePage() {
               height: "100%",
               display: "flex",
               flexDirection: "column",
+              border: (theme) => `1px solid ${alpha(theme.palette.primary.main, 0.3)}`,
             }}
           >
             <CategoryTree

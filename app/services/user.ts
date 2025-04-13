@@ -61,9 +61,7 @@ export const userService = {
 
     // 修改状态
     updateStatus: (id: number, status: number) => {
-        return request.put<Result<void>>(`${BASE_URL}/${id}/status`, {
-            status
-        });
+        return request.put<Result<void>>(`${BASE_URL}/${id}/status?status=${status}`);
     },
 
     // 更新用户头像

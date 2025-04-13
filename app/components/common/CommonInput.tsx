@@ -35,10 +35,8 @@ const BaseInput = styled(TextField)(({ theme }) => ({
     '& .MuiOutlinedInput-input': {
         padding: '8px 14px',
         height: '24px',
-        fontSize: '0.875rem',
         letterSpacing: '0.01em',
         '&::placeholder': {
-            fontSize: '0.875rem',
             color: alpha(theme.palette.text.primary, 0.4),
         }
     },
@@ -54,9 +52,9 @@ const BaseInput = styled(TextField)(({ theme }) => ({
         borderWidth: '1.5px',
     },
     '& .MuiInputLabel-root': {
-        color: alpha(theme.palette.text.primary, 0.6),
-        fontSize: '0.875rem',
-        transform: 'translate(14px, 50%)',
+        color: alpha(theme.palette.text.primary, 0.8),
+        fontSize: '1rem',
+        transform: 'translate(14px, 40%)',
         '&.Mui-focused': {
             color: theme.palette.primary.main,
             transform: 'translate(14px, -9px) scale(0.75)',

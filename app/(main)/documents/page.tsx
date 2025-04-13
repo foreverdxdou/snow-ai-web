@@ -31,7 +31,19 @@ import { useDocumentData } from '@/app/(main)/documents/hooks/useDocumentData';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { DocumentSearchBar } from '@/app/(main)/documents/components/DocumentSearchBar';
 import { DocumentSearchParams } from '@/app/types/document';
+import { alpha } from '@mui/material/styles';
 
+// 添加标签颜色配置
+const tagColors = [
+    { bg: '#E3F2FD', text: '#1976D2', border: '#90CAF9' }, // 蓝色
+    { bg: '#F3E5F5', text: '#7B1FA2', border: '#CE93D8' }, // 紫色
+    { bg: '#E8F5E9', text: '#2E7D32', border: '#A5D6A7' }, // 绿色
+    { bg: '#FFF3E0', text: '#E65100', border: '#FFB74D' }, // 橙色
+    { bg: '#FBE9E7', text: '#C62828', border: '#FF8A65' }, // 红色
+    { bg: '#E0F7FA', text: '#00838F', border: '#80DEEA' }, // 青色
+    { bg: '#F1F8E9', text: '#558B2F', border: '#C5E1A5' }, // 浅绿
+    { bg: '#FFF8E1', text: '#F57F17', border: '#FFD54F' }, // 黄色
+];
 
 export default function DocumentsPage() {
     const { t } = useTranslation();
@@ -125,7 +137,73 @@ export default function DocumentsPage() {
                         }
                     }}
                 >
-                    {record?.title || '-'}
+                    <Typography variant="body1" sx={{ 
+                        fontWeight: 500,
+                        mb: 1,
+                        background: (theme) => `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.primary.light})`,
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                        display: 'inline-block'
+                    }}>
+                        {record?.title || '-'}
+                    </Typography>
+                    {record?.tags && record.tags.length > 0 && (
+                        <Box sx={{ 
+                            display: 'flex', 
+                            flexWrap: 'wrap', 
+                            gap: 0.75, 
+                            mt: 1,
+                            '& .MuiChip-root': {
+                                height: 24,
+                                borderRadius: '12px',
+                                '& .MuiChip-label': {
+                                    px: 1.5,
+                                    fontSize: '0.75rem',
+                                    fontWeight: 500
+                                },
+                                background: (theme) => `linear-gradient(45deg, ${alpha(theme.palette.primary.main, 0.1)}, ${alpha(theme.palette.primary.light, 0.1)})`,
+                                color: 'primary.main',
+                                border: (theme) => `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+                                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                '&:hover': {
+                                    background: (theme) => `linear-gradient(45deg, ${alpha(theme.palette.primary.main, 0.2)}, ${alpha(theme.palette.primary.light, 0.2)})`,
+                                    transform: 'translateY(-2px)',
+                                    boxShadow: (theme) => `0 4px 12px ${alpha(theme.palette.primary.main, 0.15)}`,
+                                }
+                            }
+                        }}>
+                            {record.tags.map((tag, index) => {
+                                const colorIndex = index % tagColors.length;
+                                const color = tagColors[colorIndex];
+                                return (
+                                    <Chip
+                                        key={index}
+                                        label={tag.name}
+                                        size="small"
+                                        sx={{
+                                            height: 24,
+                                            borderRadius: '12px',
+                                            '& .MuiChip-label': {
+                                                px: 1.5,
+                                                fontSize: '0.75rem',
+                                                fontWeight: 500,
+                                                color: color.text
+                                            },
+                                            background: color.bg,
+                                            border: `1px solid ${color.border}`,
+                                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                            '&:hover': {
+                                                background: alpha(color.bg, 0.8),
+                                                transform: 'translateY(-2px)',
+                                                boxShadow: `0 4px 12px ${alpha(color.border, 0.2)}`,
+                                                border: `1px solid ${alpha(color.border, 0.8)}`,
+                                            }
+                                        }}
+                                    />
+                                );
+                            })}
+                        </Box>
+                    )}
                 </Box>
             )
         },
@@ -138,11 +216,6 @@ export default function DocumentsPage() {
             key: 'categoryName' as keyof Document,
             title: t('documents.category'),
             render: (_: any, record: Document) => record?.categoryName || '-'
-        },
-        {
-            key: 'tags' as keyof Document,
-            title: t('documents.tags'),
-            render: (_: any, record: Document) => record?.tags?.map(tag => tag.name).join(', ') || '-'
         },
         {
             key: 'fileSize' as keyof Document,
