@@ -11,22 +11,24 @@ import {
   Alert,
   Snackbar,
   Stack,
-  IconButton,
   Tooltip,
   Paper,
   Collapse,
   List,
   ListItem,
-  ListItemButton,
-  ListItemIcon,
   Grid,
   Checkbox,
+  FormControlLabel,
+  Switch,
 } from "@mui/material";
 import {
   Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
   Folder as FolderIcon,
+  Menu as MenuIcon,
+  ExpandMore as ExpandMoreIcon,
+  ExpandLess as ExpandLessIcon,
 } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 import { PerformanceLayout } from "@/app/components/common/PerformanceLayout";
@@ -39,6 +41,8 @@ import type {
   PermissionDTO,
   PermissionQuery,
 } from "@/app/types/permission";
+import { alpha } from "@mui/material/styles";
+import { useTheme } from "@mui/material/styles";
 
 // 转换函数
 const convertToTree = (items: Permission[]): Permission[] => {
@@ -83,6 +87,17 @@ const convertToTree = (items: Permission[]): Permission[] => {
   return roots;
 };
 
+// 获取节点及其所有子节点的ID
+const getNodeAndChildrenIds = (node: Permission): string[] => {
+  let ids: string[] = [node.id];
+  if (node.children && node.children.length > 0) {
+    node.children.forEach((child) => {
+      ids = ids.concat(getNodeAndChildrenIds(child));
+    });
+  }
+  return ids;
+};
+
 // 渲染树节点组件
 const TreeNode = ({
   node,
@@ -92,6 +107,7 @@ const TreeNode = ({
   onDelete,
   selectedIds,
   onSelect,
+  onRefresh,
 }: {
   node: Permission;
   level?: number;
@@ -100,108 +116,188 @@ const TreeNode = ({
   onDelete: (id: string) => void;
   selectedIds: string[];
   onSelect: (id: string, checked: boolean) => void;
+  onRefresh: () => void;
 }) => {
   const [open, setOpen] = useState(true);
   const { t } = useTranslation();
+  const theme = useTheme();
 
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.stopPropagation();
-    onSelect(node.id, e.target.checked);
+    const checked = e.target.checked;
+    const allIds = getNodeAndChildrenIds(node);
+    if (checked) {
+      onSelect(node.id, true);
+      allIds.forEach((id) => {
+        if (id !== node.id) {
+          onSelect(id, true);
+        }
+      });
+    } else {
+      onSelect(node.id, false);
+      allIds.forEach((id) => {
+        if (id !== node.id) {
+          onSelect(id, false);
+        }
+      });
+    }
+  };
+
+  const handleStatusChange = async (e: React.ChangeEvent<HTMLInputElement>, node: Permission): Promise<void> => {
+    e.stopPropagation();
+    try {
+      const status = node.status === 1 ? 0 : 1;
+      await permissionService.update(node.id, {
+        id: node.id,
+        status: status,
+        parentId: node.parentId,
+        name: node.name,
+        type: node.type,
+        permissionCode: node.permissionCode,
+        path: node.path,
+        component: node.component,
+        icon: node.icon,
+        sort: node.sort,
+      });
+      onRefresh();
+    } catch (error) {
+      console.error("更新状态失败:", error);
+    }
+  };
+
+  const handleNodeClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (node.hasChildren !== 0) {
+      setOpen(!open);
+    }
   };
 
   return (
     <>
       <ListItem
+        onClick={handleNodeClick}
         sx={{
-          pl: level * 2,
+          pl: level * 2 + 2,
+          position: "relative",
+          "&:before": {
+            content: '""',
+            position: "absolute",
+            left: level * 2 + 1,
+            top: 0,
+            bottom: 0,
+            width: 1,
+            opacity: 0.5,
+          },
           "&:hover": {
-            backgroundColor: "action.hover",
+            backgroundColor: alpha(theme.palette.primary.main, 0.04),
           },
         }}
       >
         <Grid container spacing={2} alignItems="center">
-          <Grid item xs={1}>
+          <Grid item xs={1} sx={{ display: "flex", justifyContent: "center" }}>
             <Checkbox
-              edge="start"
               checked={selectedIds.includes(node.id)}
               onChange={handleCheckboxChange}
               onClick={(e) => e.stopPropagation()}
-              tabIndex={-1}
-              disableRipple
-              inputProps={{ "aria-labelledby": node.id }}
             />
           </Grid>
-          <Grid item xs={11}>
-            <ListItemButton
-              onClick={() => setOpen(!open)}
+          <Grid item xs={2}>
+            <Box sx={{ display: "flex", alignItems: "center" }}>
+              {node.hasChildren === 0 ? (
+                <MenuIcon
+                  sx={{
+                    fontSize: 20,
+                    mr: 1,
+                    color: theme.palette.primary.main,
+                  }}
+                />
+              ) : open ? (
+                <ExpandMoreIcon
+                  sx={{
+                    fontSize: 20,
+                    mr: 1,
+                    color: theme.palette.primary.main,
+                  }}
+                />
+              ) : (
+                <ExpandLessIcon
+                  sx={{
+                    fontSize: 20,
+                    mr: 1,
+                    color: theme.palette.primary.main,
+                  }}
+                />
+              )}
+              <Typography variant="body2">{node.name}</Typography>
+            </Box>
+          </Grid>
+          <Grid item xs={2}>
+            <Typography variant="body2">{node.component}</Typography>
+          </Grid>
+          <Grid item xs={2}>
+            <Typography variant="body2">{node.path}</Typography>
+          </Grid>
+          <Grid item xs={2}>
+            <Typography variant="body2">{node.permissionCode}</Typography>
+          </Grid>
+          <Grid item xs={1}>
+            <Typography variant="body2">{node.sort}</Typography>
+          </Grid>
+          <Grid item xs={1}>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={node.status === 1}
+                  onChange={(e) => handleStatusChange(e, node)}
+                  color="primary"
+                />
+              }
+              label={node.status === 1 ? t("common.enable") : t("common.disable")}
               sx={{
-                minHeight: 48,
-                width: "100%",
+                "& .MuiFormControlLabel-label": {
+                  fontSize: "0.875rem",
+                },
               }}
-            >
-              <Grid container spacing={2} alignItems="center">
-                <Grid item xs={2}>
-                  <ListItemIcon>
-                    <FolderIcon />
-                    <Typography variant="body2">{node.name}</Typography>
-                  </ListItemIcon>
-                </Grid>
-                <Grid item xs={2}>
-                  <Typography variant="body2">{node.component}</Typography>
-                </Grid>
-                <Grid item xs={2}>
-                  <Typography variant="body2">{node.path}</Typography>
-                </Grid>
-                <Grid item xs={2}>
-                  <Typography variant="body2">{node.permissionCode}</Typography>
-                </Grid>
-                <Grid item xs={1}>
-                  <Typography variant="body2">{node.sort}</Typography>
-                </Grid>
-                <Grid item xs={1}>
-                  <Typography variant="body2">
-                    {node.status === 1 ? "启用" : "禁用"}
-                  </Typography>
-                </Grid>
-              </Grid>
-            </ListItemButton>
+            />
+          </Grid>
+          <Grid item xs={1}>
+            <Stack direction="row" spacing={0.5}>
+              <Tooltip title={t("common.add")}>
+                <CommonButton
+                  buttonVariant="edit"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onAdd(node.id);
+                  }}
+                >
+                  <AddIcon />
+                </CommonButton>
+              </Tooltip>
+              <Tooltip title={t("common.edit")}>
+                <CommonButton
+                  buttonVariant="edit"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEdit(node);
+                  }}
+                >
+                  <EditIcon />
+                </CommonButton>
+              </Tooltip>
+              <Tooltip title={t("common.delete")}>
+                <CommonButton
+                  buttonVariant="delete"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete(node.id);
+                  }}
+                >
+                  <DeleteIcon fontSize="small" />
+                </CommonButton>
+              </Tooltip>
+            </Stack>
           </Grid>
         </Grid>
-        <Stack direction="row" spacing={0.5}>
-          <Tooltip title={t("common.add")}>
-            <CommonButton
-              buttonVariant="edit"
-              onClick={(e) => {
-                e.stopPropagation();
-                onAdd(node.id);
-              }}
-            >
-              <AddIcon />
-            </CommonButton>
-          </Tooltip>
-          <Tooltip title={t("common.edit")}>
-            <CommonButton
-              buttonVariant="edit"
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit(node);
-              }}
-            >
-              <EditIcon />
-            </CommonButton>
-          </Tooltip>
-          <Tooltip title={t("common.delete")}>
-            <CommonButton
-              buttonVariant="delete"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete(node.id);
-              }}
-            >
-              <DeleteIcon fontSize="small" />
-            </CommonButton>
-          </Tooltip>
-        </Stack>
       </ListItem>
       {node.children && node.children.length > 0 && (
         <Collapse in={open} timeout="auto" unmountOnExit>
@@ -216,6 +312,7 @@ const TreeNode = ({
                 onDelete={onDelete}
                 selectedIds={selectedIds}
                 onSelect={onSelect}
+                onRefresh={onRefresh}
               />
             ))}
           </List>
@@ -223,6 +320,18 @@ const TreeNode = ({
       )}
     </>
   );
+};
+
+// 获取所有节点ID（包括子节点）
+const getAllNodeIds = (nodes: Permission[]): string[] => {
+  let ids: string[] = [];
+  nodes.forEach((node) => {
+    ids.push(node.id);
+    if (node.children && node.children.length > 0) {
+      ids = ids.concat(getAllNodeIds(node.children));
+    }
+  });
+  return ids;
 };
 
 export default function PermissionPage() {
@@ -397,7 +506,8 @@ export default function PermissionPage() {
   const handleSelectAll = useCallback(
     (checked: boolean) => {
       if (checked) {
-        setSelectedIds(permissions.map((item) => item.id));
+        const allIds = getAllNodeIds(permissions);
+        setSelectedIds(allIds);
       } else {
         setSelectedIds([]);
       }
@@ -462,6 +572,59 @@ export default function PermissionPage() {
     }
     return (
       <Paper sx={{ width: "100%" }}>
+        <Box sx={{ p: 2, borderBottom: 1, borderColor: "divider" }}>
+          <Grid container spacing={2} alignItems="center">
+            <Grid
+              item
+              xs={1}
+              sx={{ display: "flex", justifyContent: "center" }}
+            >
+              <Checkbox
+                checked={selectedIds.length === permissions.length}
+                indeterminate={
+                  selectedIds.length > 0 &&
+                  selectedIds.length < permissions.length
+                }
+                onChange={(e) => handleSelectAll(e.target.checked)}
+              />
+            </Grid>
+            <Grid item xs={2}>
+              <Typography variant="subtitle1" fontWeight="bold">
+                {t("common.permission.columnName")}
+              </Typography>
+            </Grid>
+            <Grid item xs={2}>
+              <Typography variant="subtitle1" fontWeight="bold">
+                {t("common.permission.columnComponent")}
+              </Typography>
+            </Grid>
+            <Grid item xs={2}>
+              <Typography variant="subtitle1" fontWeight="bold">
+                {t("common.permission.columnPath")}
+              </Typography>
+            </Grid>
+            <Grid item xs={2}>
+              <Typography variant="subtitle1" fontWeight="bold">
+                {t("common.permission.columnCode")}
+              </Typography>
+            </Grid>
+            <Grid item xs={1}>
+              <Typography variant="subtitle1" fontWeight="bold">
+                {t("common.permission.columnSort")}
+              </Typography>
+            </Grid>
+            <Grid item xs={1}>
+              <Typography variant="subtitle1" fontWeight="bold">
+                {t("common.permission.columnStatus")}
+              </Typography>
+            </Grid>
+            <Grid item xs={1}>
+              <Typography variant="subtitle1" fontWeight="bold">
+                {t("common.actions")}
+              </Typography>
+            </Grid>
+          </Grid>
+        </Box>
         <List>
           {permissions.map((node) => (
             <TreeNode
@@ -472,6 +635,7 @@ export default function PermissionPage() {
               onDelete={handleDelete}
               selectedIds={selectedIds}
               onSelect={handleSelect}
+              onRefresh={fetchPermissions}
             />
           ))}
         </List>

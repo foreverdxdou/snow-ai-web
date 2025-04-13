@@ -530,22 +530,6 @@ export default function UserPage() {
             data={users}
             columns={columns}
             emptyMessage={t("common.noData")}
-            sx={{
-              "& .MuiTableCell-root": {
-                py: 2,
-                px: 3,
-                fontSize: "0.875rem",
-              },
-              "& .MuiTableHead-root .MuiTableCell-root": {
-                fontWeight: 600,
-                backgroundColor: (theme: Theme) =>
-                  alpha(theme.palette.primary.main, 0.04),
-              },
-              "& .MuiTableRow-root:hover": {
-                backgroundColor: (theme: Theme) =>
-                  alpha(theme.palette.primary.main, 0.04),
-              },
-            }}
           />
 
           <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 3 }}>
