@@ -52,7 +52,7 @@ export default function AuthLayout({
             <Box
                 sx={{
                     position: 'absolute',
-                    top: '38%',
+                    top: '45%',
                     left: '50%',
                     transform: 'translate(-50%, -50%)',
                     zIndex: 2,

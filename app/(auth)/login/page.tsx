@@ -210,9 +210,9 @@ const LoginForm = React.memo(({
                         fontSize: '1rem',
                         fontWeight: 600,
                     }}
-                    startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <Login />}
+                    startIcon={loading ? <CircularProgress size={24} /> : <Login />}
                 >
-                     {loading ? <CircularProgress size={24} /> : t('common.login')}
+                     {t('common.login')}
                 </Button>
                 <Box sx={{ textAlign: 'center', mt: 2 }}>
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
@@ -269,14 +269,14 @@ export default function LoginPage() {
     }, [login, router, t]);
 
     return (
-        <Box sx={{ width: '400px', height: '450px' }}>
+        <Box sx={{ width: '400px', height: 'auto' }}>
             <Paper 
                 elevation={0}
                 sx={{ 
                     p: 4,
                     borderRadius: 3,
                     width: '100%',
-                    height: '100%',
+                    minHeight: '450px',
                     position: 'relative',
                     background: theme.palette.mode === 'dark' 
                         ? "background.paper"

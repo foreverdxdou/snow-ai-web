@@ -120,7 +120,7 @@ const BackgroundEffects: React.FC = () => {
     // 创建粒子
     const createParticles = () => {
       const particles: Particle[] = [];
-      const count = theme.palette.mode === 'dark' ? 100 : 50; // 减少数量以适应更大的尺寸
+      const count = theme.palette.mode === 'dark' ? 50 : 50; // 减少数量以适应更大的尺寸
 
       for (let i = 0; i < count; i++) {
         particles.push({

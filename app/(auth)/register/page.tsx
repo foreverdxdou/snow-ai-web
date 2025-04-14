@@ -21,8 +21,6 @@ import { authService } from "@/app/services/auth";
 import { CommonInput } from "@/app/components/common/CommonInput";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 
-
-
 // 密码强度检查函数
 const checkPasswordStrength = (
   password: string
@@ -84,8 +82,7 @@ export default function RegisterPage() {
   const [isSuccess, setIsSuccess] = useState(false);
 
   const handleChange =
-    (field: keyof RegisterForm) =>
-    (value: string | number) => {
+    (field: keyof RegisterForm) => (value: string | number) => {
       setFormData((prev) => ({
         ...prev,
         [field]: value,
@@ -175,15 +172,18 @@ export default function RegisterPage() {
 
   if (isSuccess) {
     return (
-      <Box sx={{ width: "100%", maxWidth: 400, mx: "auto" }}>
+      <Box sx={{ width: "100%", maxWidth: 400, mx: "auto", height: "100%" }}>
         <Paper
           elevation={0}
           sx={{
             p: 4,
             borderRadius: 3,
+            width: "100%",
+            height: "100%",
+            minHeight: "400px",
             background:
               theme.palette.mode === "dark"
-                ? "rgba(255, 255, 255, 0.95)"
+                ? "background.paper"
                 : "rgba(255, 255, 255, 0.9)",
             backdropFilter: "blur(20px)",
             border:
@@ -215,7 +215,7 @@ export default function RegisterPage() {
             />
             <Typography
               variant="h5"
-              sx={{ color: "success.main", fontWeight: 700, fontSize: '2rem' }}
+              sx={{ color: "success.main", fontWeight: 700, fontSize: "2rem" }}
             >
               {t("auth.registerSuccessTitle")}
             </Typography>
@@ -235,8 +235,9 @@ export default function RegisterPage() {
         sx={{
           p: 4,
           borderRadius: 3,
-          width: '100%',
-          height: '100%',
+          width: "100%",
+          height: "100%",
+          minHeight: "600px",
           background:
             theme.palette.mode === "dark"
               ? "background.paper"
@@ -377,7 +378,13 @@ export default function RegisterPage() {
                   background: `linear-gradient(45deg, ${theme.palette.primary.dark} 30%, ${theme.palette.primary.main} 90%)`,
                 },
               }}
-              startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <PersonAdd />}
+              startIcon={
+                loading ? (
+                  <CircularProgress size={20} color="inherit" />
+                ) : (
+                  <PersonAdd />
+                )
+              }
             >
               {t("common.register")}
             </Button>
