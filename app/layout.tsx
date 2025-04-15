@@ -19,6 +19,10 @@ export default function RootLayout({
 }) {
     return (
         <html lang="zh">
+            <head>
+                <title>Snow AI</title>
+                <meta name="description" content="Snow AI" />
+            </head>
             <body>
                 <CacheProvider value={clientSideEmotionCache}>
                     <I18nextProvider i18n={i18n}>
