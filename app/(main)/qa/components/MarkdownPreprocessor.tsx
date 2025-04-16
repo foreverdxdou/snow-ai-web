@@ -11,7 +11,8 @@ export const MarkdownPreprocessor: React.FC<{ content: string }> = ({ content })
     if (!content) return null;
     
     // 预处理Markdown内容
-    const processedContent = preprocessMarkdown(content);
+    // const processedContent = preprocessMarkdown(content);
+    const processedContent = content;
     
     return (
         <div className="markdown-preprocessor">
