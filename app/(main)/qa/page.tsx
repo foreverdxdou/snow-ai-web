@@ -972,7 +972,7 @@ export default function QaPage() {
                                         <HistoryIcon fontSize="small" />
                                     </IconButton>
                                 </Tooltip>
-                                <Tooltip title={t('qa.knowledgeBase')}>
+                                <Tooltip title={t('common.knowledgeBase')}>
                                     <IconButton
                                         size="small"
                                         onClick={() => setShowKnowledgeBase(!showKnowledgeBase)}
