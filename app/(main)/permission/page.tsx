@@ -573,6 +573,7 @@ export default function PermissionPage() {
               marginLeft: 0,
               paddingLeft: 0,
             },
+            width: "100%",
           }}
           label={
             <Grid container spacing={2} alignItems="center">
@@ -697,8 +698,15 @@ export default function PermissionPage() {
 
     return (
       <Paper sx={{ width: "100%" }}>
-        <Box sx={{ p: 2, borderBottom: 1, borderColor: "divider" }}>
-          <Grid container spacing={2} alignItems="center">
+        <Box sx={{ 
+          p: 2, 
+          borderBottom: 1, 
+          borderColor: "divider",
+          width: "100%",
+          minWidth: "100%",
+          overflowX: "auto"
+        }}>
+          <Grid container spacing={2} alignItems="center" sx={{ minWidth: "100%" }}>
             <Grid
               item
               xs={1}
@@ -717,42 +725,42 @@ export default function PermissionPage() {
               />
             </Grid>
             <Grid item xs={2}>
-              <Typography variant="subtitle1" fontWeight="bold">
+              <Typography variant="h6" fontWeight="bold">
                 {t("common.permission.columnName")}
               </Typography>
             </Grid>
             <Grid item xs={2}>
-              <Typography variant="subtitle1" fontWeight="bold">
+              <Typography variant="h6" fontWeight="bold">
                 {t("common.permission.columnComponent")}
               </Typography>
             </Grid>
             <Grid item xs={2}>
-              <Typography variant="subtitle1" fontWeight="bold">
+              <Typography variant="h6" fontWeight="bold">
                 {t("common.permission.columnPath")}
               </Typography>
             </Grid>
             <Grid item xs={2}>
-              <Typography variant="subtitle1" fontWeight="bold">
+              <Typography variant="h6" fontWeight="bold">
                 {t("common.permission.columnCode")}
               </Typography>
             </Grid>
             <Grid item xs={1}>
-              <Typography variant="subtitle1" fontWeight="bold">
+              <Typography variant="h6" fontWeight="bold">
                 {t("common.permission.columnSort")}
               </Typography>
             </Grid>
             <Grid item xs={1}>
-              <Typography variant="subtitle1" fontWeight="bold">
+              <Typography variant="h6" fontWeight="bold">
                 {t("common.permission.columnStatus")}
               </Typography>
             </Grid>
             <Grid item xs={1}>
-              <Typography variant="subtitle1" fontWeight="bold">
+              <Typography variant="h6" fontWeight="bold">
                 {t("common.actions")}
               </Typography>
             </Grid>
           </Grid>
-        </Box>
+        
         <SimpleTreeView
           defaultExpandedItems={permissions.map((node) => node.id)}
           expandedItems={expandedItems}
@@ -762,10 +770,11 @@ export default function PermissionPage() {
           onItemClick={(event, itemId) => {
             // 处理点击事件
           }}
-          sx={{ p: 2 }}
+          sx={{ marginTop: 2 }}
         >
           {permissions.map((node) => renderTreeItem(node))}
         </SimpleTreeView>
+        </Box>
       </Paper>
     );
   };

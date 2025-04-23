@@ -19,11 +19,13 @@ import {
     InputAdornment,
     IconButton,
     Alert,
-    Snackbar
+    Snackbar,
+    useTheme,
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/app/hooks/useAuth';
 import { useSnackbar } from '@/app/hooks/useSnackbar';
+import { useThemeContext } from '@/app/contexts/ThemeContext';
 import type { User } from '@/app/types/userinfo';
 import { alpha } from '@mui/material/styles';
 import { useRouter } from 'next/navigation';
@@ -33,9 +35,14 @@ import {
     Lock as LockIcon,
     Visibility,
     VisibilityOff,
+    DarkMode as DarkModeIcon,
+    LightMode as LightModeIcon,
+    Language as LanguageIcon,
+    Person as PersonIcon,
 } from '@mui/icons-material';
 import { userService } from '@/app/services/user';
 import { CommonButton } from './common/CommonButton';
+import i18n from '@/app/i18n';
 
 // 密码强度检查函数
 const checkPasswordStrength = (password: string): { score: number; label: string; color: string } => {
@@ -83,6 +90,8 @@ export const UserInfo: React.FC<UserInfoProps> = ({
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState('');
     const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
+    const theme = useTheme();
+    const { themeMode, toggleTheme, language, toggleLanguage } = useThemeContext();
 
     useEffect(() => {
         setMounted(true);
@@ -92,7 +101,6 @@ export const UserInfo: React.FC<UserInfoProps> = ({
     }, []);
 
     const displayName = mounted ? (userInfo?.nickname || user?.username || '') : '';
-    const avatarText = mounted ? displayName[0]?.toUpperCase() || '' : '';
 
     const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
         event.preventDefault();
@@ -196,6 +204,18 @@ export const UserInfo: React.FC<UserInfoProps> = ({
         setSnackbarOpen(false);
     };
 
+    const handleThemeToggle = () => {
+        toggleTheme();
+        handleMenuClose();
+    };
+
+    const handleLanguageToggle = () => {
+        const newLang = language === 'zh' ? 'en' : 'zh';
+        i18n.changeLanguage(newLang);
+        toggleLanguage();
+        handleMenuClose();
+    };
+
     return (
         <>
         <Box 
@@ -230,23 +250,12 @@ export const UserInfo: React.FC<UserInfoProps> = ({
                         ? theme.palette.background.default
                         : '#fff',
                 }}
+                src={userInfo?.avatar}
             >
-                {avatarText}
+                {!userInfo?.avatar && (
+                    userInfo?.nickname ? userInfo.nickname.charAt(0).toUpperCase() : <PersonIcon />
+                )}
             </Avatar>
-            {mounted && (
-                <Typography 
-                    variant="body2" 
-                    noWrap
-                    sx={{
-                        fontWeight: 500,
-                        color: 'text.primary',
-                        maxWidth: 120,
-                        letterSpacing: '0.15px',
-                    }}
-                >
-                    {displayName}
-                </Typography>
-            )}
             </Box>
 
             {mounted && (
@@ -261,7 +270,8 @@ export const UserInfo: React.FC<UserInfoProps> = ({
                         paper: {
                             elevation: 0,
                             sx: {
-                                width: 220,
+                                minWidth: 150,
+                                maxWidth: 240,
                                 overflow: 'visible',
                                 mt: 1.5,
                                 backgroundColor: (theme) => 
@@ -291,17 +301,7 @@ export const UserInfo: React.FC<UserInfoProps> = ({
                         },
                     }}
                 >
-                    <Box sx={{ pt: 2, pb: 1.5, px: 2.5 }}>
-                        <Typography variant="subtitle2" noWrap>
-                            {displayName}
-                        </Typography>
-                        {userInfo?.email && (
-                            <Typography variant="body2" color="text.secondary" noWrap>
-                                {userInfo.email}
-                            </Typography>
-                        )}
-                    </Box>
-                    <Divider />
+
                     <Box sx={{ py: 1 }}>
                         <MenuItem 
                             onClick={handleProfile}
@@ -342,6 +342,46 @@ export const UserInfo: React.FC<UserInfoProps> = ({
                                 primaryTypographyProps={{
                                     fontSize: '0.875rem',
                                     fontWeight: 500,
+                                }}
+                            />
+                        </MenuItem>
+                        <MenuItem 
+                            onClick={handleThemeToggle}
+                            sx={{
+                                minHeight: 48,
+                                px: 2.5,
+                                '&:hover': {
+                                    backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.08),
+                                },
+                            }}
+                        >
+                            <ListItemIcon>
+                                {themeMode === 'dark' ? <LightModeIcon fontSize="small" /> : <DarkModeIcon fontSize="small" />}
+                            </ListItemIcon>
+                            <ListItemText 
+                                primary={themeMode === 'dark' ? t('common.lightMode') : t('common.darkMode')}
+                                primaryTypographyProps={{
+                                    fontSize: '0.875rem',
+                                }}
+                            />
+                        </MenuItem>
+                        <MenuItem 
+                            onClick={handleLanguageToggle}
+                            sx={{
+                                minHeight: 48,
+                                px: 2.5,
+                                '&:hover': {
+                                    backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.08),
+                                },
+                            }}
+                        >
+                            <ListItemIcon>
+                                <LanguageIcon fontSize="small" />
+                            </ListItemIcon>
+                            <ListItemText 
+                                primary={language === 'zh' ? t('common.english') : t('common.chinese')}
+                                primaryTypographyProps={{
+                                    fontSize: '0.875rem',
                                 }}
                             />
                         </MenuItem>
@@ -473,7 +513,7 @@ export const UserInfo: React.FC<UserInfoProps> = ({
                                 ),
                             }}
                         />
-        </Box>
+                    </Box>
                 </DialogContent>
                 <DialogActions>
                     <CommonButton 
