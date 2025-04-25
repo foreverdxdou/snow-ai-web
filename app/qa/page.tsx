@@ -38,6 +38,7 @@ import {
   ExpandMore as ExpandMoreIcon,
   ExpandLess as ExpandLessIcon,
   KeyboardArrowDown as KeyboardArrowDownIcon,
+  ArrowUpward as ArrowUpwardIcon,
   Refresh as RefreshIcon,
   History as HistoryIcon,
   Folder as FolderIcon,
@@ -204,6 +205,7 @@ export default function QaPage() {
   const router = useRouter();
   const [knowledgeBases, setKnowledgeBases] = useState<KnowledgeBaseVO[]>([]);
   const [selectedKbs, setSelectedKbs] = useState<number[]>([]);
+  const [isSelectAll, setIsSelectAll] = useState(false);
   const [llmModels, setLlmModels] = useState<LlmConfig[]>([]);
   const [selectedModel, setSelectedModel] = useState<string>("");
   const [question, setQuestion] = useState("");
@@ -647,12 +649,18 @@ export default function QaPage() {
 
   // 处理全选/取消全选
   const handleSelectAll = useCallback(() => {
-    setSelectedKbs((prev) =>
-      prev.length === knowledgeBases.length
-        ? []
-        : knowledgeBases.map((kb) => kb.id)
-    );
+    setIsSelectAll(prev => {
+      const newSelectAll = !prev;
+      setSelectedKbs(newSelectAll ? knowledgeBases.map(kb => kb.id) : []);
+      return newSelectAll;
+    });
   }, [knowledgeBases]);
+
+  // 监听选中状态变化
+  useEffect(() => {
+    // 当选中的知识库数量等于总数时，自动设置全选状态
+    setIsSelectAll(selectedKbs.length === knowledgeBases.length);
+  }, [selectedKbs, knowledgeBases]);
 
   // 处理单个知识库选择
   const handleKbSelect = useCallback((id: number, checked: boolean) => {
@@ -930,16 +938,24 @@ export default function QaPage() {
           >
             {/* 第一行：聊天输入框 */}
             <Box
+              onClick={() => {
+                const inputElement = document.querySelector<HTMLTextAreaElement>('.MuiInputBase-input');
+                if (inputElement) {
+                  inputElement.focus();
+                }
+              }}
               sx={{
                 display: "flex",
                 gap: 2,
                 p: 2,
+                flex: 3,
+                cursor: "text",
               }}
             >
               <TextField
                 fullWidth
                 multiline
-                maxRows={4}
+                maxRows={20}
                 value={question}
                 onChange={handleQuestionChange}
                 onKeyPress={handleKeyPress}
@@ -947,8 +963,10 @@ export default function QaPage() {
                 disabled={loading}
                 variant="standard"
                 sx={{
+                  height: "100%",
                   "& .MuiInputBase-root": {
                     padding: 0,
+                    minHeight: "100%",
                     "&:before, &:after": {
                       display: "none",
                     },
@@ -960,79 +978,19 @@ export default function QaPage() {
                   },
                 }}
               />
-              <IconButton
-                color="primary"
-                onClick={loading ? handleAbort : handleSend}
-                disabled={!question.trim() && !loading}
-                title={loading ? t("qa.clickToStop") : t("qa.send")}
-                sx={{
-                  alignSelf: "flex-end",
-                  width: 40,
-                  height: 40,
-                  bgcolor: loading ? "error.main" : "primary.main",
-                  color: "primary.contrastText",
-                  transition: "all 0.3s ease",
-                  "&:hover": {
-                    bgcolor: loading ? "error.dark" : "primary.dark",
-                    transform: loading ? "rotate(90deg)" : "scale(1.05)",
-                  },
-                  "&.Mui-disabled": {
-                    bgcolor: "action.disabledBackground",
-                    color: "action.disabled",
-                  },
-                }}
-              >
-                {loading ? (
-                  <Box
-                    sx={{ position: "relative", display: "inline-flex" }}
-                  >
-                    <CircularProgress
-                      size={20}
-                      color="inherit"
-                      sx={{
-                        position: "absolute",
-                        left: "50%",
-                        top: "50%",
-                        marginLeft: "-10px",
-                        marginTop: "-10px",
-                      }}
-                    />
-                    <StopIcon
-                      sx={{
-                        position: "absolute",
-                        left: "50%",
-                        top: "50%",
-                        marginLeft: "-10px",
-                        marginTop: "-10px",
-                        fontSize: 20,
-                        animation: "fadeIn 0.3s ease-in-out",
-                        "@keyframes fadeIn": {
-                          "0%": {
-                            opacity: 0,
-                            transform: "scale(0.8)",
-                          },
-                          "100%": {
-                            opacity: 1,
-                            transform: "scale(1)",
-                          },
-                        },
-                      }}
-                    />
-                  </Box>
-                ) : (
-                  <SendIcon sx={{ fontSize: 20 }} />
-                )}
-              </IconButton>
             </Box>
 
-            {/* 第二行：选择器 */}
+            {/* 第二行：选择器和发送按钮 */}
             <Box
               sx={{
                 display: "flex",
                 justifyContent: "space-between",
+                alignItems: "center",
                 gap: 2,
                 p: 2,
                 pt: 1,
+                minHeight: "60px",
+                flex: 1,
               }}
             >
               {/* 知识库选择器 */}
@@ -1047,28 +1005,21 @@ export default function QaPage() {
                   size="small"
                   sx={{
                     flex: "none",
-                    width: (theme) => ({
-                      width: selectedKbs.length === 0 ? 40 : "auto",
-                      minWidth: 40,
-                      transition: theme.transitions.create(["width"], {
-                        duration: theme.transitions.duration.standard,
-                      }),
-                    }),
+                    width: "auto",
+                    minWidth: selectedKbs.length === 0 ? 40 : "auto",
+                    maxWidth: 300,
+                    transition: "all 0.3s ease",
                   }}
                 >
                   <Select
                     multiple
                     value={selectedKbs}
-                    onChange={(e) =>
-                      setSelectedKbs(
-                        typeof e.target.value === "string"
-                          ? []
-                          : e.target.value
-                      )
-                    }
+                    onChange={(e) => {
+                      const value = e.target.value as number[];
+                      setSelectedKbs(value);
+                    }}
                     displayEmpty
-                    IconComponent={() => null}
-                    renderValue={(selected) => {
+                    renderValue={(selected: number[]) => {
                       if (selected.length === 0) {
                         return (
                           <Box
@@ -1076,7 +1027,7 @@ export default function QaPage() {
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "center",
-                              width: "100%",
+                              width: 40,
                             }}
                           >
                             <StorageIcon
@@ -1090,103 +1041,217 @@ export default function QaPage() {
                       }
                       return (
                         <Box
-                          onMouseDown={(e) => {
-                            if (selected.length > 0) {
-                              e.preventDefault();
-                              e.stopPropagation();
-                            }
-                          }}
                           sx={{
                             display: "flex",
                             alignItems: "center",
-                            flexWrap: "wrap",
                             gap: 0.5,
+                            width: "100%",
+                            overflow: "hidden",
+                            px: 1,
+                          }}
+                        >
+                          <StorageIcon
+                            sx={{
+                              fontSize: "1.25rem",
+                              color: "primary.main",
+                              flexShrink: 0,
+                            }}
+                          />
+                          <Typography
+                            noWrap
+                            sx={{
+                              fontSize: "0.875rem",
+                              color: "text.primary",
+                              flexShrink: 1,
+                              minWidth: 0,
+                            }}
+                          >
+                            {selectedKbs.length} 个知识库
+                          </Typography>
+                        </Box>
+                      );
+                    }}
+                    sx={{
+                      height: 40,
+                      bgcolor: (theme: Theme) =>
+                        theme.palette.mode === "dark"
+                          ? "rgba(255, 255, 255, 0.05)"
+                          : "rgba(0, 0, 0, 0.05)",
+                      borderRadius: 1,
+                      "& .MuiOutlinedInput-notchedOutline": {
+                        border: "1px solid",
+                        borderColor: "divider",
+                      },
+                      "&:hover .MuiOutlinedInput-notchedOutline": {
+                        borderColor: "primary.main",
+                      },
+                      "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                        borderColor: "primary.main",
+                      },
+                      "& .MuiSelect-select": {
+                        display: "flex",
+                        alignItems: "center",
+                        py: 1,
+                        px: 1,
+                        minWidth: selectedKbs.length === 0 ? 40 : "auto",
+                      },
+                    }}
+                    MenuProps={{
+                      PaperProps: {
+                        sx: {
+                          maxHeight: 300,
+                          minWidth: 200,
+                          width: "auto",
+                          maxWidth: "min(400px, 90vw)",
+                          mt: 1,
+                          boxShadow: (theme) => theme.shadows[3],
+                          "& .MuiMenuItem-root": {
+                            minHeight: 40,
+                            width: "100%",
+                          },
+                          "& .MuiTypography-root": {
+                            flex: 1,
+                            marginRight: 1,
+                          },
+                        },
+                      },
+                      anchorOrigin: {
+                        vertical: "bottom",
+                        horizontal: "left",
+                      },
+                      transformOrigin: {
+                        vertical: "top",
+                        horizontal: "left",
+                      },
+                      slotProps: {
+                        paper: {
+                          sx: {
+                            overflow: "hidden",
+                          },
+                        },
+                      },
+                    }}
+                  >
+                    <MenuItem
+                      onClick={handleSelectAll}
+                      sx={{
+                        borderBottom: "1px solid",
+                        borderColor: "divider",
+                        py: 1,
+                        px: 2,
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          width: "100%",
+                          gap: 1,
+                        }}
+                      >
+                        {isSelectAll ? (
+                          <CheckBoxIcon
+                            sx={{ fontSize: "1.25rem", color: "primary.main" }}
+                          />
+                        ) : (
+                          <CheckBoxOutlineBlankIcon
+                            sx={{ fontSize: "1.25rem", color: "text.secondary" }}
+                          />
+                        )}
+                        <Typography sx={{ fontSize: "0.875rem" }}>
+                          全选
+                        </Typography>
+                      </Box>
+                    </MenuItem>
+                    {knowledgeBases.map((kb) => (
+                      <MenuItem
+                        key={kb.id}
+                        value={kb.id}
+                        sx={{
+                          py: 1,
+                          px: 2,
+                          "&:hover": {
+                            bgcolor: (theme) =>
+                              theme.palette.mode === "dark"
+                                ? "rgba(255, 255, 255, 0.05)"
+                                : "rgba(0, 0, 0, 0.05)",
+                          },
+                        }}
+                      >
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            width: "100%",
+                            gap: 1,
+                          }}
+                        >
+                          {selectedKbs.includes(kb.id) ? (
+                            <CheckBoxIcon
+                              sx={{ fontSize: "1.25rem", color: "primary.main" }}
+                            />
+                          ) : (
+                            <CheckBoxOutlineBlankIcon
+                              sx={{ fontSize: "1.25rem", color: "text.secondary" }}
+                            />
+                          )}
+                          <Typography
+                            sx={{
+                              fontSize: "0.875rem",
+                              flexGrow: 1,
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {kb.name}
+                          </Typography>
+                        </Box>
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Tooltip>
+
+              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                {/* 大模型选择器 */}
+                <FormControl
+                  size="small"
+                  sx={{
+                    flex: "none",
+                    width: (theme) => ({
+                      width: "auto",
+                      minWidth: 40,
+                      transition: theme.transitions.create(["width"], {
+                        duration: theme.transitions.duration.standard,
+                      }),
+                    }),
+                  }}
+                >
+                  <Select
+                    value={selectedModel}
+                    onChange={(e) => setSelectedModel(e.target.value)}
+                    displayEmpty
+                    renderValue={(selected) => {
+                      const model = llmModels.find((m) => m.id === selected);
+                      return (
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "flex-end",
                             width: "100%",
                           }}
                         >
-                          <Box
+                          <Typography
                             sx={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 0.5,
-                              flexGrow: 1,
-                              cursor: "default",
+                              fontSize: "0.875rem",
+                              color: "text.primary",
+                              textAlign: "right",
                             }}
-                            onClick={(e) => e.stopPropagation()}
                           >
-                            <StorageIcon
-                              sx={{
-                                fontSize: "1.25rem",
-                                color: "primary.main",
-                                mr: 0.5,
-                              }}
-                            />
-                            {selected.map((id) => {
-                              const kb = knowledgeBases.find(
-                                (kb) => kb.id === id
-                              );
-                              return (
-                                <Box
-                                  key={id}
-                                  sx={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    bgcolor: "action.selected",
-                                    borderRadius: 1,
-                                    px: 1,
-                                    py: 0.25,
-                                  }}
-                                >
-                                  <Typography
-                                    sx={{
-                                      fontSize: "0.875rem",
-                                      color: "text.primary",
-                                    }}
-                                  >
-                                    {kb?.name}
-                                  </Typography>
-                                  <IconButton
-                                    size="small"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setSelectedKbs((prev) =>
-                                        prev.filter((kbId) => kbId !== id)
-                                      );
-                                    }}
-                                    sx={{
-                                      ml: 0.5,
-                                      p: 0.25,
-                                      "&:hover": {
-                                        bgcolor: "action.hover",
-                                      },
-                                    }}
-                                  >
-                                    <CloseIcon
-                                      sx={{ fontSize: "0.875rem" }}
-                                    />
-                                  </IconButton>
-                                </Box>
-                              );
-                            })}
-                          </Box>
-                          {selected.length > 0 && (
-                            <IconButton
-                              size="small"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedKbs([]);
-                              }}
-                              sx={{
-                                p: 0.25,
-                                ml: 0.5,
-                                "&:hover": {
-                                  bgcolor: "action.hover",
-                                },
-                              }}
-                            >
-                              <CloseIcon sx={{ fontSize: "1rem" }} />
-                            </IconButton>
-                          )}
+                            {model?.modelName}
+                          </Typography>
                         </Box>
                       );
                     }}
@@ -1204,9 +1269,9 @@ export default function QaPage() {
                       "& .MuiSelect-select": {
                         display: "flex",
                         alignItems: "center",
-                        padding:
-                          selectedKbs.length === 0 ? "8px" : "8px 8px",
-                        paddingRight: "8px !important",
+                        justifyContent: "flex-end",
+                        padding: "8px 32px 8px 8px",
+                        paddingRight: "32px !important",
                       },
                     }}
                     MenuProps={{
@@ -1219,14 +1284,15 @@ export default function QaPage() {
                       },
                     }}
                   >
-                    {knowledgeBases.map((kb) => (
+                    {llmModels.map((model) => (
                       <MenuItem
-                        key={kb.id}
-                        value={kb.id}
+                        key={model.id}
+                        value={model.id}
                         sx={{
                           minHeight: "auto",
                           py: 1,
                           px: 2,
+                          whiteSpace: "normal",
                           "&.Mui-selected": {
                             bgcolor: (theme) =>
                               theme.palette.mode === "dark"
@@ -1239,6 +1305,12 @@ export default function QaPage() {
                                   : "rgba(33, 150, 243, 0.12)",
                             },
                           },
+                          "&:hover": {
+                            bgcolor: (theme) =>
+                              theme.palette.mode === "dark"
+                                ? "rgba(144, 202, 249, 0.08)"
+                                : "rgba(33, 150, 243, 0.04)",
+                          },
                         }}
                       >
                         <Box
@@ -1247,17 +1319,23 @@ export default function QaPage() {
                             alignItems: "center",
                             justifyContent: "space-between",
                             width: "100%",
+                            gap: 1,
                           }}
                         >
-                          <Typography sx={{ fontSize: "0.875rem" }}>
-                            {kb.name}
+                          <Typography
+                            sx={{
+                              fontSize: "0.875rem",
+                              flexGrow: 1,
+                            }}
+                          >
+                            {model.modelName}
                           </Typography>
-                          {selectedKbs.includes(kb.id) && (
+                          {selectedModel === model.id && (
                             <Box
                               component="span"
                               sx={{
-                                width: 16,
-                                height: 16,
+                                width: 20,
+                                height: 20,
                                 borderRadius: "50%",
                                 bgcolor: "primary.main",
                                 display: "flex",
@@ -1265,6 +1343,7 @@ export default function QaPage() {
                                 justifyContent: "center",
                                 color: "white",
                                 fontSize: "0.75rem",
+                                flexShrink: 0,
                               }}
                             >
                               ✓
@@ -1275,148 +1354,71 @@ export default function QaPage() {
                     ))}
                   </Select>
                 </FormControl>
-              </Tooltip>
 
-              {/* 大模型选择器 */}
-              <FormControl
-                size="small"
-                sx={{
-                  flex: "none",
-                  width: (theme) => ({
-                    width: "auto",
-                    minWidth: 40,
-                    transition: theme.transitions.create(["width"], {
-                      duration: theme.transitions.duration.standard,
-                    }),
-                  }),
-                }}
-              >
-                <Select
-                  value={selectedModel}
-                  onChange={(e) => setSelectedModel(e.target.value)}
-                  displayEmpty
-                  renderValue={(selected) => {
-                    const model = llmModels.find((m) => m.id === selected);
-                    return (
-                      <Box
-                        sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "flex-end",
-                          width: "100%",
-                        }}
-                      >
-                        <Typography
-                          sx={{
-                            fontSize: "0.875rem",
-                            color: "text.primary",
-                            textAlign: "right",
-                          }}
-                        >
-                          {model?.modelName}
-                        </Typography>
-                      </Box>
-                    );
-                  }}
+                {/* 发送按钮 */}
+                <IconButton
+                  color="primary"
+                  onClick={loading ? handleAbort : handleSend}
+                  disabled={!question.trim() && !loading}
+                  title={loading ? t("qa.clickToStop") : t("qa.send")}
                   sx={{
-                    height: 40,
-                    "& .MuiOutlinedInput-notchedOutline": {
-                      border: "none",
+                    width: 36,
+                    height: 36,
+                    bgcolor: loading ? "error.main" : "primary.main",
+                    color: "primary.contrastText",
+                    transition: "all 0.3s ease",
+                    "&:hover": {
+                      bgcolor: loading ? "error.dark" : "primary.dark",
+                      transform: loading ? "rotate(90deg)" : "scale(1.05)",
                     },
-                    "&:hover .MuiOutlinedInput-notchedOutline": {
-                      border: "none",
-                    },
-                    "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                      border: "none",
-                    },
-                    "& .MuiSelect-select": {
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "flex-end",
-                      padding: "8px 32px 8px 8px",
-                      paddingRight: "32px !important",
-                    },
-                  }}
-                  MenuProps={{
-                    PaperProps: {
-                      sx: {
-                        maxHeight: 300,
-                        width: "auto",
-                        minWidth: "200px",
-                      },
+                    "&.Mui-disabled": {
+                      bgcolor: "action.disabledBackground",
+                      color: "action.disabled",
                     },
                   }}
                 >
-                  {llmModels.map((model) => (
-                    <MenuItem
-                      key={model.id}
-                      value={model.id}
-                      sx={{
-                        minHeight: "auto",
-                        py: 1,
-                        px: 2,
-                        whiteSpace: "normal",
-                        "&.Mui-selected": {
-                          bgcolor: (theme) =>
-                            theme.palette.mode === "dark"
-                              ? "rgba(144, 202, 249, 0.16)"
-                              : "rgba(33, 150, 243, 0.08)",
-                          "&:hover": {
-                            bgcolor: (theme) =>
-                              theme.palette.mode === "dark"
-                                ? "rgba(144, 202, 249, 0.24)"
-                                : "rgba(33, 150, 243, 0.12)",
-                          },
-                        },
-                        "&:hover": {
-                          bgcolor: (theme) =>
-                            theme.palette.mode === "dark"
-                              ? "rgba(144, 202, 249, 0.08)"
-                              : "rgba(33, 150, 243, 0.04)",
-                        },
-                      }}
+                  {loading ? (
+                    <Box
+                      sx={{ position: "relative", display: "inline-flex" }}
                     >
-                      <Box
+                      <CircularProgress
+                        size={18}
+                        color="inherit"
                         sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                          width: "100%",
-                          gap: 1,
+                          position: "absolute",
+                          left: "50%",
+                          top: "50%",
+                          marginLeft: "-9px",
+                          marginTop: "-9px",
                         }}
-                      >
-                        <Typography
-                          sx={{
-                            fontSize: "0.875rem",
-                            flexGrow: 1,
-                          }}
-                        >
-                          {model.modelName}
-                        </Typography>
-                        {selectedModel === model.id && (
-                          <Box
-                            component="span"
-                            sx={{
-                              width: 20,
-                              height: 20,
-                              borderRadius: "50%",
-                              bgcolor: "primary.main",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              color: "white",
-                              fontSize: "0.75rem",
-                              flexShrink: 0,
-                            }}
-                          >
-                            ✓
-                          </Box>
-                        )}
-                      </Box>
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+                      />
+                      <StopIcon
+                        sx={{
+                          position: "absolute",
+                          left: "50%",
+                          top: "50%",
+                          marginLeft: "-9px",
+                          marginTop: "-9px",
+                          fontSize: 18,
+                          animation: "fadeIn 0.3s ease-in-out",
+                          "@keyframes fadeIn": {
+                            "0%": {
+                              opacity: 0,
+                              transform: "scale(0.8)",
+                            },
+                            "100%": {
+                              opacity: 1,
+                              transform: "scale(1)",
+                            },
+                          },
+                        }}
+                      />
+                    </Box>
+                  ) : (
+                    <ArrowUpwardIcon sx={{ fontSize: 18 }} />
+                  )}
+                </IconButton>
+              </Box>
             </Box>
           </Box>
         </Box>
