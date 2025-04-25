@@ -64,13 +64,8 @@ const checkPasswordStrength = (password: string): { score: number; label: string
     return { score, label: 'strong', color: '#4caf50' };
 };
 
-interface UserInfoProps {
-    userInfo: User | null;
-}
 
-export const UserInfo: React.FC<UserInfoProps> = ({
-    userInfo,
-}) => {
+export const UserInfo: React.FC = () => {
     const { t } = useTranslation();
     const { user, logout } = useAuth();
     const router = useRouter();
@@ -100,7 +95,7 @@ export const UserInfo: React.FC<UserInfoProps> = ({
         };
     }, []);
 
-    const displayName = mounted ? (userInfo?.nickname || user?.username || '') : '';
+    const displayName = mounted ? (user?.nickname || user?.username || '') : '';
 
     const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
         event.preventDefault();
@@ -244,16 +239,16 @@ export const UserInfo: React.FC<UserInfoProps> = ({
                     fontSize: '0.875rem',
                     fontWeight: 600,
                     background: (theme) => theme.palette.mode === 'dark'
-                        ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%)'
+                        ? 'linear-gradient(135deg, rgb(255, 255, 255) 0%, rgb(255, 255, 255) 100%)'
                         : 'linear-gradient(135deg, #66B2FF 0%, #007FFF 100%)',
                     color: (theme) => theme.palette.mode === 'dark'
                         ? theme.palette.background.default
                         : '#fff',
                 }}
-                src={userInfo?.avatar}
+                src={user?.avatar}
             >
-                {!userInfo?.avatar && (
-                    userInfo?.nickname ? userInfo.nickname.charAt(0).toUpperCase() : <PersonIcon />
+                {!user?.avatar && (
+                    user?.nickname ? user.nickname.charAt(0).toUpperCase() : <PersonIcon />
                 )}
             </Avatar>
             </Box>

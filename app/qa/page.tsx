@@ -63,8 +63,8 @@ import { llmService } from "@/app/services/llm";
 import type { LlmConfig } from "@/app/types/llm";
 import { isToday, isWithinInterval, subDays } from "date-fns";
 import { UserInfo } from "@/app/components/UserInfo";
-import { useAuth } from "@/app/hooks/useAuth";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 // 添加自定义样式
 const markdownStyles = {
@@ -201,7 +201,6 @@ const groupChatHistory = (history: KbChatHistory[]) => {
 
 export default function QaPage() {
   const { t } = useTranslation();
-  const { user } = useAuth();
   const router = useRouter();
   const [knowledgeBases, setKnowledgeBases] = useState<KnowledgeBaseVO[]>([]);
   const [selectedKbs, setSelectedKbs] = useState<number[]>([]);
@@ -1490,6 +1489,9 @@ export default function QaPage() {
             variant="h6"
             component="div"
             sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
               fontWeight: 1000,
               background: (theme) =>
                 theme.palette.mode === "light"
@@ -1505,8 +1507,6 @@ export default function QaPage() {
               overflow: "visible",
               textOverflow: "clip",
               lineHeight: 1,
-              display: "flex",
-              alignItems: "center",
               cursor: "pointer",
               "&:hover": {
                 opacity: 0.8,
@@ -1514,6 +1514,15 @@ export default function QaPage() {
             }}
             onClick={() => router.push("/")}
           >
+            <Image
+              src="/snow.svg"
+              alt="Snow AI Logo"
+              width={24}
+              height={24}
+              style={{
+                filter: "brightness(0) saturate(100%) invert(40%) sepia(52%) saturate(2476%) hue-rotate(199deg) brightness(100%) contrast(101%)"
+              }}
+            />
             {t("common.appName")}
           </Typography>
         </Box>
@@ -1578,7 +1587,7 @@ export default function QaPage() {
               <ClearAllIcon />
             </IconButton>
           </Tooltip>
-          <UserInfo userInfo={user} />
+          <UserInfo/>
         </Box>
       </Box>
 

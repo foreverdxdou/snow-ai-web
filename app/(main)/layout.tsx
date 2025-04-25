@@ -49,6 +49,7 @@ import BackgroundEffects from '@/app/components/common/BackgroundEffects';
 import { UserInfo } from '@/app/components/UserInfo';
 import { authService } from '@/app/services/auth';
 import type { User } from '@/app/types/userinfo';
+import Image from 'next/image';
 
 const DRAWER_WIDTH = 240;
 const DRAWER_COLLAPSED_WIDTH = 72;
@@ -148,9 +149,7 @@ const TopBar = React.memo(({
                 duration: theme.transitions.duration.leavingScreen,
             }),
             backdropFilter: 'blur(6px)',
-            backgroundColor: (theme) => alpha(theme.palette.background.default, 0.8),
-            borderBottom: 1,
-            borderColor: 'divider',
+            backgroundColor: (theme) => alpha(theme.palette.background.default, 0.8)
         }}
     >
         <Toolbar sx={{ 
@@ -158,9 +157,7 @@ const TopBar = React.memo(({
             px: 2,
             justifyContent: 'flex-end',
         }}>
-            <UserInfo
-                userInfo={userInfo}
-            />
+            <UserInfo/>
         </Toolbar>
     </AppBar>
 ));
@@ -174,6 +171,7 @@ interface SideBarProps {
     currentPath: string;
     onDrawerToggle: () => void;
     onNavigate: (path: string) => void;
+    router: any;
 }
 
 const SideBar = React.memo(({ 
@@ -183,6 +181,7 @@ const SideBar = React.memo(({
     currentPath,
     onDrawerToggle,
     onNavigate,
+    router,
 }: SideBarProps) => {
     const [expandedItems, setExpandedItems] = useState<string[]>([]);
 
@@ -273,7 +272,7 @@ const SideBar = React.memo(({
                                 alignItems: 'center',
                                 height: '100%',
                                 flex: 1,
-                                justifyContent: 'center',
+                                justifyContent: 'left',
                             }}>
                                 <Typography 
                                     variant="h6" 
@@ -289,36 +288,50 @@ const SideBar = React.memo(({
                                         opacity: 1,
                                         fontSize: '1.25rem',
                                         width: 'auto',
-                                        textAlign: 'center',
+                                        textAlign: 'left',
                                         whiteSpace: 'nowrap',
                                         overflow: 'visible',
                                         textOverflow: 'clip',
                                         lineHeight: 1,
                                         display: 'flex',
                                         alignItems: 'center',
+                                        gap: 1,
+                                        cursor: 'pointer',
+                                        '&:hover': {
+                                            opacity: 0.8,
+                                        },
                                     }}
+                                    onClick={() => router.push('/')}
                                 >
-                                    <img src="data:image/png;base64,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"  style={{ width: '24px', height: '24px' }} />
-                                     Snow AI
+                                    <Image
+                                        src="/snow.svg"
+                                        alt="Snow AI Logo"
+                                        width={24}
+                                        height={24}
+                                        style={{
+                                            filter: "brightness(0) saturate(100%) invert(40%) sepia(52%) saturate(2476%) hue-rotate(199deg) brightness(100%) contrast(101%)"
+                                        }}
+                                    />
+                                    Snow AI
                                 </Typography>
                             </Box>
                             <Box sx={{ 
                                 display: 'flex', 
                                 alignItems: 'center',
                                 height: '100%',
-                                position: 'absolute',
-                                right: 0,
                             }}>
                                 <IconButton
                                     color="inherit"
                                     onClick={onDrawerToggle}
                                     sx={{ 
+                                        width: 36,
+                                        height: 36,
                                         '&:hover': {
                                             backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.08),
                                         },
                                     }}
                                 >
-                                    <ViewSidebarIcon />
+                                    <ViewSidebarIcon sx={{ fontSize: 20 }} />
                                 </IconButton>
                             </Box>
                         </>
@@ -327,12 +340,14 @@ const SideBar = React.memo(({
                             color="inherit"
                             onClick={onDrawerToggle}
                             sx={{ 
+                                width: 36,
+                                height: 36,
                                 '&:hover': {
                                     backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.08),
                                 },
                             }}
                         >
-                            <ViewSidebarIcon sx={{ transform: 'rotate(180deg)' }} />
+                            <ViewSidebarIcon sx={{ fontSize: 20, transform: 'rotate(180deg)' }} />
                         </IconButton>
                     )}
                 </Box>
@@ -477,6 +492,7 @@ export default function MainLayout({
                     currentPath={pathname}
                     onDrawerToggle={handleDrawerToggle}
                     onNavigate={handleNavigation}
+                    router={router}
                 />
 
                 <Box
