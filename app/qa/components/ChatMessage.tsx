@@ -275,6 +275,16 @@ export const ChatMessage = ({
       });
   };
 
+  const handleInlineCodeClickCopy = (text: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setSnackbar({
+        open: true,
+        message: t('qa.copySuccess'),
+        severity: 'success',
+      });
+    });
+  };
+
   const handleDeleteMessage = () => {
     setDeleteDialog({ open: true });
   };
@@ -476,6 +486,7 @@ export const ChatMessage = ({
                   return (
                     <Box
                       component="code"
+                      onClick={() => handleInlineCodeClickCopy(codeContent)}
                       sx={{
                         p: 0.5,
                         borderRadius: "4px",
@@ -488,6 +499,13 @@ export const ChatMessage = ({
                         fontSize: "0.875rem",
                         fontFamily:
                           'Consolas, Monaco, "Andale Mono", "Ubuntu Mono", monospace',
+                        cursor: "pointer",
+                        "&:hover": {
+                          bgcolor: (theme) =>
+                            theme.palette.mode === "dark"
+                              ? "rgba(255, 255, 255, 0.15)"
+                              : "rgba(0, 0, 0, 0.05)",
+                        },
                       }}
                     >
                       {codeContent}
